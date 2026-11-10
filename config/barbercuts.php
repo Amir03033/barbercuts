@@ -10,6 +10,8 @@ return [
     */
     'billing' => [
         'enabled' => (bool) env('BILLING_ENABLED', false),
+        // Tot de plans-tabel er is (fase 4) staat de proefperiode hier.
+        'trial_days' => 14,
     ],
 
     /*
@@ -33,7 +35,7 @@ return [
     */
     'reserved_slugs' => [
         'app', 'admin', 'account', 'afspraak', 'aanmelden', 'inloggen', 'registreren', 'uitloggen',
-        'wachtwoord-vergeten', 'wachtwoord-herstellen', 'e-mail-bevestigen', 'prijzen', 'privacy',
+        'wachtwoord-vergeten', 'wachtwoord-herstellen', 'e-mail-bevestigen', 'uitnodiging', 'prijzen', 'privacy',
         'voorwaarden', 'contact', 'over', 'help', 'api', 'up', 'webhooks', 'storage', 'build',
         'livewire', 'filament', 'css', 'js', 'images', 'kappers', 'zoeken', '_ui',
     ],

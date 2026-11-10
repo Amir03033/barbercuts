@@ -7,14 +7,21 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 
-it('sends unverified users to the verification notice', function () {
-    $this->actingAs(User::factory()->unverified()->create())
-        ->get('/app')
-        ->assertRedirect('/e-mail-bevestigen');
+it('lets unverified owners into the app with a reminder to verify', function () {
+    [$shop, $owner] = shopWithOwner();
+    $owner->forceFill(['email_verified_at' => null])->save();
+
+    $this->actingAs($owner)->get('/app')->assertOk()->assertSee('Bevestig je e-mailadres');
 });
 
-it('lets verified users into the app', function () {
-    $this->actingAs(User::factory()->create())->get('/app')->assertOk()->assertSee('Vandaag');
+it('lets verified owners into the app without the reminder', function () {
+    [$shop, $owner] = shopWithOwner();
+
+    $this->actingAs($owner)->get('/app')->assertOk()->assertSee($shop->name)->assertDontSee('Bevestig je e-mailadres');
+});
+
+it('sends users without a shop to the onboarding', function () {
+    $this->actingAs(User::factory()->create())->get('/app')->assertRedirect('/aanmelden');
 });
 
 it('verifies the email address through the signed link', function () {

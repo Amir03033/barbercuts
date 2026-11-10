@@ -13,7 +13,7 @@ export async function expectNoHorizontalScroll(page) {
 /** Inputs zijn minimaal 16px, anders zoomt iOS in bij focus. */
 export async function expectInputsAtLeast16px(page) {
     const tooSmall = await page.evaluate(() =>
-        [...document.querySelectorAll('input:not([type=radio]):not([type=checkbox]):not([type=hidden]), select, textarea')]
+        [...document.querySelectorAll('input:not([type=radio]):not([type=checkbox]):not([type=hidden]):not([type=file]):not([type=color]), select, textarea')]
             .filter((element) => parseFloat(getComputedStyle(element).fontSize) < 16)
             .map((element) => element.name || element.id),
     );

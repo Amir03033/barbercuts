@@ -290,7 +290,7 @@ Test: `php artisan tinker --execute 'Mail::raw("Test", fn ($m) => $m->to("jij@ex
 
 ## 12. Back-ups
 
-Komt in fase 1 in de code (`spatie/laravel-backup`): dagelijks database + `storage/app` naar S3-compatible opslag
+Komt in de code zodra de VPS er staat (`spatie/laravel-backup`): dagelijks database + `storage/app` naar S3-compatible opslag
 in de EU (Scaleway of Hetzner), 30 dagen bewaren. Zet dan in `shared/.env` de `AWS_*`-gegevens van de bucket.
 Doe **maandelijks een terugzet-test** op staging.
 

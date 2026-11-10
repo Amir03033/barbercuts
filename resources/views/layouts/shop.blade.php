@@ -3,8 +3,8 @@
     Verwacht `$shop` (vanaf fase 1) of losse `$themeMode`, `$accentColor`, `$onAccentColor`.
 --}}
 @php
-    $themeMode = $shop->theme_mode ?? ($themeMode ?? 'light');
-    $accentColor = $shop->accent_color ?? ($accentColor ?? '#111827');
+    $themeMode = isset($shop) ? $shop->theme_mode->value : ($themeMode ?? 'light');
+    $accentColor = isset($shop) ? $shop->accent_color : ($accentColor ?? '#111827');
     $onAccentColor = isset($shop) ? $shop->onAccentColor() : ($onAccentColor ?? '#ffffff');
     $themeMode = in_array($themeMode, ['light', 'dark'], true) ? $themeMode : 'light';
     $accentColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $accentColor) ? $accentColor : '#111827';
