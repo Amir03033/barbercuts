@@ -32,6 +32,14 @@ trait PicksSlot
         return null;
     }
 
+    /**
+     * true: de klant boekt (raster, minimale boektermijn, maximum dagen). false: de kapper boekt.
+     */
+    protected function slotOnline(): bool
+    {
+        return true;
+    }
+
     public function updatedDate(): void
     {
         $this->time = '';
@@ -44,6 +52,10 @@ trait PicksSlot
 
     protected function maxDays(): int
     {
+        if (! $this->slotOnline()) {
+            return 366;
+        }
+
         $settings = ShopSetting::withoutGlobalScopes()->where('barbershop_id', $this->slotShop()->id)->first();
 
         return ($settings->max_days_ahead ?? 60) + 1;
@@ -69,6 +81,7 @@ trait PicksSlot
             $shop, $service, $this->slotStaff(),
             $today->toDateString(), $today->addDays(min($this->daysShown, $this->maxDays()) - 1)->toDateString(),
             $this->slotIgnore(),
+            $this->slotOnline(),
         );
 
         $days = [];
@@ -100,7 +113,7 @@ trait PicksSlot
         }
 
         $shop = $this->slotShop();
-        $slots = app(AvailabilityService::class)->slots($shop, $service, $this->slotStaff(), $this->date, $this->slotIgnore());
+        $slots = app(AvailabilityService::class)->slots($shop, $service, $this->slotStaff(), $this->date, $this->slotIgnore(), $this->slotOnline());
 
         return array_map(fn (CarbonImmutable $slot): string => $slot->setTimezone($shop->timezone)->format('H:i'), $slots);
     }

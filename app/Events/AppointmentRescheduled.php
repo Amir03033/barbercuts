@@ -10,5 +10,5 @@ class AppointmentRescheduled
 {
     use Dispatchable;
 
-    public function __construct(public Appointment $appointment, public CarbonInterface $previousStartsAt) {}
+    public function __construct(public Appointment $appointment, public CarbonInterface $previousStartsAt, public bool $byCustomer = false) {}
 }

@@ -24,7 +24,9 @@ export async function expectInputsAtLeast16px(page) {
 /** Zichtbare knoppen en links zijn minimaal 44px hoog. */
 export async function expectTapTargets(page) {
     const tooSmall = await page.evaluate(() =>
+        // Blokken in de tijdlijn van de agenda zijn zo hoog als de afspraak duurt (15 minuten = 24px) en tellen niet mee.
         [...document.querySelectorAll('a, button')]
+            .filter((element) => ! element.hasAttribute('data-timeline-item'))
             .filter((element) => {
                 const rect = element.getBoundingClientRect();
 

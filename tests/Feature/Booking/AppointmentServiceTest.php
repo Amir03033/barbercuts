@@ -318,7 +318,7 @@ it('does not mail a customer without an e-mail address', function () {
 
     $this->appointments->book(($this->data)(['customer' => new CustomerInput('Daan', '0612345678')]), null);
 
-    Notification::assertNothingSent();
+    Notification::assertNotSentTo(new AnonymousNotifiable, AppointmentConfirmed::class);
 });
 
 it('does not dispatch events when the booking fails', function () {

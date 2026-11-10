@@ -714,4 +714,14 @@ Aanbetaling activeren met Mollie Connect · reviews na een bezoek · wachtlijst 
 - **2026-11-10 — `/account` staat er in een eerste versie** (komende afspraken, geschiedenis, opnieuw boeken). Na inloggen gaat wie bij een zaak hoort naar `/app`, anderen naar `/account`.
 - **2026-11-10 — De toegangsstatus van de zaak (§7.7) wordt bij boeken nog niet gecontroleerd**; alleen `is_public`. Dat komt met `accessState()` in fase 4.
 - **2026-11-10 — `slots` is in Livewire 4 een gereserveerde naam in views.** De componenten `time-grid` en `slot-picker` gebruiken daarom de prop `times`.
+- **2026-11-10 — Meldingen voor de kapper gaan nu per mail, nog niet per push.** Bij een online boeking, annulering of verplaatsing door de klant krijgt de kapper een mail; heeft de kapper geen account, dan de eigenaar. Web push komt in fase 5, samen met push voor klanten.
+- **2026-11-10 — Vandaag:** de eigenaar ziet de dag van alle kappers, een kapper alleen de eigen dag. In de Agenda ziet iedereen alle agenda's (collega's alleen-lezen).
+- **2026-11-10 — Agenda "Iedereen":** de kolommen per kapper staan naast elkaar en scrollen op een telefoon horizontaal binnen de tijdlijn (de pagina zelf scrolt niet horizontaal). Standaard opent de agenda op de eigen kapper.
+- **2026-11-10 — Blokken in de tijdlijn zijn zo hoog als de afspraak duurt** (1,6 px per minuut; 15 minuten = 24px). Dat is lager dan de 44px voor tapdoelen; de mobiele test slaat deze blokken daarom over (`data-timeline-item`).
+- **2026-11-10 — Voltooien in 3 tikken:** afspraak → Voltooien → betaalmethode. De knop van de betaalmethode slaat meteen op; het bedrag is voorgevuld met de prijs.
+- **2026-11-10 — Nieuwe afspraak en verplaatsen delen één scherm.** De eerste dienst en de eigen kapper zijn voorgeselecteerd. Een kapper kan alleen zichzelf kiezen; de eigenaar kan bij verplaatsen ook een andere kapper kiezen.
+- **2026-11-10 — Grafiek per periode:** dag = per uur (07–21 uur), week en maand = per dag, jaar = per maand; de staven komen uit één query. "Terugkeer %" rekent over de 90 dagen tot het einde van de periode (of tot nu).
+- **2026-11-10 — CSV-export** gebruikt `;` als scheidingsteken en een BOM, zodat Excel het bestand goed opent; alleen voltooide afspraken.
+- **2026-11-10 — PWA:** `public/manifest.webmanifest`, iconen in `public/icons/` (zwart vlak met een witte "b", te vervangen zodra er een logo is), `public/sw.js` en `public/offline.html`. De service worker bewaart alleen `/build/*` en de iconen; pagina's komen altijd van het netwerk.
+- **2026-11-10 — Conditionele blokken met invoervelden krijgen een `wire:key`.** Zonder sleutel hergebruikt Livewire bij het wisselen van blok een veld (het zoekveld werd het naamveld bij "Nieuwe klant").
 

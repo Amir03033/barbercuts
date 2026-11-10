@@ -189,7 +189,7 @@ class AppointmentService
             $appointment->blocked_until = $newStartsAt->utc()->addMinutes($appointment->duration + $service->buffer_after);
             $appointment->save();
 
-            DB::afterCommit(fn () => event(new AppointmentRescheduled($appointment, $previous)));
+            DB::afterCommit(fn () => event(new AppointmentRescheduled($appointment, $previous, byCustomer: ! $byStaff)));
 
             return $appointment;
         });

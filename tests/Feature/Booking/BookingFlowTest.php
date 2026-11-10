@@ -9,6 +9,7 @@ use App\Models\ShopSetting;
 use App\Models\User;
 use App\Notifications\AppointmentConfirmed;
 use App\Support\CurrentShop;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
@@ -163,7 +164,7 @@ it('books as a guest with name and phone only and goes to the confirmation', fun
         ->and(Customer::withoutGlobalScopes()->firstOrFail()->only(['name', 'phone', 'email', 'user_id']))
         ->toBe(['name' => 'Daan de Vries', 'phone' => '+31612345678', 'email' => null, 'user_id' => null]);
 
-    Notification::assertNothingSent();
+    Notification::assertNotSentTo(new AnonymousNotifiable, AppointmentConfirmed::class);
 
     $this->get($appointment->manageUrl())->assertOk();
 });

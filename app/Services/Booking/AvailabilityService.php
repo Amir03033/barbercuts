@@ -102,6 +102,48 @@ class AvailabilityService
     }
 
     /**
+     * Werkblokken per kapper op één dag, voor de agenda (pauzes en vrije tijd vallen ertussen).
+     *
+     * @param  Collection<int, StaffMember>  $staff  op id
+     * @return array<int, list<array{0: CarbonImmutable, 1: CarbonImmutable}>> per kapper: [[van, tot]] in UTC
+     */
+    public function workBlocksForDay(Barbershop $shop, Collection $staff, string $date): array
+    {
+        $context = $this->buildContext($shop, $staff->keyBy('id'), $date, $date, null, false);
+        $blocks = [];
+
+        foreach ($context->staff as $member) {
+            $blocks[$member->id] = array_map(
+                fn (array $block): array => [CarbonImmutable::createFromTimestampUTC($block[0]), CarbonImmutable::createFromTimestampUTC($block[1])],
+                $this->workBlocks($context, $member->id, $date),
+            );
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * Beschikbare werkminuten van deze kappers in een periode, voor de bezettingsgraad (§7.5).
+     *
+     * @param  Collection<int, StaffMember>  $staff  op id
+     */
+    public function workMinutes(Barbershop $shop, Collection $staff, string $from, string $to): int
+    {
+        $context = $this->buildContext($shop, $staff->keyBy('id'), $from, $to, null, false);
+        $seconds = 0;
+
+        for ($day = CarbonImmutable::parse($from, $shop->timezone); $day->toDateString() <= $to; $day = $day->addDay()) {
+            foreach ($context->staff as $member) {
+                foreach ($this->workBlocks($context, $member->id, $day->toDateString()) as [$start, $end]) {
+                    $seconds += $end - $start;
+                }
+            }
+        }
+
+        return intdiv($seconds, 60);
+    }
+
+    /**
      * De actieve kappers die deze dienst doen. Geen koppeling voor de dienst = iedereen.
      *
      * @return Collection<int, StaffMember>
@@ -131,6 +173,14 @@ class AvailabilityService
             $eligible = $eligible->filter(fn (StaffMember $candidate): bool => $candidate->id === $staff->id);
         }
 
+        return $this->buildContext($shop, $eligible, $from, $to, $ignore, $online);
+    }
+
+    /**
+     * @param  Collection<int, StaffMember>  $eligible  kappers, op id
+     */
+    private function buildContext(Barbershop $shop, Collection $eligible, string $from, string $to, ?Appointment $ignore, bool $online): AvailabilityContext
+    {
         $staffIds = $eligible->keys()->all();
         $timezone = $shop->timezone;
         $rangeStart = CarbonImmutable::parse($from, $timezone)->startOfDay()->utc();
