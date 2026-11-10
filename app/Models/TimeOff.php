@@ -10,9 +10,14 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Vrij, vakantie, ziek of afwijkende uren. staff_member_id null = de hele zaak.
+ *
+ * @property Carbon $starts_at
+ * @property Carbon $ends_at
+ * @property TimeOffType $type
  */
 #[Table('time_off')]
 #[Fillable(['staff_member_id', 'starts_at', 'ends_at', 'type', 'reason'])]

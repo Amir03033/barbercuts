@@ -16,9 +16,16 @@ it('logs a user in with valid credentials', function () {
         ->set('password', 'password')
         ->call('login')
         ->assertHasNoErrors()
-        ->assertRedirect(route('app.today', absolute: false));
+        ->assertRedirect(route('account', absolute: false));
 
     $this->assertAuthenticatedAs($user);
+});
+
+it('sends owners and barbers to the app and customers to their account after login', function () {
+    [, $owner] = shopWithOwner();
+
+    Livewire::test(Login::class)->set('email', $owner->email)->set('password', 'password')->call('login')
+        ->assertRedirect(route('app.today', absolute: false));
 });
 
 it('rejects a wrong password with a Dutch message', function () {
@@ -53,7 +60,8 @@ it('redirects guests from the app to the login page', function () {
 });
 
 it('redirects logged in users away from the login page', function () {
-    $this->actingAs(User::factory()->create())->get('/inloggen')->assertRedirect('/app');
+    $this->actingAs(User::factory()->create())->get('/inloggen')->assertRedirect('/account');
+    $this->actingAs(shopWithOwner()[1])->get('/inloggen')->assertRedirect('/app');
 });
 
 it('logs a user out', function () {

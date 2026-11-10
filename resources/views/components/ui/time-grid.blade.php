@@ -1,23 +1,23 @@
 {{--
-    Tijden als chips. slots: ['09:00', '09:15', …] of gegroepeerd: ['Ochtend' => [...], 'Middag' => [...]].
+    Tijden als chips. times: ['09:00', '09:15', …] of gegroepeerd: ['Ochtend' => [...], 'Middag' => [...]].
     wire:model gaat naar de radio's.
 --}}
-@props(['slots' => [], 'name' => 'time', 'selected' => null])
+@props(['times' => [], 'name' => 'time', 'selected' => null])
 
 @php
     $model = $attributes->whereStartsWith('wire:model');
-    $groups = array_is_list($slots) ? ['' => $slots] : $slots;
+    $groups = array_is_list($times) ? ['' => $times] : $times;
 @endphp
 
 <div role="radiogroup" aria-label="Kies een tijd" {{ $attributes->whereDoesntStartWith('wire:model')->class('space-y-4') }}>
-    @foreach ($groups as $group => $times)
-        @continue(empty($times))
+    @foreach ($groups as $group => $groupTimes)
+        @continue(empty($groupTimes))
         <div wire:key="group-{{ $group }}">
             @if ($group !== '')
                 <p class="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">{{ $group }}</p>
             @endif
             <div class="grid grid-cols-4 gap-2">
-                @foreach ($times as $time)
+                @foreach ($groupTimes as $time)
                     <label class="relative cursor-pointer" wire:key="time-{{ $time }}">
                         <input type="radio" class="peer sr-only" name="{{ $name }}" value="{{ $time }}"
                             @checked($selected === $time) {{ $model }} />

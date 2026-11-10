@@ -1,13 +1,14 @@
-{{-- Rij in een lijst. Slots: leading (avatar/icoon), trailing (badge/bedrag). Met href wordt het een link met pijltje. --}}
+{{-- Rij in een lijst. Slots: leading (avatar/icoon), trailing (badge/bedrag). Met href een link, met wire:click een knop. --}}
 @props(['href' => null, 'title' => null, 'subtitle' => null, 'chevron' => null])
 
 @php
-    $tag = $href ? 'a' : 'div';
-    $chevron ??= (bool) $href;
+    $clickable = $attributes->has('wire:click') || $attributes->has('x-on:click');
+    $tag = $href ? 'a' : ($clickable ? 'button' : 'div');
+    $chevron ??= $href || $clickable;
 @endphp
 
-<{{ $tag }} @if ($href) href="{{ $href }}" wire:navigate @endif
-    {{ $attributes->class(['flex min-h-14 items-center gap-3 px-4 py-3', 'active:bg-surface' => $href]) }}>
+<{{ $tag }} @if ($href) href="{{ $href }}" wire:navigate @elseif ($clickable) type="button" @endif
+    {{ $attributes->class(['flex min-h-14 items-center gap-3 px-4 py-3', 'active:bg-surface' => $href || $clickable, 'w-full text-left' => $clickable]) }}>
     @isset($leading)
         <div class="shrink-0">{{ $leading }}</div>
     @endisset

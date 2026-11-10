@@ -70,7 +70,7 @@
     <x-ui.date-strip :days="$days" wire:model.live="date" :selected="$date" />
 
     <h2 class="{{ $section }}">Tijden</h2>
-    <x-ui.time-grid wire:model.live="time" :selected="$time" :slots="[
+    <x-ui.time-grid wire:model.live="time" :selected="$time" :times="[
         'Ochtend' => ['09:00', '09:15', '10:30', '11:45'],
         'Middag' => ['13:00', '13:15', '14:30', '15:00', '16:15'],
         'Avond' => ['18:00', '18:30'],

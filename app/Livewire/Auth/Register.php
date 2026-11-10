@@ -41,7 +41,8 @@ class Register extends Component
         Auth::login($user, remember: true);
         Session::regenerate();
 
-        $this->redirectRoute('verification.notice');
+        // Wie vanuit de boekflow komt, gaat daarheen terug; anders naar de bevestigingspagina.
+        $this->redirectIntended(default: route('verification.notice', absolute: false));
     }
 
     public function render(): View

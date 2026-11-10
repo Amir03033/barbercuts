@@ -17,7 +17,7 @@ class VerifyEmail extends Component
     public function mount(): void
     {
         if ($this->user()->hasVerifiedEmail()) {
-            $this->redirectRoute('app.today');
+            $this->redirect($this->user()->homeRoute());
         }
     }
 
@@ -26,7 +26,7 @@ class VerifyEmail extends Component
         $user = $this->user();
 
         if ($user->hasVerifiedEmail()) {
-            $this->redirectRoute('app.today');
+            $this->redirect($this->user()->homeRoute());
 
             return;
         }

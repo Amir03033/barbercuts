@@ -22,7 +22,7 @@ class BarbershopFactory extends Factory
         $name = fake()->unique()->company();
 
         return [
-            'slug' => Str::slug($name).'-'.fake()->unique()->numberBetween(100, 99999),
+            'slug' => Str::limit(Str::slug($name), 40, '').'-'.fake()->unique()->numberBetween(100, 99999),
             'name' => $name,
             'city' => fake()->city(),
             'phone' => '+316'.fake()->numerify('########'),

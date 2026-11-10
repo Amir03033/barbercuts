@@ -3,6 +3,7 @@
 use App\Http\Middleware\ResolveShopFromApp;
 use App\Http\Middleware\ResolveShopFromSlug;
 use App\Livewire\AcceptInvitation;
+use App\Livewire\Account;
 use App\Livewire\App\Appearance;
 use App\Livewire\App\More;
 use App\Livewire\App\OpeningHours;
@@ -19,8 +20,11 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Dev\UiShowcase;
 use App\Livewire\Home;
+use App\Livewire\ManageAppointment;
 use App\Livewire\Onboarding;
+use App\Livewire\Shop\Book as ShopBook;
 use App\Livewire\Shop\Show as ShopShow;
+use App\Models\Appointment;
 use App\Support\CurrentShop;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -49,6 +53,45 @@ Route::livewire('/uitnodiging/{staffMember}', AcceptInvitation::class)
 
 /*
 |--------------------------------------------------------------------------
+| Klanten: beheerlink (ook voor gasten) en account. Geen tenant in de URL (§6.3).
+|--------------------------------------------------------------------------
+*/
+Route::livewire('/afspraak/{token}', ManageAppointment::class)->where('token', '[A-Za-z0-9]{40}')->name('appointment.manage');
+
+Route::get('/afspraak/{token}/agenda.ics', function (string $token): Response {
+    $appointment = Appointment::withoutGlobalScopes()->with(['barbershop', 'staffMember'])->where('manage_token', $token)->firstOrFail();
+    $shop = $appointment->barbershop;
+    $escape = fn (string $text): string => addcslashes($text, ',;\\');
+    $stamp = fn ($date): string => $date->copy()->utc()->format('Ymd\\THis\\Z');
+
+    $lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//BarberCuts//NL',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        'UID:afspraak-'.$appointment->id.'@barbercuts.nl',
+        'DTSTAMP:'.$stamp(now()),
+        'DTSTART:'.$stamp($appointment->starts_at),
+        'DTEND:'.$stamp($appointment->ends_at),
+        'SUMMARY:'.$escape($appointment->service_name.' bij '.$shop->name),
+        'DESCRIPTION:'.$escape('Bij '.$appointment->staffMember->name.'. Verplaatsen of annuleren: '.$appointment->manageUrl()),
+        'LOCATION:'.$escape(collect([$shop->name, $shop->address, trim($shop->postal_code.' '.$shop->city)])->filter()->implode(', ')),
+        'URL:'.$appointment->manageUrl(),
+        'END:VEVENT',
+        'END:VCALENDAR',
+    ];
+
+    return response(implode("\r\n", $lines)."\r\n", 200, [
+        'Content-Type' => 'text/calendar; charset=utf-8',
+        'Content-Disposition' => 'attachment; filename="afspraak-'.$shop->slug.'.ics"',
+    ]);
+})->where('token', '[A-Za-z0-9]{40}')->name('appointment.ics');
+
+Route::livewire('/account', Account::class)->middleware('auth')->name('account');
+
+/*
+|--------------------------------------------------------------------------
 | Auth
 |--------------------------------------------------------------------------
 */
@@ -65,7 +108,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/e-mail-bevestigen/{id}/{hash}', function (EmailVerificationRequest $request): RedirectResponse {
         $request->fulfill();
 
-        return redirect()->route('app.today')->with('toast', 'Je e-mailadres is bevestigd.');
+        return redirect()->to($request->user()->homeRoute())->with('toast', 'Je e-mailadres is bevestigd.');
     })->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
 
     Route::post('/uitloggen', function (Request $request): RedirectResponse {
@@ -129,4 +172,5 @@ if (app()->environment('local')) {
 */
 Route::middleware(ResolveShopFromSlug::class)->group(function (): void {
     Route::livewire('/{slug}', ShopShow::class)->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('shop.show');
+    Route::livewire('/{slug}/boeken', ShopBook::class)->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('shop.book');
 });

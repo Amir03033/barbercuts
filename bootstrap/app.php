@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(fn (): string => route('login'));
-        $middleware->redirectUsersTo(fn (): string => route('app.today'));
+        $middleware->redirectUsersTo(fn (Request $request): string => $request->user()?->homeRoute() ?? route('home'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

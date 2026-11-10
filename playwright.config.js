@@ -30,6 +30,7 @@ export default defineConfig({
         command: `php artisan serve --host=127.0.0.1 --port=${port}`,
         url: `http://127.0.0.1:${port}/up`,
         reuseExistingServer: !process.env.CI,
-        env: { APP_ENV: 'local' },
+        // Alle tests komen van hetzelfde IP-adres: de limiet per IP zou de boektests anders blokkeren.
+        env: { APP_ENV: 'local', BOOKING_MAX_PER_IP_PER_HOUR: '100000' },
     },
 });

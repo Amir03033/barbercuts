@@ -43,3 +43,36 @@ export async function screenshot(page, testInfo, phase, name) {
         fullPage: true,
     });
 }
+
+/**
+ * Meld via de onboarding een nieuwe zaak aan (solo-kapper, standaardtijden en -diensten) en geef de slug terug.
+ * Daarna is de eigenaar ingelogd; gebruik page.context().clearCookies() om als gast verder te gaan.
+ */
+export async function createShop(page, id) {
+    const slug = `kapper-${id}`;
+
+    await page.goto('/aanmelden');
+    await page.getByLabel('Je naam').fill('Jay Fontein');
+    await page.getByLabel('E-mailadres').fill(`jay-${id}@example.com`);
+    await page.getByLabel('Wachtwoord').fill('geheim-wachtwoord-123');
+    await page.getByRole('button', { name: 'Verder' }).click();
+
+    await page.getByLabel('Naam van je zaak').fill(`Kapper ${id}`);
+    await expect(page.getByLabel('Je boekingslink')).toHaveValue(slug);
+    await page.getByLabel('Plaats').fill('Utrecht');
+    await page.getByLabel('Telefoonnummer van de zaak').fill('0612345678');
+    await page.getByRole('button', { name: 'Verder' }).click();
+
+    await expect(page.getByRole('heading', { name: /Werk je alleen/ })).toBeVisible();
+    await page.getByRole('button', { name: 'Verder' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Wanneer ben je open?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Verder' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Je diensten' })).toBeVisible();
+    await page.getByRole('button', { name: 'Klaar' }).click();
+
+    await expect(page.getByRole('heading', { name: /staat online/ })).toBeVisible();
+
+    return slug;
+}

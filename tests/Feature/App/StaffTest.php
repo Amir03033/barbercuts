@@ -19,7 +19,7 @@ use Livewire\Livewire;
 
 beforeEach(function () {
     [$this->shop, $this->owner] = shopWithOwner();
-    $this->staff = StaffMember::factory()->create(['barbershop_id' => $this->shop->id, 'name' => 'Sam']);
+    $this->staff = StaffMember::factory()->create(['barbershop_id' => $this->shop->id, 'name' => 'Sam', 'color' => '#2563eb']);
 });
 
 it('adds a barber who works during the opening hours of the shop', function () {

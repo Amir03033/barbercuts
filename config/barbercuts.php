@@ -23,6 +23,16 @@ return [
         'deposits' => (bool) env('FEATURE_DEPOSITS', false),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Rate limiting op online boeken (fase 2)
+    |--------------------------------------------------------------------------
+    */
+    'booking' => [
+        'max_per_ip_per_hour' => (int) env('BOOKING_MAX_PER_IP_PER_HOUR', 10),
+        'max_per_phone_per_hour' => (int) env('BOOKING_MAX_PER_PHONE_PER_HOUR', 5),
+    ],
+
     'sms' => [
         'provider' => env('SMS_PROVIDER', 'log'),
     ],

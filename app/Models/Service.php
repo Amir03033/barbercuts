@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property DepositType $deposit_type
+ */
 #[Fillable(['name', 'description', 'duration', 'price_cents', 'buffer_after', 'is_active', 'sort_order'])]
 class Service extends Model
 {

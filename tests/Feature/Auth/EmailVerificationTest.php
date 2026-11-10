@@ -32,7 +32,7 @@ it('verifies the email address through the signed link', function () {
         'hash' => sha1($user->email),
     ]);
 
-    $this->actingAs($user)->get($url)->assertRedirect('/app');
+    $this->actingAs($user)->get($url)->assertRedirect('/account');
 
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
 });

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -44,7 +45,10 @@ class Login extends Component
         RateLimiter::clear($this->throttleKey());
         Session::regenerate();
 
-        $this->redirectIntended(default: route('app.today', absolute: false));
+        /** @var User $user */
+        $user = Auth::user();
+
+        $this->redirectIntended(default: $user->homeRoute());
     }
 
     private function ensureIsNotRateLimited(): void
