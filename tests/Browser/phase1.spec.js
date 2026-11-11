@@ -82,7 +82,7 @@ test('een nieuwe zaak meldt zich aan op een telefoon en richt de zaak in', async
 
     // Kapper toevoegen via een Livewire-actie: de zaak moet ook bij updaterequests bekend zijn
     await page.getByRole('link', { name: 'Kappers' }).click();
-    await expect(page.getByText('Jay Fontein')).toBeVisible();
+    await expect(page.getByRole('main').getByText('Jay Fontein')).toBeVisible();
     await page.getByRole('button', { name: 'Kapper toevoegen' }).click();
     const sheet = page.getByRole('dialog', { name: 'Kapper toevoegen' });
     await sheet.getByLabel('Naam').fill('Mo');

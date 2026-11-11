@@ -27,6 +27,7 @@ test('de kapper boekt telefonisch, neemt een inloop aan en rekent af op een tele
 
     const started = Date.now();
     await page.getByRole('button', { name: 'Nieuwe klant' }).click();
+    await expect(page.getByRole('button', { name: 'Toch een bestaande klant zoeken' })).toBeVisible();
     await page.getByLabel('Naam').fill('Daan de Vries');
     await page.getByLabel('Telefoonnummer').fill('0612345678');
 

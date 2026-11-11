@@ -21,7 +21,7 @@
                     <label class="relative cursor-pointer" wire:key="time-{{ $time }}">
                         <input type="radio" class="peer sr-only" name="{{ $name }}" value="{{ $time }}"
                             @checked($selected === $time) {{ $model }} />
-                        <span class="flex min-h-11 items-center justify-center rounded-pill border border-border bg-bg text-sm font-medium text-text tabular-nums transition peer-checked:border-accent peer-checked:bg-accent peer-checked:text-on-accent peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2">{{ $time }}</span>
+                        <span class="flex min-h-11 items-center justify-center rounded-pill border border-border-strong bg-card text-sm font-medium text-text tabular-nums transition-[background-color,border-color,color,transform] duration-150 ease-out-soft hover:border-text/50 active:scale-[0.97] peer-checked:border-accent peer-checked:bg-accent peer-checked:text-on-accent peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--focus)] peer-focus-visible:ring-offset-2">{{ $time }}</span>
                     </label>
                 @endforeach
             </div>

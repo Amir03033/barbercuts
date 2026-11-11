@@ -4,7 +4,7 @@
 <section {{ $attributes->class('space-y-3') }}>
     @if ($title)
         <div>
-            <h2 class="text-base font-semibold text-text">{{ $title }}</h2>
+            <h2 class="text-base font-semibold text-text lg:text-sm lg:tracking-wide lg:uppercase lg:text-muted">{{ $title }}</h2>
             @if ($text)
                 <p class="text-sm text-muted">{{ $text }}</p>
             @endif

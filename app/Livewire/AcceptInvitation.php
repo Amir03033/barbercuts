@@ -20,7 +20,7 @@ use Livewire\Component;
  * Een kapper accepteert de uitnodiging via de gesigneerde link uit de mail (§8).
  * Deze pagina heeft geen tenant: de kapper wordt expliciet op id + e-mailadres opgezocht.
  */
-#[Layout('layouts::platform')]
+#[Layout('layouts::auth')]
 #[Title('Uitnodiging')]
 class AcceptInvitation extends Component
 {

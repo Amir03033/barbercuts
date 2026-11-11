@@ -20,7 +20,7 @@
         <label class="relative {{ $compact ? 'min-w-0 flex-1' : 'shrink-0' }} snap-start {{ $disabled ? '' : 'cursor-pointer' }}" wire:key="day-{{ $day['date'] }}">
             <input type="radio" class="peer sr-only" name="{{ $name }}" value="{{ $day['date'] }}"
                 @checked($selected === $day['date']) @disabled($disabled) {{ $model }} />
-            <span class="flex {{ $compact ? 'h-14 w-full' : 'h-[4.5rem] w-14' }} flex-col items-center justify-center rounded-card border border-border bg-bg text-text transition peer-checked:border-accent peer-checked:bg-accent peer-checked:text-on-accent peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 peer-disabled:border-transparent peer-disabled:bg-surface peer-disabled:text-muted peer-disabled:opacity-60">
+            <span class="flex {{ $compact ? 'h-14 w-full' : 'h-[4.5rem] w-14' }} flex-col items-center justify-center rounded-card border border-border-strong bg-card text-text transition-[background-color,border-color,color,transform] duration-150 ease-out-soft hover:border-text/50 active:scale-[0.97] peer-checked:border-accent peer-checked:bg-accent peer-checked:text-on-accent peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--focus)] peer-focus-visible:ring-offset-2 peer-disabled:border-transparent peer-disabled:bg-surface peer-disabled:text-muted peer-disabled:opacity-60">
                 <span class="text-xs font-medium opacity-70">{{ $day['date'] === $today && ! $compact ? 'nu' : rtrim($date->isoFormat('dd'), '.') }}</span>
                 <span class="text-lg font-bold leading-6 tabular-nums">{{ $date->day }}</span>
                 @unless ($compact)

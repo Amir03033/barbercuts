@@ -9,7 +9,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-#[Layout('layouts::platform')]
+#[Layout('layouts::auth')]
 #[Title('Wachtwoord vergeten')]
 class ForgotPassword extends Component
 {

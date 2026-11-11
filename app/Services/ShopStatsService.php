@@ -187,6 +187,84 @@ class ShopStatsService
     }
 
     /**
+     * Aantal afspraken per status in een periode (voor de statusverdeling op het dashboard).
+     *
+     * @return array<string, int> status => aantal (scheduled, completed, cancelled, no_show)
+     */
+    public function statusBreakdown(Barbershop $shop, User $viewer, Period $period, ?int $requestedStaffId = null): array
+    {
+        $scope = $this->scopeFor($shop, $viewer, $requestedStaffId);
+
+        $counts = $this->inPeriod($shop, $scope, $period)
+            ->selectRaw('status, COUNT(*) AS total')
+            ->groupBy('status')
+            ->toBase()
+            ->pluck('total', 'status')
+            ->map(fn (mixed $total): int => (int) $total)
+            ->all();
+
+        return [
+            'scheduled' => $counts[AppointmentStatus::Scheduled->value] ?? 0,
+            'completed' => $counts[AppointmentStatus::Completed->value] ?? 0,
+            'cancelled' => $counts[AppointmentStatus::Cancelled->value] ?? 0,
+            'no_show' => $counts[AppointmentStatus::NoShow->value] ?? 0,
+        ];
+    }
+
+    /**
+     * Alle afspraken in een periode, behalve geannuleerde (voor "afspraken deze maand").
+     */
+    public function appointmentCount(Barbershop $shop, User $viewer, Period $period): int
+    {
+        return $this->inPeriod($shop, $this->scopeFor($shop, $viewer), $period)
+            ->where('status', '!=', AppointmentStatus::Cancelled->value)
+            ->count();
+    }
+
+    /**
+     * Recente activiteit: nieuwe afspraken, voltooide, geannuleerde en no-shows, de nieuwste eerst.
+     * Een kapper ziet alleen de eigen afspraken, de eigenaar die van de hele zaak.
+     *
+     * @return list<array{appointment: Appointment, event: string, tone: string, icon: string, at: CarbonImmutable}>
+     */
+    public function recentActivity(Barbershop $shop, User $viewer, int $limit = 8): array
+    {
+        return $this->base($shop, $this->scopeFor($shop, $viewer))
+            ->with(['customer', 'staffMember'])
+            ->orderByDesc('updated_at')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get()
+            ->map(function (Appointment $appointment): array {
+                [$event, $tone, $icon] = match ($appointment->status) {
+                    AppointmentStatus::Completed => ['Voltooid · '.money((int) $appointment->amount_paid_cents), 'completed', 'check'],
+                    AppointmentStatus::Cancelled => ['Geannuleerd'.($appointment->cancelled_by?->value === 'customer' ? ' door de klant' : ''), 'cancelled', 'x'],
+                    AppointmentStatus::NoShow => ['No-show', 'no_show', 'alert'],
+                    default => [
+                        $appointment->updated_at?->equalTo($appointment->created_at) === true
+                            ? match ($appointment->source->value) {
+                                'online' => 'Nieuwe online afspraak',
+                                'walk_in' => 'Inloop',
+                                default => 'Nieuwe afspraak',
+                            }
+                            : 'Afspraak gewijzigd',
+                        'scheduled',
+                        'calendar',
+                    ],
+                };
+
+                return [
+                    'appointment' => $appointment,
+                    'event' => $event,
+                    'tone' => $tone,
+                    'icon' => $icon,
+                    'at' => CarbonImmutable::instance($appointment->updated_at ?? $appointment->created_at),
+                ];
+            })
+            ->all();
+    }
+
+    /**
      * Totale besteding van een klant: de eigenaar ziet alles, een kapper alleen wat bij hem is besteed.
      */
     public function customerSpend(Barbershop $shop, User $viewer, Customer $customer): int

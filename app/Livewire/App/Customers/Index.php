@@ -13,7 +13,7 @@ use Livewire\Component;
 /**
  * Klanten (§9.1): sticky zoekbalk en een lijst met naam en laatste bezoek.
  */
-#[Layout('layouts::app', ['active' => 'customers'])]
+#[Layout('layouts::app', ['active' => 'customers', 'wide' => true])]
 #[Title('Klanten')]
 class Index extends Component
 {

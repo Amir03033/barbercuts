@@ -6,29 +6,40 @@
 
 /*
 |--------------------------------------------------------------------------
-| Design tokens (docs/BOUWOPDRACHT.md §10)
+| Ontwerpsysteem BarberCuts
 |--------------------------------------------------------------------------
-| Kleuren verwijzen naar CSS-variabelen, zodat de publieke pagina's van een
-| zaak (data-theme + --accent) dezelfde componenten kunnen gebruiken.
+| Zwart, houtskool en gebroken wit, met champagne-goud als spaarzaam accent.
+| Goud is voor accenten (actieve staat, grafieken, merk); lopende tekst blijft inkt of --gold-ink,
+| zodat het contrast ≥ 4,5:1 blijft. De pagina's van een zaak overschrijven --accent en data-theme (B2),
+| dus componenten gebruiken altijd de tokens hieronder en nooit vaste kleuren voor knoppen of selecties.
 */
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
 
-    /* Kleuren */
+    /* Kleuren (semantisch; de waarden staan in :root en [data-theme]) */
     --color-bg: var(--bc-bg);
+    --color-card: var(--bc-card);
     --color-surface: var(--bc-surface);
     --color-border: var(--bc-border);
+    --color-border-strong: var(--bc-border-strong);
     --color-text: var(--bc-text);
     --color-muted: var(--bc-muted);
-    --color-primary: #111114;
+    --color-primary: #121214;
     --color-accent: var(--accent);
     --color-on-accent: var(--on-accent);
 
-    --color-scheduled: #2563eb;
-    --color-completed: #16a34a;
-    --color-cancelled: #9ca3af;
-    --color-no-show: #dc2626;
-    --color-danger: #dc2626;
+    --color-ink: #121214;
+    --color-charcoal: #18181b;
+    --color-charcoal-2: #212125;
+    --color-gold: var(--bc-gold);
+    --color-gold-soft: var(--bc-gold-soft);
+    --color-gold-ink: var(--bc-gold-ink);
+
+    --color-scheduled: #2f5fd0;
+    --color-completed: #1f8a4c;
+    --color-cancelled: #9a9890;
+    --color-no-show: #c43d3d;
+    --color-danger: #c43d3d;
 
     /* Typografie: 13 · 15 · 17 · 20, display 32 */
     --text-xs: 0.8125rem;
@@ -42,42 +53,77 @@
     --text-display: 2rem;
     --text-display--line-height: 2.375rem;
 
-    /* Radius: 12px voor kaarten en inputs, 999px voor chips */
-    --radius-card: 0.75rem;
+    /* Vorm: 14px voor kaarten, 12px voor velden, pillen voor chips */
+    --radius-card: 0.875rem;
+    --radius-input: 0.75rem;
     --radius-pill: 999px;
 
-    /* Eén zachte schaduw */
-    --shadow-soft: 0 1px 2px rgb(17 17 20 / 0.04), 0 8px 24px rgb(17 17 20 / 0.06);
+    /* Schaduwen: bijna onzichtbaar in rust, merkbaar bij zweven */
+    --shadow-soft: 0 1px 2px rgb(18 18 20 / 0.05), 0 0 0 1px rgb(18 18 20 / 0.02);
+    --shadow-lift: 0 8px 24px -8px rgb(18 18 20 / 0.14), 0 2px 6px rgb(18 18 20 / 0.05);
+    --shadow-pop: 0 18px 48px -12px rgb(18 18 20 / 0.28), 0 4px 12px rgb(18 18 20 / 0.08);
 
-    /* Hoogte van de bottom nav, gebruikt voor padding en toasts */
-    --spacing-nav: 4rem;
+    /* Beweging */
+    --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+
+    --spacing-nav: 4.25rem;
+    --spacing-sidebar: 15rem;
+    --spacing-sidebar-collapsed: 4.5rem;
+
+    --animate-page-in: page-in 260ms var(--ease-out-soft) backwards;
+    --animate-fade-up: fade-up 280ms var(--ease-out-soft) backwards;
+    --animate-pop-in: pop-in 200ms var(--ease-out-soft) both;
+    --animate-shimmer: shimmer 1.6s linear infinite;
+    --animate-grow: grow 700ms var(--ease-out-soft) both;
+    --animate-draw: draw 1100ms var(--ease-out-soft) both;
+    --animate-pulse-dot: pulse-dot 2.2s var(--ease-in-out-soft) infinite;
+    --animate-sheet-up: sheet-up 320ms var(--ease-out-soft) both;
+    --animate-dialog-in: dialog-in 220ms var(--ease-out-soft) both;
+    --animate-fade-in: fade-in 200ms ease-out both;
 }
 
 :root {
-    --bc-bg: #ffffff;
-    --bc-surface: #f7f7f8;
-    --bc-border: #e7e7ea;
-    --bc-text: #111114;
-    --bc-muted: #6b6b76;
-    --accent: #111114;
+    --bc-bg: #f7f6f3;
+    --bc-card: #ffffff;
+    --bc-surface: #f1efea;
+    --bc-border: #e7e4dd;
+    --bc-border-strong: #d5d1c7;
+    --bc-text: #121214;
+    --bc-muted: #6b6963;
+    --bc-gold: #b08d4f;
+    --bc-gold-soft: #f3ead6;
+    --bc-gold-ink: #7d5f27;
+    --accent: #121214;
     --on-accent: #ffffff;
+    --focus: var(--bc-gold);
     color-scheme: light;
 }
 
 /* Donker thema: alleen op de publieke pagina's van een zaak (B2) */
 [data-theme='dark'] {
-    --bc-bg: #0f0f12;
-    --bc-surface: #1a1a1f;
-    --bc-border: #2c2c33;
-    --bc-text: #f5f5f7;
-    --bc-muted: #a1a1ad;
+    --bc-bg: #0e0e10;
+    --bc-card: #17171a;
+    --bc-surface: #1e1e22;
+    --bc-border: #2b2b31;
+    --bc-border-strong: #3a3a42;
+    --bc-text: #f5f4f1;
+    --bc-muted: #a3a19b;
+    --bc-gold-soft: #2a2417;
+    --bc-gold-ink: #d9bd86;
     color-scheme: dark;
+}
+
+/* Pagina's van een zaak: de focusring volgt de kleur van de zaak */
+[data-theme] {
+    --focus: var(--accent);
 }
 
 @layer base {
     html {
         -webkit-text-size-adjust: 100%;
         -webkit-tap-highlight-color: transparent;
+        scroll-behavior: smooth;
     }
 
     body {
@@ -85,12 +131,26 @@
         color: var(--color-text);
         font-size: var(--text-sm);
         line-height: var(--text-sm--line-height);
+        font-feature-settings: 'cv11', 'ss01', 'calt';
         -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    h1,
+    h2,
+    h3 {
+        letter-spacing: -0.015em;
+    }
+
+    ::selection {
+        background: var(--bc-gold-soft);
+        color: var(--color-text);
     }
 
     :focus-visible {
-        outline: 2px solid var(--color-accent);
+        outline: 2px solid var(--focus);
         outline-offset: 2px;
+        border-radius: 6px;
     }
 
     [x-cloak] {
@@ -115,6 +175,133 @@
     .no-scrollbar::-webkit-scrollbar {
         display: none;
     }
+
+    /* Cijfers die netjes onder elkaar staan */
+    .tnum {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Een fijne gouden lijn als merkaccent */
+    .gold-rule {
+        background: linear-gradient(90deg, transparent, var(--bc-gold), transparent);
+        height: 1px;
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Beweging (150–300 ms, zachte easing). Alles valt weg bij prefers-reduced-motion.
+|--------------------------------------------------------------------------
+*/
+@keyframes page-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}
+
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+}
+
+@keyframes pop-in {
+    from {
+        opacity: 0;
+        transform: scale(0.97) translateY(-4px);
+    }
+}
+
+@keyframes shimmer {
+    from {
+        background-position: -200% 0;
+    }
+
+    to {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes grow {
+    from {
+        transform: scaleY(0);
+    }
+}
+
+@keyframes draw {
+    from {
+        stroke-dashoffset: var(--len, 1000);
+    }
+}
+
+@keyframes sheet-up {
+    from {
+        transform: translateY(100%);
+    }
+}
+
+@keyframes dialog-in {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(8px);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes pulse-dot {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgb(31 138 76 / 0.35);
+    }
+
+    50% {
+        box-shadow: 0 0 0 5px rgb(31 138 76 / 0);
+    }
+}
+
+/* Elke pagina schuift zacht binnen; met wire:navigate speelt dit bij elke paginawissel */
+main > * {
+    animation: var(--animate-page-in);
+}
+
+/* Lijsten en kaarten komen na elkaar binnen */
+.stagger > * {
+    animation: var(--animate-fade-up);
+}
+
+.stagger > *:nth-child(2) {
+    animation-delay: 40ms;
+}
+
+.stagger > *:nth-child(3) {
+    animation-delay: 80ms;
+}
+
+.stagger > *:nth-child(4) {
+    animation-delay: 120ms;
+}
+
+.stagger > *:nth-child(n + 5) {
+    animation-delay: 160ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 @layer components {
@@ -124,33 +311,77 @@
         width: 100%;
         min-height: 3rem;
         padding: 0.75rem 0.875rem;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-card);
-        background-color: var(--color-bg);
+        border: 1px solid var(--color-border-strong);
+        border-radius: var(--radius-input);
+        background-color: var(--color-card);
         color: var(--color-text);
         font-size: var(--text-base);
         line-height: var(--text-base--line-height);
         appearance: none;
-        transition: border-color 0.15s;
+        transition:
+            border-color 150ms var(--ease-out-soft),
+            box-shadow 150ms var(--ease-out-soft),
+            background-color 150ms var(--ease-out-soft);
+    }
+
+    @media (min-width: 1024px) {
+        .bc-input {
+            min-height: 2.75rem;
+            padding-block: 0.625rem;
+        }
     }
 
     .bc-input::placeholder {
         color: var(--color-muted);
-        opacity: 0.7;
+        opacity: 0.65;
+    }
+
+    .bc-input:hover:not(:disabled) {
+        border-color: color-mix(in srgb, var(--color-text) 35%, var(--color-border));
     }
 
     .bc-input:focus {
         outline: none;
         border-color: var(--color-text);
-        box-shadow: 0 0 0 1px var(--color-text);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--focus) 22%, transparent);
     }
 
     .bc-input[aria-invalid='true'] {
         border-color: var(--color-danger);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-danger) 12%, transparent);
     }
 
     .bc-input:disabled {
         background-color: var(--color-surface);
         color: var(--color-muted);
+    }
+
+    /* Skeleton: een rustige glans over een vlak */
+    .bc-skeleton {
+        background: linear-gradient(
+            100deg,
+            var(--color-surface) 30%,
+            color-mix(in srgb, var(--color-card) 70%, var(--color-surface)) 50%,
+            var(--color-surface) 70%
+        );
+        background-size: 200% 100%;
+        animation: var(--animate-shimmer);
+        border-radius: var(--radius-input);
+    }
+
+    /* Kaart die zacht omhoog komt bij zweven (alleen met een aanwijsapparaat) */
+    @media (hover: hover) {
+        .bc-lift {
+            transition:
+                transform 220ms var(--ease-out-soft),
+                box-shadow 220ms var(--ease-out-soft),
+                border-color 220ms var(--ease-out-soft);
+        }
+
+        .bc-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lift);
+            border-color: var(--color-border-strong);
+        }
     }
 }

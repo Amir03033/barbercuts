@@ -16,7 +16,7 @@ use Livewire\Component;
  * Omzet (§9.1 en §7.5): één groot getal met het verschil met de vorige periode, een staafgrafiek, KPI-tegels
  * en voor de eigenaar een lijst per kapper. Wat de kijker mag zien bepaalt ShopStatsService (§6.4).
  */
-#[Layout('layouts::app', ['active' => 'more'])]
+#[Layout('layouts::app', ['active' => 'more', 'wide' => true])]
 #[Title('Omzet')]
 class Revenue extends Component
 {

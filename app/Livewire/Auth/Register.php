@@ -12,7 +12,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('layouts::platform')]
+#[Layout('layouts::auth')]
 #[Title('Account maken')]
 class Register extends Component
 {

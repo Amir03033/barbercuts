@@ -5,13 +5,13 @@
     @include('layouts.partials.head')
 </head>
 <body class="flex min-h-dvh flex-col bg-bg font-sans text-text">
-    <header class="pt-safe">
-        <div class="mx-auto flex min-h-14 max-w-5xl items-center justify-between px-4">
-            <x-brand :href="route('home')" />
-            <nav aria-label="Hoofdmenu" class="flex items-center gap-1">
-                <x-ui.button :href="route('pricing')" variant="ghost" size="sm" wire:navigate class="hidden sm:inline-flex">Prijzen</x-ui.button>
+    <header class="sticky top-0 z-30 border-b border-border/70 bg-bg/80 pt-safe backdrop-blur-xl">
+        <div class="mx-auto flex min-h-14 max-w-5xl items-center justify-between gap-2 px-4">
+            <x-brand :href="route('home')" class="shrink-0" />
+            <nav aria-label="Hoofdmenu" class="flex min-w-0 items-center gap-1">
+                <x-ui.button :href="route('pricing')" variant="ghost" size="sm" wire:navigate class="max-sm:hidden!">Prijzen</x-ui.button>
                 @auth
-                    <x-ui.button :href="auth()->user()->homeRoute()" variant="ghost" size="sm" wire:navigate>Mijn account</x-ui.button>
+                    <x-ui.button :href="auth()->user()->homeRoute()" variant="ghost" size="sm" wire:navigate class="max-sm:hidden!">Account</x-ui.button>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <x-ui.button type="submit" variant="ghost" size="sm">Uitloggen</x-ui.button>

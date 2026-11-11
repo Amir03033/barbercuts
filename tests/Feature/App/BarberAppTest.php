@@ -57,9 +57,11 @@ it('shows the owner the day of every barber with the next appointment highlighte
     ($this->appointment)('2026-11-18 09:00', customer: Customer::factory()->create(['barbershop_id' => $this->shop->id, 'name' => 'Morgen Pas']));
 
     $this->actingAs($this->owner)->get('/app')->assertOk()
-        ->assertSeeInOrder(['Eerstvolgende', 'Yusuf Kaya', 'Vandaag', 'Daan de Vries', 'Yusuf Kaya'])
-        ->assertDontSee('Afgezegd')
-        ->assertDontSee('Morgen Pas');
+        ->assertSeeInOrder(['Eerstvolgende', 'Yusuf Kaya', 'Vandaag', 'Daan de Vries', 'Yusuf Kaya']);
+
+    // De tijdlijn van vandaag bevat geen geannuleerde en geen afspraken van een andere dag (die staan wel in de recente activiteit).
+    actingInShop($this->owner, $this->shop);
+    Livewire::test(Today::class)->assertViewHas('appointments', fn ($appointments) => $appointments->pluck('customer.name')->sort()->values()->all() === ['Daan de Vries', 'Yusuf Kaya']);
 });
 
 it('shows a barber only the own day', function () {
@@ -134,7 +136,7 @@ it('does not offer completing before the appointment has started', function () {
 
     Livewire::test(Today::class)
         ->call('selectAppointment', $appointment->id)
-        ->assertDontSee('Voltooien')->assertDontSee('No-show')
+        ->assertDontSee('wire:click="showSheet(\'complete\')"', false)->assertDontSee('wire:click="markNoShow"', false)
         ->assertSee('Verplaatsen')->assertSee('Annuleren')->assertSee('Bellen')->assertSee('WhatsApp')
         ->call('completeAppointment', 'pin');
 
@@ -483,4 +485,21 @@ it('ships a manifest, icons and a service worker that never caches pages', funct
         ->and(file_exists(public_path('offline.html')))->toBeTrue();
 
     $this->get('/')->assertSee('rel="manifest"', false)->assertSee("serviceWorker.register('/sw.js')", false);
+});
+
+it('shows the week and month views and opens a day from them', function () {
+    ($this->appointment)('2026-11-18 11:00', customer: Customer::factory()->create(['barbershop_id' => $this->shop->id, 'name' => 'Woensdag Klant']));
+    ($this->appointment)('2026-12-02 10:00', customer: Customer::factory()->create(['barbershop_id' => $this->shop->id, 'name' => 'Volgende Maand']));
+    actingInShop($this->samUser, $this->shop);
+
+    Livewire::test(Calendar::class)
+        ->set('view', 'week')
+        ->assertSee('Week 47')->assertSee('11:00 Woensdag Klant')->assertDontSee('Volgende Maand')
+        ->call('shift', 1)->assertSet('date', '2026-11-24')
+        ->set('view', 'month')
+        ->assertSee('November 2026')->assertSee('1 afspraak')
+        ->call('shift', 1)->assertSet('date', '2026-12-24')
+        ->call('selectDay', '2026-12-02')
+        ->assertSet('view', 'day')->assertSet('date', '2026-12-02')->assertSee('10:00 Volgende Maand')
+        ->call('selectDay', 'rommel')->assertSet('date', '2026-12-02');
 });

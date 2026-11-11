@@ -16,8 +16,8 @@
     {{ $slot }}
 
     @if ($error)
-        <p id="{{ $for }}-error" class="text-xs text-danger" role="alert">{{ $error }}</p>
+        <p id="{{ $for }}-error" class="flex items-center gap-1 text-xs text-danger" role="alert"><x-ui.icon name="alert" size="14" />{{ $error }}</p>
     @elseif ($hint)
-        <p id="{{ $for }}-hint" class="text-xs text-muted">{{ $hint }}</p>
+        <p id="{{ $for }}-hint" class="text-xs text-muted [overflow-wrap:anywhere]">{{ $hint }}</p>
     @endif
 </div>

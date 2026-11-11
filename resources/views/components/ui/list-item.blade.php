@@ -8,17 +8,17 @@
 @endphp
 
 <{{ $tag }} @if ($href) href="{{ $href }}" wire:navigate @elseif ($clickable) type="button" @endif
-    {{ $attributes->class(['flex min-h-14 items-center gap-3 px-4 py-3', 'active:bg-surface' => $href || $clickable, 'w-full text-left' => $clickable]) }}>
+    {{ $attributes->class(['group flex min-h-14 items-center gap-3 px-4 py-3 transition-colors duration-150', 'hover:bg-surface/70 active:bg-surface' => $href || $clickable, 'w-full text-left' => $clickable]) }}>
     @isset($leading)
         <div class="shrink-0">{{ $leading }}</div>
     @endisset
 
     <div class="min-w-0 flex-1">
         @if ($title)
-            <p class="truncate text-base font-medium text-text">{{ $title }}</p>
+            <p class="truncate text-base font-medium text-text lg:text-sm">{{ $title }}</p>
         @endif
         @if ($subtitle)
-            <p class="truncate text-sm text-muted">{{ $subtitle }}</p>
+            <p class="truncate text-sm text-muted lg:text-xs">{{ $subtitle }}</p>
         @endif
         {{ $slot }}
     </div>
@@ -28,6 +28,6 @@
     @endisset
 
     @if ($chevron)
-        <x-ui.icon name="chevron-right" size="20" class="text-muted" />
+        <x-ui.icon name="chevron-right" size="20" class="text-muted/70 transition-transform duration-200 ease-out-soft group-hover:translate-x-0.5" />
     @endif
 </{{ $tag }}>

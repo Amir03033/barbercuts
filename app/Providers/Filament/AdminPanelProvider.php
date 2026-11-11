@@ -34,7 +34,8 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->profile()
             ->darkMode(false)
-            ->colors(['primary' => Color::Slate])
+            ->colors(['primary' => Color::hex('#b08d4f'), 'gray' => Color::Zinc])
+            ->font('Inter')
             ->multiFactorAuthentication([
                 AppAuthentication::make()->recoverable(),
             ], isRequired: true)

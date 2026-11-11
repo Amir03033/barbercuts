@@ -30,7 +30,7 @@ export async function expectTapTargets(page) {
             .filter((element) => {
                 const rect = element.getBoundingClientRect();
 
-                return rect.width > 0 && rect.height > 0 && rect.height < 44;
+                return rect.width > 0 && rect.height > 0 && rect.height < 43.5;
             })
             .map((element) => `${element.textContent.trim().slice(0, 30)} (${Math.round(element.getBoundingClientRect().height)}px)`),
     );

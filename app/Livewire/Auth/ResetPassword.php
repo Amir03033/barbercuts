@@ -14,7 +14,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-#[Layout('layouts::platform')]
+#[Layout('layouts::auth')]
 #[Title('Nieuw wachtwoord')]
 class ResetPassword extends Component
 {
