@@ -7,7 +7,7 @@ use App\Models\Customer;
 use App\Models\Service;
 use App\Models\ShopSetting;
 use App\Models\User;
-use App\Notifications\AppointmentConfirmed;
+use App\Notifications\AppointmentMessage;
 use App\Support\CurrentShop;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\DB;
@@ -164,7 +164,7 @@ it('books as a guest with name and phone only and goes to the confirmation', fun
         ->and(Customer::withoutGlobalScopes()->firstOrFail()->only(['name', 'phone', 'email', 'user_id']))
         ->toBe(['name' => 'Daan de Vries', 'phone' => '+31612345678', 'email' => null, 'user_id' => null]);
 
-    Notification::assertNotSentTo(new AnonymousNotifiable, AppointmentConfirmed::class);
+    Notification::assertNotSentTo(new AnonymousNotifiable, AppointmentMessage::class);
 
     $this->get($appointment->manageUrl())->assertOk();
 });
@@ -180,7 +180,7 @@ it('redirects to the manage page as confirmation and mails when an address is gi
 
     $component->assertRedirect(url('/afspraak/'.$appointment->manage_token));
     expect(session('booked'))->toBe($appointment->manage_token);
-    Notification::assertSentOnDemand(AppointmentConfirmed::class);
+    Notification::assertSentOnDemand(AppointmentMessage::class);
 });
 
 it('requires name and a valid phone number', function (array $input, string $field) {

@@ -34,6 +34,7 @@
                         {{ $appointment->customer->email ? 'Je krijgt een bevestiging op '.$appointment->customer->email.'.' : 'Bewaar deze pagina: hier kun je je afspraak later wijzigen.' }}
                     </p>
                 </div>
+                <x-push-toggle title="Herinnering op je telefoon" text="Krijg een melding voor je afspraak en als er iets verandert." />
             @else
                 <h1 class="text-lg font-bold">Je afspraak</h1>
             @endif

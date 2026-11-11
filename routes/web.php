@@ -2,6 +2,7 @@
 
 use App\Enums\ShopRole;
 use App\Http\Controllers\MollieWebhookController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Middleware\ResolveShopFromApp;
 use App\Http\Middleware\ResolveShopFromSlug;
 use App\Livewire\AcceptInvitation;
@@ -113,6 +114,12 @@ Route::get('/afspraak/{token}/agenda.ics', function (string $token): Response {
 })->where('token', '[A-Za-z0-9]{40}')->name('appointment.ics');
 
 Route::livewire('/account', Account::class)->middleware('auth')->name('account');
+
+// Web push: het browserabonnement van de ingelogde gebruiker (klant of kapper), §7.6
+Route::middleware(['auth', 'throttle:20,1'])->group(function (): void {
+    Route::post('/push/abonneren', [PushSubscriptionController::class, 'store'])->name('push.subscribe');
+    Route::post('/push/afmelden', [PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
+});
 
 // Webhook van Mollie (CSRF staat uit voor /webhooks/*, zie bootstrap/app.php)
 Route::post('/webhooks/mollie', MollieWebhookController::class)->name('webhooks.mollie');

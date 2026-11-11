@@ -12,7 +12,7 @@ use App\Livewire\App\Today;
 use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\Service;
-use App\Notifications\AppointmentConfirmed;
+use App\Notifications\AppointmentMessage;
 use App\Notifications\StaffAppointmentUpdate;
 use App\Services\Booking\AppointmentService;
 use App\Services\Booking\BookingData;
@@ -444,7 +444,7 @@ it('notifies the barber of an online booking, and the owner when the barber has 
     });
     Notification::assertSentTo($this->owner, StaffAppointmentUpdate::class, fn (StaffAppointmentUpdate $notification) => $notification->appointmentId === $forMo->id);
     Notification::assertSentToTimes($this->owner, StaffAppointmentUpdate::class, 1);
-    Notification::assertNotSentTo($this->samUser, AppointmentConfirmed::class);
+    Notification::assertNotSentTo($this->samUser, AppointmentMessage::class);
 });
 
 it('notifies the barber when a customer cancels or reschedules, not when staff does', function () {

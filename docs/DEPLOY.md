@@ -343,6 +343,14 @@ _dmarc.barbercuts.nl  TXT  "v=DMARC1; p=quarantine; rua=mailto:dmarc@barbercuts.
 
 Test: `php artisan tinker --execute 'Mail::raw("Test", fn ($m) => $m->to("jij@example.com")->subject("Test"));'`
 
+## 11b. Herinneringen, push, sms en WhatsApp (fase 5)
+
+- **Geen nieuwe cron nodig.** De scheduler (`schedule:run`, elke minuut) draait `notifications:send-due`. Staat die taak al in Plesk, dan werken herinneringen vanzelf. Berichten die direct weg moeten (bevestigingen) gaan via de queue; draait die niet, dan pakt `notifications:send-due` ze binnen een minuut op.
+- **Web push:** maak eenmalig sleutels met `php artisan webpush:vapid` en zet `VAPID_PUBLIC_KEY` en `VAPID_PRIVATE_KEY` (en `VAPID_SUBJECT`) in `.env`, daarna `php artisan config:cache` (of de deploy). Wissel de sleutels daarna nooit: alle abonnementen worden dan ongeldig. Push werkt alleen via **https**. Zonder sleutels verdwijnt de knop "Meldingen aanzetten" en gaat alles per mail.
+- **iPhone:** pushmeldingen werken alleen als de gebruiker de app eerst op het beginscherm zet.
+- **SMS/WhatsApp:** standaard `SMS_PROVIDER=log` en `WHATSAPP_PROVIDER=log` (schrijft naar `storage/logs`, kost niets). Voor echt versturen: zet `twilio` en vul de `TWILIO_*`-waarden in `.env`; zet daarna in /admin → Instellingen de functie SMS (en/of WhatsApp) aan, en laat de zaak het in Instellingen aanzetten. WhatsApp werkt alleen met door Meta goedgekeurde templates (Content SID's in `.env`).
+- **Controle:** /admin → Berichten toont elk verstuurd bericht met kanaal, kosten en eventuele fout. Een mislukt klantbericht wordt niet automatisch herhaald (dat kan dubbel versturen).
+
 ## 12. Back-ups
 
 Komt in de code zodra de VPS er staat (`spatie/laravel-backup`): dagelijks database + `storage/app` naar S3-compatible opslag

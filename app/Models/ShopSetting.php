@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'slot_interval', 'min_notice', 'max_days_ahead', 'customer_cancel_limit', 'customer_reschedule_limit',
     'allow_guest_booking', 'allow_staff_choice', 'reminder_1_minutes', 'reminder_2_minutes', 'reminder_channels',
+    'sms_enabled', 'whatsapp_enabled',
 ])]
 class ShopSetting extends Model
 {
@@ -29,7 +30,7 @@ class ShopSetting extends Model
         'allow_guest_booking' => true,
         'allow_staff_choice' => true,
         'reminder_1_minutes' => 1440,
-        'reminder_channels' => '["mail"]',
+        'reminder_channels' => '["mail","push"]',
     ];
 
     /**

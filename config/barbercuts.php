@@ -50,8 +50,27 @@ return [
         'max_per_phone_per_hour' => (int) env('BOOKING_MAX_PER_PHONE_PER_HOUR', 5),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | SMS en WhatsApp (fase 5): provider 'log' (standaard) of 'twilio'; kosten per bericht in eurocenten
+    |--------------------------------------------------------------------------
+    */
     'sms' => [
         'provider' => env('SMS_PROVIDER', 'log'),
+        'cost_cents' => (int) env('SMS_COST_CENTS', 8),
+    ],
+
+    'whatsapp' => [
+        'provider' => env('WHATSAPP_PROVIDER', 'log'),
+        'cost_cents' => (int) env('WHATSAPP_COST_CENTS', 6),
+        // Content SID van de door Meta goedgekeurde template, per berichtsoort (alleen nodig met provider twilio).
+        'templates' => [
+            'confirmation' => env('WHATSAPP_TEMPLATE_CONFIRMATION'),
+            'reminder_1' => env('WHATSAPP_TEMPLATE_REMINDER'),
+            'reminder_2' => env('WHATSAPP_TEMPLATE_REMINDER'),
+            'rescheduled' => env('WHATSAPP_TEMPLATE_RESCHEDULED'),
+            'cancelled' => env('WHATSAPP_TEMPLATE_CANCELLED'),
+        ],
     ],
 
     /*
@@ -61,7 +80,7 @@ return [
     | Deze namen mogen niet als slug van een zaak gebruikt worden.
     */
     'reserved_slugs' => [
-        'app', 'admin', 'account', 'afspraak', 'aanmelden', 'inloggen', 'registreren', 'uitloggen',
+        'app', 'admin', 'account', 'push', 'afspraak', 'aanmelden', 'inloggen', 'registreren', 'uitloggen',
         'wachtwoord-vergeten', 'wachtwoord-herstellen', 'e-mail-bevestigen', 'uitnodiging', 'prijzen', 'privacy',
         'voorwaarden', 'verwerkersovereenkomst', 'contact', 'impersonate', 'over', 'help', 'api', 'up', 'webhooks', 'storage', 'build',
         'livewire', 'filament', 'css', 'js', 'images', 'kappers', 'zoeken', '_ui',

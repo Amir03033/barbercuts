@@ -13,7 +13,7 @@ use Filament\Tables\Table;
 use UnitEnum;
 
 /**
- * Verstuurde berichten per kanaal, alleen lezen (§11). Wordt gevuld vanaf fase 5.
+ * Verstuurde berichten per kanaal, alleen lezen (§11). Gevuld door de notificatielistener (fase 5).
  */
 class MessageLogResource extends Resource
 {
@@ -46,6 +46,7 @@ class MessageLogResource extends Resource
                 TextColumn::make('type')->label('Soort'),
                 TextColumn::make('to')->label('Aan')->searchable(),
                 TextColumn::make('cost_cents')->label('Kosten')->formatStateUsing(fn (?int $state): string => $state === null ? '-' : money($state)),
+                TextColumn::make('error')->label('Fout')->limit(40)->placeholder('-')->toggleable(),
                 TextColumn::make('status')->label('Status')->badge()->color(fn (string $state): string => $state === 'failed' ? 'danger' : 'success'),
             ])
             ->defaultSort('created_at', 'desc')

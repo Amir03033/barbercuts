@@ -43,4 +43,22 @@
             </x-ui.card>
         </x-ui.section>
     @endif
+
+    <x-ui.section title="Meldingen">
+        <x-push-toggle />
+        <x-ui.card>
+            <form wire:submit="savePreferences" class="space-y-1">
+                <p class="pb-2 text-xs text-muted">Je krijgt elk bericht op één kanaal: push als dat aan staat op je apparaat, anders je eigen keuze hieronder.</p>
+                <x-ui.toggle label="Pushmeldingen" hint="Op apparaten waar je ze hebt aangezet" wire:model="preferPush" />
+                <x-ui.toggle label="E-mail" hint="Bevestigingen en herinneringen per mail" wire:model="preferMail" />
+                @if ($smsAvailable)
+                    <x-ui.toggle label="Sms" hint="Gebruik sms in plaats van e-mail (als de zaak sms aan heeft)" wire:model="preferSms" />
+                @endif
+                @if ($whatsappAvailable)
+                    <x-ui.toggle label="WhatsApp" hint="Gebruik WhatsApp in plaats van e-mail (als de zaak dat aan heeft)" wire:model="preferWhatsapp" />
+                @endif
+                <div class="pt-3"><x-ui.button type="submit" variant="secondary" loading="savePreferences">Voorkeuren opslaan</x-ui.button></div>
+            </form>
+        </x-ui.card>
+    </x-ui.section>
 </div>

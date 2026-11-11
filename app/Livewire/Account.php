@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
 use App\Models\User;
+use App\Support\Features;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -12,7 +13,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Klantaccount: eigen afspraken bij alle zaken (§9.3). Profiel en notificatievoorkeuren volgen in fase 5.
+ * Klantaccount: eigen afspraken bij alle zaken (§9.3). Met notificatievoorkeuren (fase 5).
  *
  * Geen tenant: er wordt expliciet gefilterd op de klantrecords van de ingelogde gebruiker (§6.3).
  */
@@ -20,6 +21,40 @@ use Livewire\Component;
 #[Title('Mijn afspraken')]
 class Account extends Component
 {
+    public bool $preferPush = true;
+
+    public bool $preferMail = true;
+
+    public bool $preferSms = false;
+
+    public bool $preferWhatsapp = false;
+
+    public function mount(): void
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $this->preferPush = $user->prefersChannel('push');
+        $this->preferMail = $user->prefersChannel('mail');
+        $this->preferSms = $user->prefersChannel('sms');
+        $this->preferWhatsapp = $user->prefersChannel('whatsapp');
+    }
+
+    public function savePreferences(): void
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $user->update(['notification_preferences' => [
+            'push' => $this->preferPush,
+            'mail' => $this->preferMail,
+            'sms' => $this->preferSms,
+            'whatsapp' => $this->preferWhatsapp,
+        ]]);
+
+        $this->dispatch('toast', message: 'Voorkeuren opgeslagen');
+    }
+
     public function render(): View
     {
         /** @var User $user */
@@ -39,6 +74,8 @@ class Account extends Component
             'user' => $user,
             'upcoming' => $upcoming->values(),
             'past' => $past->sortByDesc('starts_at')->take(30)->values(),
+            'smsAvailable' => Features::sms(),
+            'whatsappAvailable' => Features::whatsapp(),
         ]);
     }
 }

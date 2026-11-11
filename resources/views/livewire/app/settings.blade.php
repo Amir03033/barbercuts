@@ -22,7 +22,7 @@
             <x-ui.select label="Verplaatsen kan" wire:model="rescheduleLimit" :selected="$rescheduleLimit" :options="Settings::LIMIT_OPTIONS" />
         </x-ui.section>
 
-        <x-ui.section title="Herinneringen" text="Klanten krijgen een herinnering per e-mail. Push, sms en WhatsApp volgen later.">
+        <x-ui.section title="Herinneringen" text="Elke klant krijgt een bericht op één kanaal: push (als de klant een account en meldingen heeft), anders e-mail.">
             <x-ui.select label="1e herinnering" wire:model.live="reminder1" :selected="$reminder1"
                 :options="Settings::REMINDER_1_OPTIONS + ['custom' => 'Anders…']" />
             @if ($reminder1 === 'custom')
@@ -33,6 +33,14 @@
                 :options="['off' => 'Uit'] + Settings::REMINDER_2_OPTIONS + ['custom' => 'Anders…']" />
             @if ($reminder2 === 'custom')
                 <x-ui.input label="Uren vooraf (2e herinnering)" type="text" inputmode="decimal" wire:model="reminder2Hours" />
+            @endif
+
+            <x-ui.toggle label="Pushmeldingen aan klanten" hint="Voor klanten met een account die meldingen hebben aangezet" wire:model="channelPush" :checked="$channelPush" />
+            @if (\App\Support\Features::sms())
+                <x-ui.toggle label="Sms voor klanten zonder e-mailadres" hint="Kost per bericht" wire:model="smsEnabled" :checked="$smsEnabled" />
+            @endif
+            @if (\App\Support\Features::whatsapp())
+                <x-ui.toggle label="WhatsApp voor klanten die dat kiezen" hint="Kost per bericht" wire:model="whatsappEnabled" :checked="$whatsappEnabled" />
             @endif
         </x-ui.section>
 

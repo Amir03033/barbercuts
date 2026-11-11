@@ -7,9 +7,11 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
 /**
- * Bericht voor de kapper als een klant online boekt, annuleert of verplaatst (§7.6). Nu per mail; push volgt in fase 5.
+ * Bericht voor de kapper als een klant online boekt, annuleert of verplaatst (§7.6). Per push als de kapper meldingen heeft aangezet op een apparaat, anders per mail (nooit allebei).
  */
 class StaffAppointmentUpdate extends Notification implements ShouldQueue
 {
@@ -28,7 +30,27 @@ class StaffAppointmentUpdate extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return method_exists($notifiable, 'pushSubscriptions') && $notifiable->pushSubscriptions()->exists()
+            ? [WebPushChannel::class]
+            : ['mail'];
+    }
+
+    public function toWebPush(object $notifiable, Notification $notification): WebPushMessage
+    {
+        $appointment = Appointment::withoutGlobalScopes()->with(['barbershop', 'customer'])->findOrFail($this->appointmentId);
+
+        [$title, $body] = match ($this->type) {
+            self::CANCELLED => ['Afspraak geannuleerd', "{$appointment->customer->name} heeft de afspraak van ".$appointment->whenLabel().' geannuleerd.'],
+            self::RESCHEDULED => ['Afspraak verplaatst', "{$appointment->customer->name} heeft de afspraak verplaatst naar ".$appointment->whenLabel().'.'],
+            default => ['Nieuwe afspraak', "{$appointment->customer->name}: {$appointment->service_name}, ".$appointment->whenLabel().'.'],
+        };
+
+        return (new WebPushMessage)
+            ->title($title)
+            ->icon('/icons/icon-192.png')
+            ->body($body)
+            ->tag('staff-appointment-'.$this->appointmentId)
+            ->data(['url' => route('app.calendar', ['dag' => $appointment->localStart()->toDateString(), 'kapper' => $appointment->staff_member_id])]);
     }
 
     public function toMail(object $notifiable): MailMessage

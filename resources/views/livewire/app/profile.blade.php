@@ -10,6 +10,10 @@
             </div>
         </div>
 
+        <x-ui.section title="Meldingen">
+            <x-push-toggle title="Pushmeldingen" text="Krijg een melding bij een nieuwe online boeking, annulering of verplaatsing." />
+        </x-ui.section>
+
         <x-ui.section title="Gegevens">
             <x-ui.card>
                 <form wire:submit="saveProfile" class="space-y-4" novalidate>

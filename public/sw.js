@@ -47,3 +47,35 @@ self.addEventListener('fetch', (event) => {
         );
     }
 });
+
+// Web push (§7.6): toon de melding en open de afspraak of agenda bij een tik.
+self.addEventListener('push', (event) => {
+    let payload = {};
+
+    try {
+        payload = event.data ? event.data.json() : {};
+    } catch (error) {
+        payload = { title: 'BarberCuts', body: event.data ? event.data.text() : '' };
+    }
+
+    event.waitUntil(self.registration.showNotification(payload.title || 'BarberCuts', {
+        body: payload.body || '',
+        icon: payload.icon || '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        tag: payload.tag,
+        data: payload.data || {},
+    }));
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const target = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+
+    event.waitUntil(
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+            const open = clients.find((client) => 'focus' in client);
+
+            return open ? open.navigate(target).then((client) => client && client.focus()) : self.clients.openWindow(target);
+        }),
+    );
+});

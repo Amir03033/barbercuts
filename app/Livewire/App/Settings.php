@@ -4,6 +4,7 @@ namespace App\Livewire\App;
 
 use App\Livewire\Concerns\InShop;
 use App\Models\ShopSetting;
+use App\Support\Features;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -51,6 +52,12 @@ class Settings extends Component
     /** Minuten, "off" of "custom". */
     public string $reminder2 = 'off';
 
+    public bool $channelPush = true;
+
+    public bool $smsEnabled = false;
+
+    public bool $whatsappEnabled = false;
+
     public string $reminder2Hours = '';
 
     public function mount(): void
@@ -73,6 +80,10 @@ class Settings extends Component
             $this->reminder1 = 'custom';
             $this->reminder1Hours = self::hours($settings->reminder_1_minutes);
         }
+
+        $this->channelPush = in_array('push', (array) $settings->reminder_channels, true);
+        $this->smsEnabled = (bool) $settings->sms_enabled;
+        $this->whatsappEnabled = (bool) $settings->whatsapp_enabled;
 
         if ($settings->reminder_2_minutes === null) {
             $this->reminder2 = 'off';
@@ -149,6 +160,9 @@ class Settings extends Component
             'allow_staff_choice' => $this->allowStaffChoice,
             'reminder_1_minutes' => $reminder1,
             'reminder_2_minutes' => $reminder2,
+            'reminder_channels' => $this->channelPush ? ['mail', 'push'] : ['mail'],
+            'sms_enabled' => Features::sms() && $this->smsEnabled,
+            'whatsapp_enabled' => Features::whatsapp() && $this->whatsappEnabled,
         ]);
 
         $this->dispatch('toast', message: 'Instellingen opgeslagen');

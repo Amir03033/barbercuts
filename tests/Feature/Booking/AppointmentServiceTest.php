@@ -16,7 +16,7 @@ use App\Models\Customer;
 use App\Models\Service;
 use App\Models\ShopSetting;
 use App\Models\User;
-use App\Notifications\AppointmentConfirmed;
+use App\Notifications\AppointmentMessage;
 use App\Services\Booking\AppointmentService;
 use App\Services\Booking\BookingData;
 use App\Services\Booking\CustomerInput;
@@ -303,7 +303,7 @@ it('dispatches the booked event and mails the confirmation with the manage link'
 
     $appointment = $this->appointments->book(($this->data)(), null);
 
-    Notification::assertSentTo(new AnonymousNotifiable, AppointmentConfirmed::class, function (AppointmentConfirmed $notification, array $channels, AnonymousNotifiable $notifiable) use ($appointment) {
+    Notification::assertSentTo(new AnonymousNotifiable, AppointmentMessage::class, function (AppointmentMessage $notification, array $channels, AnonymousNotifiable $notifiable) use ($appointment) {
         $mail = $notification->toMail($notifiable);
 
         return $notifiable->routes['mail'] === 'daan@example.com'
@@ -318,7 +318,7 @@ it('does not mail a customer without an e-mail address', function () {
 
     $this->appointments->book(($this->data)(['customer' => new CustomerInput('Daan', '0612345678')]), null);
 
-    Notification::assertNotSentTo(new AnonymousNotifiable, AppointmentConfirmed::class);
+    Notification::assertNotSentTo(new AnonymousNotifiable, AppointmentMessage::class);
 });
 
 it('does not dispatch events when the booking fails', function () {

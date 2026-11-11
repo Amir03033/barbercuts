@@ -19,13 +19,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
-#[Fillable(['name', 'email', 'phone', 'password'])]
+/**
+ * @property array<string, bool>|null $notification_preferences
+ */
+#[Fillable(['name', 'email', 'phone', 'password', 'notification_preferences'])]
 #[Hidden(['password', 'remember_token', 'app_authentication_secret', 'app_authentication_recovery_codes'])]
 class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, InteractsWithAppAuthentication, InteractsWithAppAuthenticationRecovery, Notifiable;
+
+    use HasPushSubscriptions;
 
     /**
      * Get the attributes that should be cast.
@@ -38,9 +44,20 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'notification_preferences' => 'array',
             'app_authentication_secret' => 'encrypted',
             'app_authentication_recovery_codes' => 'encrypted:array',
         ];
+    }
+
+    /**
+     * Voorkeur voor een meldingskanaal (push, mail, sms, whatsapp); wat niet is ingesteld volgt de standaard.
+     */
+    public function prefersChannel(string $channel): bool
+    {
+        $default = in_array($channel, ['push', 'mail'], true);
+
+        return (bool) ($this->notification_preferences[$channel] ?? $default);
     }
 
     /**
