@@ -142,11 +142,12 @@ Als `deploy` (herhaal voor `barbercuts-staging`):
 sudo mkdir -p /var/www/barbercuts && sudo chown deploy:www-data /var/www/barbercuts   # als beheerder
 cd /var/www/barbercuts
 mkdir -p releases shared/storage/{app/public,framework/{cache/data,sessions,views},logs}
-git clone --bare git@github.com:<eigenaar>/barbercuts.git repo
+git clone --mirror https://github.com/Amir03033/barbercuts.git repo
 ```
 
-> De server heeft leestoegang tot de repo nodig: maak op de server een SSH-key (`ssh-keygen -t ed25519`) en voeg de
-> publieke key toe als **Deploy key** (alleen-lezen) in de GitHub-repo.
+> `--mirror` (en niet `--bare`) is nodig: alleen dan haalt `git fetch` de nieuwste commits van `main` op in `repo/`.
+> De repo is publiek, dus er is geen sleutel nodig. Wordt de repo later privé, maak dan een **Deploy key**
+> (`ssh-keygen -t ed25519`, alleen-lezen in GitHub) en clone via `git@github.com:Amir03033/barbercuts.git`.
 
 Kopieer de scripts en maak de `.env`:
 
@@ -158,12 +159,19 @@ git --git-dir=repo show main:.env.example > shared/.env
 nano shared/.env
 ```
 
+Genereer eerst een sleutel en plak die achter `APP_KEY=` (bewaar hem: zonder deze sleutel zijn sessies en
+versleutelde gegevens onleesbaar):
+
+```bash
+php -r 'echo "base64:".base64_encode(random_bytes(32)), PHP_EOL;'
+```
+
 Zet in `shared/.env` minimaal:
 
 ```dotenv
 APP_NAME=BarberCuts
 APP_ENV=production            # staging: staging
-APP_KEY=                      # zie hieronder
+APP_KEY=base64:...            # zie hieronder (één keer genereren)
 APP_DEBUG=false
 APP_URL=https://barbercuts.nl # staging: https://staging.barbercuts.nl
 
@@ -192,15 +200,10 @@ SMS_PROVIDER=log
 
 ```bash
 cd /var/www/barbercuts
-./deploy.sh origin/main
+./deploy.sh            # deployt main; of: ./deploy.sh <commit-sha>
 ```
 
-Bij de allereerste keer is `APP_KEY` nog leeg. Genereer hem één keer en deploy opnieuw:
-
-```bash
-cd /var/www/barbercuts/current && php artisan key:generate --show   # plak de waarde in shared/.env
-cd /var/www/barbercuts && ./deploy.sh origin/main
-```
+Faalt de deploy, dan blijft de vorige versie live en wordt de halve release automatisch verwijderd.
 
 Wat `deploy.sh` doet: code ophalen → nieuwe release-map → `composer install --no-dev --optimize-autoloader` →
 `npm ci && npm run build` → symlinks naar `shared/.env` en `shared/storage` → `php artisan migrate --force` →
@@ -211,9 +214,13 @@ oude releases opruimen (laatste 5 blijven staan).
 
 ## 6. Nginx
 
+De bestanden staan na de eerste deploy in `/var/www/barbercuts/current/deploy/` (een gewone checkout bestaat niet op
+de server):
+
 ```bash
-sudo cp deploy/nginx-barbercuts.conf /etc/nginx/sites-available/barbercuts.nl
-sudo cp deploy/nginx-staging.conf    /etc/nginx/sites-available/staging.barbercuts.nl
+D=/var/www/barbercuts/current/deploy
+sudo cp $D/nginx-barbercuts.conf /etc/nginx/sites-available/barbercuts.nl
+sudo cp $D/nginx-staging.conf    /etc/nginx/sites-available/staging.barbercuts.nl
 sudo ln -s /etc/nginx/sites-available/barbercuts.nl /etc/nginx/sites-enabled/
 sudo ln -s /etc/nginx/sites-available/staging.barbercuts.nl /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
@@ -222,7 +229,7 @@ sudo nginx -t && sudo systemctl reload nginx
 ```
 
 De vhosts: [`deploy/nginx-barbercuts.conf`](../deploy/nginx-barbercuts.conf) en
-[`deploy/nginx-staging.conf`](../deploy/nginx-staging.conf). Daarin: root op `current/public`, HTTP/2, gzip,
+[`deploy/nginx-staging.conf`](../deploy/nginx-staging.conf). Daarin: root op `current/public`, gzip,
 een jaar cache op `/build/*`, `client_max_body_size 10M` en `www` → zonder `www`.
 
 Brotli (optioneel): `apt install libnginx-mod-http-brotli-filter` en zet `brotli on;` naast `gzip on;`.
@@ -235,12 +242,21 @@ sudo certbot --nginx -d staging.barbercuts.nl
 sudo certbot renew --dry-run          # vernieuwen gaat automatisch via een systemd-timer
 ```
 
-Certbot zet zelf de `listen 443 ssl`-regels en de redirect van http naar https in de vhosts.
+Certbot zet zelf de `listen 443 ssl`-regels en de redirect van http naar https in de vhosts. De DNS-records moeten
+dan al naar de server wijzen, anders mislukt certbot.
+
+**HTTP/2 (optioneel).** Ubuntu 24.04 heeft nginx 1.24, waar `http2 on;` niet bestaat. Zet HTTP/2 aan door na certbot
+`http2` achter de 443-regels te zetten:
+
+```bash
+sudo sed -i -E 's/^(\s*listen (\[::\]:)?443 ssl)( ipv6only=on)?;/\1 http2\3;/' /etc/nginx/sites-available/barbercuts.nl /etc/nginx/sites-available/staging.barbercuts.nl
+sudo nginx -t && sudo systemctl reload nginx
+```
 
 ## 8. Queue (Supervisor)
 
 ```bash
-sudo cp deploy/supervisor-barbercuts.conf /etc/supervisor/conf.d/barbercuts.conf
+sudo cp /var/www/barbercuts/current/deploy/supervisor-barbercuts.conf /etc/supervisor/conf.d/barbercuts.conf
 sudo supervisorctl reread && sudo supervisorctl update
 sudo supervisorctl status
 ```

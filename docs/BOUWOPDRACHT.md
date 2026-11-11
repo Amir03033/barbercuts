@@ -724,4 +724,8 @@ Aanbetaling activeren met Mollie Connect · reviews na een bezoek · wachtlijst 
 - **2026-11-10 — CSV-export** gebruikt `;` als scheidingsteken en een BOM, zodat Excel het bestand goed opent; alleen voltooide afspraken.
 - **2026-11-10 — PWA:** `public/manifest.webmanifest`, iconen in `public/icons/` (zwart vlak met een witte "b", te vervangen zodra er een logo is), `public/sw.js` en `public/offline.html`. De service worker bewaart alleen `/build/*` en de iconen; pagina's komen altijd van het netwerk.
 - **2026-11-10 — Conditionele blokken met invoervelden krijgen een `wire:key`.** Zonder sleutel hergebruikt Livewire bij het wisselen van blok een veld (het zoekveld werd het naamveld bij "Nieuwe klant").
+- **2026-11-11 — Op de server staat `repo/` als `git clone --mirror`** (niet `--bare`) en `deploy.sh` deployt standaard `main`. Met `--bare` haalt `git fetch` geen nieuwe commits op in de lokale branches, waardoor `origin/main` niet bestond. De GitHub-repo is publiek, dus de server clonet via https zonder deploy key.
+- **2026-11-11 — `deploy.sh` controleert eerst `shared/.env` en `APP_KEY`, ruimt een mislukte release zelf op en koppelt `public/storage` direct aan `shared/storage/app/public`** (geen `artisan storage:link`, dat wees naar de releasemap). `APP_KEY` wordt vóór de eerste deploy gegenereerd.
+- **2026-11-11 — Nginx-configs zonder `http2 on;`:** Ubuntu 24.04 levert nginx 1.24, waar die regel niet bestaat. HTTP/2 staat als optionele stap in `docs/DEPLOY.md`. De `www`-redirect staat in een `location`, zodat certbot zijn challenge kan plaatsen.
+- **2026-11-11 — De configbestanden op de server staan in `/var/www/barbercuts/current/deploy/`** (er is daar geen losse checkout).
 
