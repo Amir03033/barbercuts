@@ -29,3 +29,7 @@ Thumbs.db
 /storage/playwright
 /test-results
 /playwright-report
+# Filament-bestanden worden bij het installeren gepubliceerd (composer install / filament:upgrade)
+/public/css/filament
+/public/js/filament
+/public/fonts/filament

@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\ShopRole;
+use App\Http\Controllers\MollieWebhookController;
 use App\Http\Middleware\ResolveShopFromApp;
 use App\Http\Middleware\ResolveShopFromSlug;
 use App\Livewire\AcceptInvitation;
@@ -17,6 +19,7 @@ use App\Livewire\App\Services\Index as ServiceIndex;
 use App\Livewire\App\Settings;
 use App\Livewire\App\Staff\Edit as StaffEdit;
 use App\Livewire\App\Staff\Index as StaffIndex;
+use App\Livewire\App\Subscription;
 use App\Livewire\App\Today;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
@@ -29,9 +32,14 @@ use App\Livewire\ManageAppointment;
 use App\Livewire\Onboarding;
 use App\Livewire\Shop\Book as ShopBook;
 use App\Livewire\Shop\Show as ShopShow;
+use App\Models\ActivityLog;
 use App\Models\Appointment;
+use App\Models\Barbershop;
+use App\Models\Plan;
+use App\Models\User;
 use App\Services\ShopStatsService;
 use App\Support\CurrentShop;
+use App\Support\Features;
 use App\Support\Period;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -51,6 +59,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 |--------------------------------------------------------------------------
 */
 Route::livewire('/', Home::class)->name('home');
+
+// Statische pagina's (§9.4). Teksten staan in resources/views/pages.
+Route::get('/prijzen', fn () => view('pages.pricing', ['plan' => Plan::current(), 'billing' => Features::billing()]))->name('pricing');
+Route::view('/privacy', 'pages.privacy')->name('privacy');
+Route::view('/voorwaarden', 'pages.terms')->name('terms');
+Route::view('/verwerkersovereenkomst', 'pages.processor-agreement')->name('processor-agreement');
+Route::view('/contact', 'pages.contact')->name('contact');
 
 // Zaak aanmelden (§8) en uitnodiging voor kappers
 Route::livewire('/aanmelden', Onboarding::class)->name('onboarding');
@@ -98,6 +113,9 @@ Route::get('/afspraak/{token}/agenda.ics', function (string $token): Response {
 
 Route::livewire('/account', Account::class)->middleware('auth')->name('account');
 
+// Webhook van Mollie (CSRF staat uit voor /webhooks/*, zie bootstrap/app.php)
+Route::post('/webhooks/mollie', MollieWebhookController::class)->name('webhooks.mollie');
+
 /*
 |--------------------------------------------------------------------------
 | Auth
@@ -126,6 +144,42 @@ Route::middleware('auth')->group(function (): void {
 
         return redirect()->route('home');
     })->name('logout');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Inloggen als eigenaar (alleen platformadmin, §11). Elke start en stop komt in het activiteitenlogboek.
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->group(function (): void {
+    Route::get('/impersonate/{shop}', function (Request $request, Barbershop $shop): RedirectResponse {
+        $admin = $request->user();
+        abort_unless($admin instanceof User && $admin->is_admin && ! $request->session()->has('impersonator_id'), 403);
+
+        $owner = $shop->users()->wherePivot('role', ShopRole::Owner->value)->orderBy('shop_user.id')->first();
+        abort_if($owner === null, 404);
+
+        ActivityLog::record('impersonate.start', $shop, $shop, ['as_user_id' => $owner->id]);
+
+        Auth::guard('web')->login($owner);
+        $request->session()->regenerate();
+        $request->session()->put(['impersonator_id' => $admin->id, 'current_shop_id' => $shop->id]);
+
+        return redirect()->route('app.today');
+    })->whereNumber('shop')->middleware('signed')->name('impersonate.start');
+
+    Route::post('/impersonate/stop', function (Request $request): RedirectResponse {
+        $admin = User::query()->find($request->session()->get('impersonator_id'));
+        abort_unless($admin instanceof User && $admin->is_admin, 403);
+
+        ActivityLog::record('impersonate.stop', null, null, ['from_user_id' => $request->user()?->id]);
+
+        Auth::guard('web')->login($admin);
+        $request->session()->forget(['impersonator_id', 'current_shop_id']);
+        $request->session()->regenerate();
+
+        return redirect('/admin');
+    })->name('impersonate.stop');
 });
 
 /*
@@ -181,6 +235,7 @@ Route::middleware(['auth', ResolveShopFromApp::class])->prefix('app')->name('app
     Route::livewire('/openingstijden', OpeningHours::class)->name('opening-hours');
     Route::livewire('/uiterlijk', Appearance::class)->name('appearance');
     Route::livewire('/instellingen', Settings::class)->name('settings');
+    Route::livewire('/abonnement', Subscription::class)->name('subscription');
 
     // QR-code van de boekingslink als SVG-download (§8, stap 6)
     Route::get('/qr-code', function (CurrentShop $currentShop): Response {

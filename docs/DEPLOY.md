@@ -1,4 +1,43 @@
-# BarberCuts — deploy op een eigen VPS
+# BarberCuts — online zetten
+
+> **Live staat op Plesk.** Het eerste hoofdstuk beschrijft die opzet. Daaronder staat het algemene VPS-stappenplan
+> (eigen Nginx, Supervisor, certbot); dat gebruik je **niet** op een Plesk-server, want Plesk beheert die onderdelen zelf.
+
+## Plesk (zo staat barbercuts.nl live)
+
+| Onderdeel | Waar / hoe |
+|---|---|
+| Code | `/var/www/vhosts/barbercuts.nl/httpdocs/` (Plesk Git haalt `main` binnen). Document root: `httpdocs/public` |
+| PHP / Node | `/opt/plesk/php/8.4/bin/php` en `/opt/plesk/node/24/bin/node` (de gewone `php` op de server is een andere versie) |
+| Database | MariaDB, via Plesk aangemaakt, alleen lokale verbindingen. Gegevens in `.env` |
+| Sessies, cache, wachtrij | `database`-drivers in `.env` (er is geen Redis) |
+| Geplande taken | Plesk → Scheduled Tasks, type **Run a PHP script**: script `…/httpdocs/artisan`, argumenten `schedule:run` en `queue:work --stop-when-empty --tries=3 --max-time=55`, elke minuut |
+| Mail | Postvak `hallo@barbercuts.nl` in Plesk; `.env`: `MAIL_URL="smtp://hallo%40barbercuts.nl:WACHTWOORD@localhost:25?verify_peer=0"` (wachtwoord met alleen letters en cijfers). DNS bij STRATO: MX, SPF, DKIM (`default._domainkey`) en DMARC |
+| SSL | Plesk → SSL/TLS Certificates (Let\'s Encrypt), met 301 van http naar https en voorkeursdomein zonder `www` |
+
+**Bijwerken na een wijziging op GitHub:** Plesk → Websites & Domains → barbercuts.nl → Git → *Pull updates*. Laat daarna
+het update-script draaien (composer, npm, migraties, caches). Zet het in Plesk bij *Additional deployment actions*:
+
+```bash
+/bin/bash /var/www/vhosts/barbercuts.nl/httpdocs/deploy/plesk-update.sh
+```
+
+Of handmatig, als de sitegebruiker (`sudo -u 'barbercuts.nl_…' -H bash`): `cd httpdocs && bash deploy/plesk-update.sh`.
+
+**Eerste admin aanmaken** (voor `/admin`; bij de eerste keer inloggen stel je twee-staps-verificatie in met een authenticator-app):
+
+```bash
+/opt/plesk/php/8.4/bin/php artisan barbercuts:make-admin jouw@adres.nl
+```
+
+**Facturering aanzetten** (staat standaard uit, B12): zet in `.env` `MOLLIE_KEY=test_…` (eerst een testsleutel), draai
+`php artisan optimize:clear && php artisan optimize`, ga naar `/admin` → Instellingen → *Facturering aanzetten*. Zaken die op dat
+moment geen proefperiode of gratis periode hebben, krijgen een proefperiode uit het actieve plan. Mollie moet de webhook
+`https://barbercuts.nl/webhooks/mollie` kunnen bereiken (alleen https).
+
+---
+
+# VPS-stappenplan (eigen server zonder Plesk)
 
 Stappenplan voor **Ubuntu 24.04 LTS** (docs/BOUWOPDRACHT.md §13). Voer de stappen in deze volgorde uit.
 De config-bestanden staan in de map [`deploy/`](../deploy) van deze repo.

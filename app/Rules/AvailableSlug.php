@@ -3,6 +3,7 @@
 namespace App\Rules;
 
 use App\Models\Barbershop;
+use App\Support\Features;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
@@ -41,7 +42,7 @@ class AvailableSlug implements ValidationRule
 
     public static function isReserved(string $slug): bool
     {
-        return in_array($slug, config('barbercuts.reserved_slugs'), true)
+        return in_array($slug, Features::reservedSlugs(), true)
             || str_starts_with($slug, 'livewire')
             || str_starts_with($slug, '_');
     }

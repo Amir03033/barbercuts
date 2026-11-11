@@ -1,4 +1,4 @@
-{{-- Platform: landingspagina, auth, aanmelden, klantaccount. Altijd licht (B2). --}}
+{{-- Platform: landingspagina, auth, aanmelden, klantaccount en de statische pagina's. Altijd licht (B2). --}}
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -8,8 +8,10 @@
     <header class="pt-safe">
         <div class="mx-auto flex min-h-14 max-w-5xl items-center justify-between px-4">
             <x-brand :href="route('home')" />
-            <nav aria-label="Account" class="flex items-center gap-1">
+            <nav aria-label="Hoofdmenu" class="flex items-center gap-1">
+                <x-ui.button :href="route('pricing')" variant="ghost" size="sm" wire:navigate class="hidden sm:inline-flex">Prijzen</x-ui.button>
                 @auth
+                    <x-ui.button :href="auth()->user()->homeRoute()" variant="ghost" size="sm" wire:navigate>Mijn account</x-ui.button>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <x-ui.button type="submit" variant="ghost" size="sm">Uitloggen</x-ui.button>
@@ -28,8 +30,15 @@
     </main>
 
     <footer class="border-t border-border pb-safe">
-        <div class="mx-auto max-w-5xl px-4 py-6 text-xs text-muted">
-            © {{ date('Y') }} BarberCuts
+        <div class="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+            <p>© {{ date('Y') }} {{ config('barbercuts.company.name') }}</p>
+            <nav aria-label="Voetnavigatie" class="flex flex-wrap gap-x-4 gap-y-1">
+                <a href="{{ route('pricing') }}" class="inline-flex min-h-11 items-center">Prijzen</a>
+                <a href="{{ route('privacy') }}" class="inline-flex min-h-11 items-center">Privacy</a>
+                <a href="{{ route('terms') }}" class="inline-flex min-h-11 items-center">Voorwaarden</a>
+                <a href="{{ route('processor-agreement') }}" class="inline-flex min-h-11 items-center">Verwerkersovereenkomst</a>
+                <a href="{{ route('contact') }}" class="inline-flex min-h-11 items-center">Contact</a>
+            </nav>
         </div>
     </footer>
 

@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Mollie roept de webhook aan zonder CSRF-token; de echte status wordt zelf bij Mollie opgehaald.
+        $middleware->validateCsrfTokens(except: ['webhooks/*']);
         $middleware->redirectGuestsTo(fn (): string => route('login'));
         $middleware->redirectUsersTo(fn (Request $request): string => $request->user()?->homeRoute() ?? route('home'));
     })

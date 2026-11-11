@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\AccessState;
 use App\Models\Barbershop;
 use App\Support\CurrentShop;
 use Closure;
@@ -25,6 +26,11 @@ class ResolveShopFromSlug
 
         $this->currentShop->set($shop);
         View::share('shop', $shop);
+
+        // Door de admin geblokkeerd: de pagina is niet beschikbaar (§7.7).
+        if ($shop->accessState() === AccessState::Suspended) {
+            return response()->view('shop.unavailable', ['shop' => $shop], 503);
+        }
 
         return $next($request);
     }

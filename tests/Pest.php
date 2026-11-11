@@ -3,14 +3,18 @@
 use App\Enums\ShopRole;
 use App\Models\Barbershop;
 use App\Models\StaffMember;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Support\CurrentShop;
+use App\Support\PlatformSettings;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    // Platforminstellingen worden per proces onthouden; begin elke test schoon.
+    ->beforeEach(fn () => PlatformSettings::forget())
     ->in('Feature');
 
 /**
@@ -113,4 +117,51 @@ function at(string $local): CarbonImmutable
 function clock(array $slots): array
 {
     return array_map(fn (CarbonImmutable $slot): string => $slot->setTimezone('Europe/Amsterdam')->format('H:i'), $slots);
+}
+
+/**
+ * Zet facturering aan voor deze test (standaard staat het uit, B12). Het standaardplan staat al in de database.
+ */
+function billingOn(): void
+{
+    config(['barbercuts.billing.enabled' => true]);
+}
+
+/**
+ * Een abonnement van een zaak in een bepaalde status.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function subscriptionFor(Barbershop $shop, string $status = 'active', array $attributes = []): Subscription
+{
+    $subscription = new Subscription;
+    $subscription->barbershop_id = $shop->id;
+    $subscription->status = $status;
+    $subscription->price_cents = 1000;
+    $subscription->current_period_ends_at = now()->addMonth();
+    $subscription->forceFill($attributes);
+    $subscription->save();
+
+    return $subscription;
+}
+
+/**
+ * Een betaalde zaak met eigenaar, in een bepaalde toegangsstatus (facturering moet aan staan).
+ *
+ * @return array{0: Barbershop, 1: User}
+ */
+function shopInState(string $state): array
+{
+    [$shop, $owner] = shopWithOwner(['trial_ends_at' => null]);
+
+    match ($state) {
+        'trial' => $shop->forceFill(['trial_ends_at' => now()->addDays(10)])->save(),
+        'free' => $shop->forceFill(['free_until' => now()->addMonths(3)])->save(),
+        'active' => subscriptionFor($shop, 'active'),
+        'past_due' => subscriptionFor($shop, 'past_due', ['past_due_at' => now()->subDays(2)]),
+        'suspended' => $shop->forceFill(['suspended_at' => now(), 'suspended_reason' => 'Test'])->save(),
+        default => null, // expired
+    };
+
+    return [$shop->fresh(), $owner];
 }

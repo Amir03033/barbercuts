@@ -58,6 +58,13 @@ class Book extends Component
 
     public function mount(): void
     {
+        // Abonnement verlopen: de boekpagina is dicht, de zaakpagina legt uit waarom.
+        if (! $this->slotShop()->accessState()->canTakeBookings()) {
+            $this->redirectRoute('shop.show', $this->slotShop()->slug);
+
+            return;
+        }
+
         $user = Auth::user();
 
         if ($user instanceof User) {

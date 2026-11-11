@@ -21,6 +21,23 @@ return [
     */
     'features' => [
         'deposits' => (bool) env('FEATURE_DEPOSITS', false),
+        'sms' => (bool) env('FEATURE_SMS', false),
+        'whatsapp' => (bool) env('FEATURE_WHATSAPP', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bedrijfsgegevens (privacyverklaring, voorwaarden, contact)
+    |--------------------------------------------------------------------------
+    | Vul deze in via .env; lege velden worden op de pagina's weggelaten.
+    */
+    'company' => [
+        'name' => env('COMPANY_NAME', 'BarberCuts'),
+        'kvk' => env('COMPANY_KVK'),
+        'vat' => env('COMPANY_VAT'),
+        'address' => env('COMPANY_ADDRESS'),
+        'email' => env('COMPANY_EMAIL', 'hallo@barbercuts.nl'),
+        'phone' => env('COMPANY_PHONE'),
     ],
 
     /*
@@ -46,7 +63,7 @@ return [
     'reserved_slugs' => [
         'app', 'admin', 'account', 'afspraak', 'aanmelden', 'inloggen', 'registreren', 'uitloggen',
         'wachtwoord-vergeten', 'wachtwoord-herstellen', 'e-mail-bevestigen', 'uitnodiging', 'prijzen', 'privacy',
-        'voorwaarden', 'contact', 'over', 'help', 'api', 'up', 'webhooks', 'storage', 'build',
+        'voorwaarden', 'verwerkersovereenkomst', 'contact', 'impersonate', 'over', 'help', 'api', 'up', 'webhooks', 'storage', 'build',
         'livewire', 'filament', 'css', 'js', 'images', 'kappers', 'zoeken', '_ui',
     ],
 

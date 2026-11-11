@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 /**
  * Een Mollie-betaling: voor een abonnement (fase 4) of een aanbetaling op een afspraak (later, §7.8).
  * Geen tenant-scope: webhooks en het adminpanel werken over alle zaken heen.
+ *
+ * @property array<string, mixed>|null $metadata
  */
 class Payment extends Model
 {

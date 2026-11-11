@@ -5,6 +5,7 @@ namespace App\Models\Concerns;
 use App\Models\Barbershop;
 use App\Models\Scopes\ShopScope;
 use App\Support\CurrentShop;
+use App\Support\ShopWriteGuard;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -19,6 +20,10 @@ trait BelongsToShop
         static::creating(function (self $model): void {
             $model->barbershop_id ??= app(CurrentShop::class)->id();
         });
+
+        // Alleen-lezen zolang het abonnement verlopen is of de zaak geblokkeerd (§7.7).
+        static::saving(fn () => ShopWriteGuard::assertWritable());
+        static::deleting(fn () => ShopWriteGuard::assertWritable());
     }
 
     /**

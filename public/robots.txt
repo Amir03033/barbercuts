@@ -1,2 +1,8 @@
 User-agent: *
-Disallow:
+Disallow: /app
+Disallow: /admin
+Disallow: /account
+Disallow: /afspraak/
+Disallow: /impersonate
+Disallow: /webhooks
+Allow: /

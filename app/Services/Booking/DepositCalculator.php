@@ -4,6 +4,7 @@ namespace App\Services\Booking;
 
 use App\Enums\DepositType;
 use App\Models\Service;
+use App\Support\Features;
 
 /**
  * Aanbetaling voor een dienst (§7.8). Staat achter de feature flag `barbercuts.features.deposits`.
@@ -12,7 +13,7 @@ class DepositCalculator
 {
     public static function enabled(): bool
     {
-        return (bool) config('barbercuts.features.deposits');
+        return Features::deposits();
     }
 
     /**

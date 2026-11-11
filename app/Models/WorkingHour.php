@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ShopWriteGuard;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class WorkingHour extends Model
 {
     public $timestamps = false;
+
+    protected static function booted(): void
+    {
+        static::saving(fn () => ShopWriteGuard::assertWritable());
+        static::deleting(fn () => ShopWriteGuard::assertWritable());
+    }
 
     /**
      * @return BelongsTo<StaffMember, $this>

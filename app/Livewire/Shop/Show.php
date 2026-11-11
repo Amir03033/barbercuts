@@ -27,7 +27,8 @@ class Show extends Component
             'staffMembers' => StaffMember::query()->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get(),
             'week' => WeekSchedule::fromRows($shop->openingHours()->get(), 'opens_at', 'closes_at'),
             'images' => $shop->images()->get(),
-            'bookUrl' => Route::has('shop.book') ? route('shop.book', $shop->slug) : null,
+            'bookUrl' => Route::has('shop.book') && $shop->accessState()->canTakeBookings() ? route('shop.book', $shop->slug) : null,
+            'bookingClosed' => ! $shop->accessState()->canTakeBookings(),
         ])->layout('layouts::shop', ['shop' => $shop, 'title' => $shop->name]);
     }
 }

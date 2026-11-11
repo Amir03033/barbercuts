@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\AccessState;
 use App\Models\Barbershop;
 use App\Models\User;
 use App\Support\CurrentShop;
@@ -47,6 +48,11 @@ class ResolveShopFromApp
         $request->session()->put('current_shop_id', $shop->id);
         $this->currentShop->set($shop);
         View::share('currentShop', $shop);
+
+        // Door de admin geblokkeerd: alleen een melding (uitloggen kan nog), nooit data verwijderen (§7.7).
+        if ($shop->accessState() === AccessState::Suspended && ! $request->routeIs('logout', 'impersonate.stop')) {
+            return response()->view('app.suspended', ['shop' => $shop], 403);
+        }
 
         return $next($request);
     }

@@ -61,7 +61,8 @@ class AppointmentService
             throw new BookingException('Deze kapper is niet beschikbaar voor deze dienst.');
         }
 
-        if ($online && ! $shop->is_public) {
+        // Online boeken kan alleen als de zaak publiek is en zijn abonnement in orde is (§7.7).
+        if ($online && (! $shop->is_public || ! $shop->accessState()->canTakeBookings())) {
             throw new BookingException('Online boeken is tijdelijk niet beschikbaar.');
         }
 

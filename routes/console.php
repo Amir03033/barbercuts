@@ -1,8 +1,6 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Platformstatistiek voor het adminpanel: elke nacht, voor gisteren (afgerond) en vandaag (momentopname).
+Schedule::command('stats:compute --days=2')->dailyAt('02:30')->timezone('Europe/Amsterdam');

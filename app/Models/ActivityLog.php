@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -39,5 +40,21 @@ class ActivityLog extends Model
         $log->save();
 
         return $log;
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<Barbershop, $this>
+     */
+    public function barbershop(): BelongsTo
+    {
+        return $this->belongsTo(Barbershop::class);
     }
 }

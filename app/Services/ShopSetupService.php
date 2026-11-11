@@ -5,12 +5,14 @@ namespace App\Services;
 use App\Enums\ShopRole;
 use App\Models\Barbershop;
 use App\Models\OpeningHour;
+use App\Models\Plan;
 use App\Models\Service;
 use App\Models\ShopSetting;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Rules\AvailableSlug;
 use App\Support\Color;
+use App\Support\Features;
 use App\Support\WeekSchedule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -75,8 +77,11 @@ class ShopSetupService
             ]);
             $shop->is_public = false;
             $shop->onboarding_step = 3;
-            $shop->trial_ends_at = config('barbercuts.billing.enabled')
-                ? now()->addDays((int) config('barbercuts.billing.trial_days'))
+            // Facturering aan: een proefperiode uit het actieve plan. Uit (gratis start): geen proefperiode nodig.
+            $plan = Features::billing() ? Plan::current() : null;
+            $shop->plan_id = $plan?->id;
+            $shop->trial_ends_at = Features::billing()
+                ? now()->addDays($plan->trial_days ?? (int) config('barbercuts.billing.trial_days'))
                 : null;
             $shop->save();
 
