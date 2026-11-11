@@ -11,6 +11,10 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 # De PHP en Node die Plesk voor deze site gebruikt (de gewone `php` op de server kan een andere versie zijn).
 export PATH="/opt/plesk/php/8.4/bin:/opt/plesk/node/24/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
+# Plesk start deployment-acties soms zonder HOME; composer en npm hebben een schrijfbare thuismap nodig.
+export HOME="${HOME:-$(getent passwd "$(id -un)" | cut -d: -f6)}"
+export COMPOSER_HOME="${COMPOSER_HOME:-$HOME/.composer}"
+
 [ -f .env ] || { echo "✗ .env ontbreekt (zie docs/DEPLOY.md)"; exit 1; }
 grep -qE '^APP_KEY=base64:.+' .env || { echo "✗ APP_KEY in .env is leeg"; exit 1; }
 
