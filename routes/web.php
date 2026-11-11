@@ -13,6 +13,7 @@ use App\Livewire\App\Customers\Index as CustomerIndex;
 use App\Livewire\App\Customers\Show as CustomerShow;
 use App\Livewire\App\More;
 use App\Livewire\App\OpeningHours;
+use App\Livewire\App\Profile;
 use App\Livewire\App\Revenue;
 use App\Livewire\App\Services\Form as ServiceForm;
 use App\Livewire\App\Services\Index as ServiceIndex;
@@ -190,6 +191,7 @@ Route::middleware('auth')->group(function (): void {
 Route::middleware(['auth', ResolveShopFromApp::class])->prefix('app')->name('app.')->group(function (): void {
     Route::livewire('/', Today::class)->name('today');
     Route::livewire('/meer', More::class)->name('more');
+    Route::livewire('/profiel', Profile::class)->name('profile');
 
     Route::livewire('/agenda', Calendar::class)->name('calendar');
     Route::livewire('/afspraken/nieuw', AppointmentForm::class)->name('appointments.create');

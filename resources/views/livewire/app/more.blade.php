@@ -14,6 +14,9 @@
             <x-ui.list-item :href="route('app.staff')" title="Kappers">
                 <x-slot:leading><x-ui.icon name="users" class="text-muted" /></x-slot:leading>
             </x-ui.list-item>
+            <x-ui.list-item :href="route('app.profile')" title="Mijn profiel">
+                <x-slot:leading><x-ui.icon name="user" class="text-muted" /></x-slot:leading>
+            </x-ui.list-item>
             @if (! $isOwner && $ownStaffId)
                 <x-ui.list-item :href="route('app.staff.edit', $ownStaffId)" title="Mijn werktijden">
                     <x-slot:leading><x-ui.icon name="clock" class="text-muted" /></x-slot:leading>

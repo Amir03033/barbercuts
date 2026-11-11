@@ -19,7 +19,7 @@
             $isOwner ? ['route' => 'app.services', 'match' => ['app.services', 'app.services.*'], 'label' => 'Diensten', 'icon' => 'scissors'] : null,
             $isOwner ? ['route' => 'app.opening-hours', 'match' => ['app.opening-hours'], 'label' => 'Openingstijden', 'icon' => 'clock'] : null,
             $isOwner ? ['route' => 'app.appearance', 'match' => ['app.appearance'], 'label' => 'Uiterlijk', 'icon' => 'palette'] : null,
-            $isOwner ? ['route' => 'app.settings', 'match' => ['app.settings'], 'label' => 'Instellingen', 'icon' => 'sliders'] : null,
+            $isOwner ? ['route' => 'app.settings', 'match' => ['app.settings'], 'label' => 'Instellingen', 'icon' => 'settings'] : null,
             $isOwner && \App\Support\Features::billing() ? ['route' => 'app.subscription', 'match' => ['app.subscription'], 'label' => 'Abonnement', 'icon' => 'credit-card'] : null,
         ])),
     ];
@@ -101,9 +101,7 @@
             </x-slot:trigger>
 
             <div>
-                @if (\Illuminate\Support\Facades\Route::has('app.profile'))
-                    <x-ui.dropdown-item :href="route('app.profile')" icon="user">Mijn profiel</x-ui.dropdown-item>
-                @endif
+                <x-ui.dropdown-item :href="route('app.profile')" icon="user">Mijn profiel</x-ui.dropdown-item>
                 <x-ui.dropdown-item :href="route('app.more')" icon="menu">Alle onderdelen</x-ui.dropdown-item>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

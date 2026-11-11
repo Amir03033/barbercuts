@@ -85,7 +85,7 @@
         @endif
 
         <h2 class="mt-6 mb-2 text-base font-semibold">Diensten</h2>
-        <div class="divide-y divide-border rounded-card border border-border">
+        <div class="divide-y divide-border rounded-card border border-border bg-card shadow-soft">
             @forelse ($services as $service)
                 <x-ui.list-item :title="$service->name" :subtitle="duration_label($service->duration)" :chevron="false">
                     <x-slot:trailing><span class="font-semibold tabular-nums">{{ money($service->price_cents) }}</span></x-slot:trailing>

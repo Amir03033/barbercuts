@@ -7,6 +7,7 @@ use App\Livewire\App\Appointments\Form as AppointmentForm;
 use App\Livewire\App\Calendar;
 use App\Livewire\App\Customers\Index as CustomerIndex;
 use App\Livewire\App\Customers\Show as CustomerShow;
+use App\Livewire\App\Profile;
 use App\Livewire\App\Today;
 use App\Models\Appointment;
 use App\Models\Customer;
@@ -502,4 +503,17 @@ it('shows the week and month views and opens a day from them', function () {
         ->call('selectDay', '2026-12-02')
         ->assertSet('view', 'day')->assertSet('date', '2026-12-02')->assertSee('10:00 Volgende Maand')
         ->call('selectDay', 'rommel')->assertSet('date', '2026-12-02');
+});
+
+it('lets a team member update their profile and password', function () {
+    actingInShop($this->samUser, $this->shop);
+
+    $this->get(route('app.profile'))->assertOk()->assertSee('Mijn profiel');
+
+    Livewire::test(Profile::class)
+        ->set('name', 'Sam Nieuw')->set('phone', '0612345678')->call('saveProfile')->assertHasNoErrors()
+        ->set('phone', 'abc')->call('saveProfile')->assertHasErrors('phone')
+        ->set('currentPassword', 'fout')->set('newPassword', 'nieuw-wachtwoord-1')->call('savePassword')->assertHasErrors('currentPassword');
+
+    expect($this->samUser->refresh())->name->toBe('Sam Nieuw')->phone->toBe('+31612345678');
 });
