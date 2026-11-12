@@ -20,7 +20,7 @@
             $isOwner ? ['route' => 'app.opening-hours', 'match' => ['app.opening-hours'], 'label' => 'Openingstijden', 'icon' => 'clock'] : null,
             $isOwner ? ['route' => 'app.appearance', 'match' => ['app.appearance'], 'label' => 'Uiterlijk', 'icon' => 'palette'] : null,
             $isOwner ? ['route' => 'app.settings', 'match' => ['app.settings'], 'label' => 'Instellingen', 'icon' => 'settings'] : null,
-            $isOwner && \App\Support\Features::billing() ? ['route' => 'app.subscription', 'match' => ['app.subscription'], 'label' => 'Abonnement', 'icon' => 'credit-card'] : null,
+            $isOwner && \App\Support\Features::billing() && ! $shop->is_demo ? ['route' => 'app.subscription', 'match' => ['app.subscription'], 'label' => 'Abonnement', 'icon' => 'credit-card'] : null,
         ])),
     ];
 @endphp

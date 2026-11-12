@@ -17,7 +17,7 @@ class SignupsChartWidget extends ChartWidget
     protected function getData(): array
     {
         $start = CarbonImmutable::now('Europe/Amsterdam')->startOfWeek()->subWeeks(11);
-        $dates = Barbershop::query()->where('created_at', '>=', $start->utc())->pluck('created_at');
+        $dates = Barbershop::query()->real()->where('created_at', '>=', $start->utc())->pluck('created_at');
 
         $labels = [];
         $values = [];

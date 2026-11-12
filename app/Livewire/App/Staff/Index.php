@@ -46,7 +46,10 @@ class Index extends Component
             $staff->invited_at = now();
             $staff->save();
 
-            Notification::route('mail', $this->email)->notify(new StaffInvitation($staff, $shop, $this->user()->name));
+            // In een demozaak (fase 6) gaat de uitnodiging niet echt de deur uit.
+            if (! $shop->is_demo) {
+                Notification::route('mail', $this->email)->notify(new StaffInvitation($staff, $shop, $this->user()->name));
+            }
         }
 
         $this->reset('name', 'email');

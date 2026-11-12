@@ -17,7 +17,7 @@ class TopShopsWidget extends TableWidget
     {
         return $table
             ->heading('Zaken met de meeste boekingen')
-            ->query(fn () => Barbershop::query()->withCount('appointments')->orderByDesc('appointments_count')->limit(10))
+            ->query(fn () => Barbershop::query()->real()->withCount('appointments')->orderByDesc('appointments_count')->limit(10))
             ->columns([
                 TextColumn::make('name')->label('Zaak'),
                 TextColumn::make('city')->label('Plaats')->placeholder('-'),

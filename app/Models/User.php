@@ -44,6 +44,8 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'is_pitcher' => 'boolean',
+            'last_demo_at' => 'datetime',
             'notification_preferences' => 'array',
             'app_authentication_secret' => 'encrypted',
             'app_authentication_recovery_codes' => 'encrypted:array',
@@ -115,10 +117,14 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     }
 
     /**
-     * Waar deze gebruiker na inloggen thuishoort: de kapper-app, of het klantaccount.
+     * Waar deze gebruiker na inloggen thuishoort: de demo (pitcher), de kapper-app, of het klantaccount.
      */
     public function homeRoute(): string
     {
+        if ($this->is_pitcher) {
+            return route('demo', absolute: false);
+        }
+
         return $this->shops()->exists() ? route('app.today', absolute: false) : route('account', absolute: false);
     }
 

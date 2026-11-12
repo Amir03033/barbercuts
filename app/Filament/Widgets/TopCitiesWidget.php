@@ -20,7 +20,7 @@ class TopCitiesWidget extends TableWidget
             ->heading('Steden met de meeste zaken')
             // Een afgeleide tabel: Filament sorteert altijd ook op de sleutel, en dat mag niet botsen met GROUP BY.
             ->query(fn () => Barbershop::query()
-                ->fromSub(DB::table('barbershops')->whereNotNull('city')->selectRaw('MIN(id) as id, city, COUNT(*) as shops_count')->groupBy('city'), 'barbershops')
+                ->fromSub(DB::table('barbershops')->where('is_demo', false)->whereNotNull('city')->selectRaw('MIN(id) as id, city, COUNT(*) as shops_count')->groupBy('city'), 'barbershops')
                 ->orderByDesc('shops_count')->orderBy('city')->limit(10))
             ->columns([
                 TextColumn::make('city')->label('Plaats'),

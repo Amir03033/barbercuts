@@ -32,6 +32,16 @@ class ResolveShopFromSlug
             return response()->view('shop.unavailable', ['shop' => $shop], 503);
         }
 
+        // Demozaak van een pitcher (fase 6): weg zodra de tijd om is, en nooit in een zoekmachine.
+        if ($shop->is_demo) {
+            abort_if($shop->isExpiredDemo(), 404);
+
+            $response = $next($request);
+            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+
+            return $response;
+        }
+
         return $next($request);
     }
 }

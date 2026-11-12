@@ -107,15 +107,18 @@ class PlatformStatsService
 
         $values = [];
 
+        // Demozaken van pitchers tellen nergens mee (fase 6).
+        $demoShops = Barbershop::query()->where('is_demo', true)->select('id');
+
         // Zaken per toegangsstatus (momentopname) en aanmeldingen
-        $values['shops_total'] = Barbershop::query()->count();
+        $values['shops_total'] = Barbershop::query()->real()->count();
 
         foreach (AccessState::cases() as $state) {
-            $values['shops_'.$state->value] = Barbershop::query()->inAccessState($state)->count();
+            $values['shops_'.$state->value] = Barbershop::query()->real()->inAccessState($state)->count();
         }
 
-        $values['shops_onboarded'] = Barbershop::query()->whereNull('onboarding_step')->count();
-        $values['signups'] = Barbershop::query()->where('created_at', '>=', $from)->where('created_at', '<', $to)->count();
+        $values['shops_onboarded'] = Barbershop::query()->real()->whereNull('onboarding_step')->count();
+        $values['signups'] = Barbershop::query()->real()->where('created_at', '>=', $from)->where('created_at', '<', $to)->count();
 
         // Geld
         $recurring = Subscription::query()->whereIn('status', [SubscriptionStatus::Active->value, SubscriptionStatus::PastDue->value]);
@@ -132,32 +135,32 @@ class PlatformStatsService
         $values['churn_bp'] = $atStart > 0 ? $cancelled / $atStart * 10000 : 0;
 
         // Conversie trial → betaald: zaken met minstens één betaald abonnement / zaken die een proefperiode hebben gehad
-        $trialled = Barbershop::query()->whereNotNull('trial_ends_at')->count();
-        $paying = Barbershop::query()->whereNotNull('trial_ends_at')
+        $trialled = Barbershop::query()->real()->whereNotNull('trial_ends_at')->count();
+        $paying = Barbershop::query()->real()->whereNotNull('trial_ends_at')
             ->whereExists(fn ($sub) => $sub->selectRaw('1')->from('payments')->whereColumn('payments.barbershop_id', 'barbershops.id')
                 ->where('payments.status', 'paid')->where('payments.payable_type', Subscription::class))->count();
         $values['conversion_bp'] = $trialled > 0 ? $paying / $trialled * 10000 : 0;
 
         // Gebruik: afspraken op deze dag
-        $created = fn () => Appointment::withoutGlobalScopes()->where('created_at', '>=', $from)->where('created_at', '<', $to);
+        $created = fn () => Appointment::withoutGlobalScopes()->whereNotIn('barbershop_id', $demoShops)->where('created_at', '>=', $from)->where('created_at', '<', $to);
         $values['appointments_created'] = $created()->count();
         $values['appointments_online'] = $created()->where('source', AppointmentSource::Online->value)->count();
         $values['appointments_staff'] = $created()->where('source', '!=', AppointmentSource::Online->value)->count();
 
-        $held = fn () => Appointment::withoutGlobalScopes()->where('starts_at', '>=', $from)->where('starts_at', '<', $to);
+        $held = fn () => Appointment::withoutGlobalScopes()->whereNotIn('barbershop_id', $demoShops)->where('starts_at', '>=', $from)->where('starts_at', '<', $to);
         $values['appointments_done'] = $held()->where('status', AppointmentStatus::Completed->value)->count();
         $values['revenue_cents'] = (int) $held()->where('status', AppointmentStatus::Completed->value)->sum('amount_paid_cents');
 
         // No-show over de laatste 30 dagen (momentopname)
-        $last30 = fn () => Appointment::withoutGlobalScopes()->where('starts_at', '>=', $since30)->where('starts_at', '<', $to);
+        $last30 = fn () => Appointment::withoutGlobalScopes()->whereNotIn('barbershop_id', $demoShops)->where('starts_at', '>=', $since30)->where('starts_at', '<', $to);
         $done30 = $last30()->where('status', AppointmentStatus::Completed->value)->count();
         $noShow30 = $last30()->where('status', AppointmentStatus::NoShow->value)->count();
         $values['no_show_bp'] = $done30 + $noShow30 > 0 ? $noShow30 / ($done30 + $noShow30) * 10000 : 0;
 
         // Kappers en klanten (momentopname)
-        $values['active_barbers'] = StaffMember::withoutGlobalScopes()->where('is_active', true)->count();
-        $values['customer_accounts'] = Customer::withoutGlobalScopes()->whereNotNull('user_id')->distinct()->count('user_id');
-        $values['guest_customers'] = Customer::withoutGlobalScopes()->whereNull('user_id')->count();
+        $values['active_barbers'] = StaffMember::withoutGlobalScopes()->whereNotIn('barbershop_id', $demoShops)->where('is_active', true)->count();
+        $values['customer_accounts'] = Customer::withoutGlobalScopes()->whereNotIn('barbershop_id', $demoShops)->whereNotNull('user_id')->distinct()->count('user_id');
+        $values['guest_customers'] = Customer::withoutGlobalScopes()->whereNotIn('barbershop_id', $demoShops)->whereNull('user_id')->count();
 
         // Berichten op deze dag
         foreach (['mail', 'push', 'sms', 'whatsapp'] as $channel) {

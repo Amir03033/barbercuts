@@ -7,3 +7,6 @@ Schedule::command('stats:compute --days=2')->dailyAt('02:30')->timezone('Europe/
 
 // Herinneringen en andere geplande klantberichten (§7.6): elke minuut, nooit twee runs tegelijk.
 Schedule::command('notifications:send-due')->everyMinute()->withoutOverlapping(5);
+
+// Demozaken van pitchers (fase 6): elk uur opruimen wat verlopen is.
+Schedule::command('demo:cleanup')->hourly();

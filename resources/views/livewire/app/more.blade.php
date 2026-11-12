@@ -32,7 +32,7 @@
                 <x-ui.list-item :href="route('app.settings')" title="Instellingen">
                     <x-slot:leading><x-ui.icon name="settings" class="text-muted" /></x-slot:leading>
                 </x-ui.list-item>
-                @if (\App\Support\Features::billing())
+                @if (\App\Support\Features::billing() && ! $shop->is_demo)
                     <x-ui.list-item :href="route('app.subscription')" title="Abonnement" :subtitle="$shop->accessState()->label()">
                         <x-slot:leading><x-ui.icon name="euro" class="text-muted" /></x-slot:leading>
                     </x-ui.list-item>

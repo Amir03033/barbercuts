@@ -25,6 +25,14 @@ class ResolveShopFromApp
 
         $shops = $user->shops()->orderBy('shop_user.id')->get();
 
+        // Een verlopen demozaak (fase 6) bestaat voor de pitcher niet meer; hij wordt binnen het uur gewist.
+        $hadDemo = $shops->contains(fn (Barbershop $candidate): bool => $candidate->isExpiredDemo());
+        $shops = $shops->reject(fn (Barbershop $candidate): bool => $candidate->isExpiredDemo())->values();
+
+        if ($shops->isEmpty() && ($hadDemo || $user->is_pitcher)) {
+            return redirect()->route('demo');
+        }
+
         /** @var Barbershop|null $shop */
         $shop = $shops->firstWhere('id', $request->session()->get('current_shop_id')) ?? $shops->first();
 

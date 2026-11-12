@@ -28,6 +28,8 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $trial_ends_at
  * @property Carbon|null $free_until
  * @property Carbon|null $suspended_at
+ * @property bool $is_demo
+ * @property Carbon|null $demo_expires_at
  */
 #[Fillable([
     'slug', 'name', 'description', 'phone', 'email', 'address', 'postal_code', 'city', 'latitude', 'longitude',
@@ -58,6 +60,8 @@ class Barbershop extends Model
         return [
             'theme_mode' => ThemeMode::class,
             'is_public' => 'boolean',
+            'is_demo' => 'boolean',
+            'demo_expires_at' => 'datetime',
             'onboarding_step' => 'integer',
             'link_shared_at' => 'datetime',
             'trial_ends_at' => 'datetime',
@@ -170,7 +174,8 @@ class Barbershop extends Model
             return AccessState::Suspended;
         }
 
-        if (! Features::billing()) {
+        // Een demozaak valt altijd buiten facturering (fase 6).
+        if ($this->is_demo || ! Features::billing()) {
             return AccessState::Free;
         }
 
@@ -266,6 +271,25 @@ class Barbershop extends Model
     public function trialDaysLeft(): ?int
     {
         return $this->trial_ends_at?->isFuture() ? (int) ceil(now()->diffInDays($this->trial_ends_at, false)) : null;
+    }
+
+    /**
+     * Echte zaken: zonder de tijdelijke demozaken van pitchers. Voor statistiek, lijsten en straks de kappersgids.
+     *
+     * @param  Builder<Barbershop>  $query
+     * @return Builder<Barbershop>
+     */
+    public function scopeReal(Builder $query): Builder
+    {
+        return $query->where('barbershops.is_demo', false);
+    }
+
+    /**
+     * Een demozaak waarvan de tijd om is; wordt binnen het uur opgeruimd.
+     */
+    public function isExpiredDemo(): bool
+    {
+        return $this->is_demo && ($this->demo_expires_at === null || $this->demo_expires_at->isPast());
     }
 
     public function hasFinishedOnboarding(): bool

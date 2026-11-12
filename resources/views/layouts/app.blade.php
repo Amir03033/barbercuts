@@ -17,6 +17,7 @@
     <div class="transition-[padding] duration-300 ease-out-soft" :class="collapsed ? 'lg:pl-[4.5rem]' : 'lg:pl-60'">
         <x-app.impersonation-banner />
         @isset($currentShop)
+            <x-app.demo-banner :shop="$currentShop" />
             <x-app.access-banner :shop="$currentShop" :is-owner="auth()->user()?->isOwnerOf($currentShop) ?? false" />
         @endisset
 

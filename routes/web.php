@@ -3,6 +3,7 @@
 use App\Enums\ShopRole;
 use App\Http\Controllers\MollieWebhookController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Middleware\EnsurePitcher;
 use App\Http\Middleware\ResolveShopFromApp;
 use App\Http\Middleware\ResolveShopFromSlug;
 use App\Livewire\AcceptInvitation;
@@ -28,6 +29,7 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmail;
+use App\Livewire\Demo;
 use App\Livewire\Dev\UiShowcase;
 use App\Livewire\Home;
 use App\Livewire\ManageAppointment;
@@ -39,6 +41,7 @@ use App\Models\Appointment;
 use App\Models\Barbershop;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\Demo\DemoShopService;
 use App\Services\ShopStatsService;
 use App\Support\CurrentShop;
 use App\Support\Features;
@@ -51,6 +54,7 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -189,6 +193,30 @@ Route::middleware('auth')->group(function (): void {
         return redirect('/admin');
     })->name('impersonate.stop');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Demo voor pitchers (fase 6). Niet gelinkt, alleen voor accounts die de admin als pitcher heeft aangemaakt.
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', EnsurePitcher::class])->group(function (): void {
+    Route::livewire('/demo', Demo::class)->name('demo');
+
+    // Verse demozaak: wist de vorige demo van deze pitcher en logt hem in als eigenaar van de nieuwe.
+    Route::post('/demo/start', function (Request $request, DemoShopService $demos): RedirectResponse {
+        $shop = $demos->start($request->user());
+        $request->session()->put('current_shop_id', $shop->id);
+
+        return redirect()->route('app.today')->with('toast', 'Je demo staat klaar.');
+    })->middleware('throttle:6,1')->name('demo.start');
+});
+
+// Link uit de uitnodiging van een pitcher (7 dagen geldig): door naar "wachtwoord kiezen" met een vers token.
+Route::get('/demo/welkom/{user}', function (User $user): RedirectResponse {
+    abort_unless($user->is_pitcher, 404);
+
+    return redirect()->route('password.reset', ['token' => Password::broker()->createToken($user), 'email' => $user->email]);
+})->whereNumber('user')->middleware(['signed', 'guest', 'throttle:6,1'])->name('demo.welcome');
 
 /*
 |--------------------------------------------------------------------------

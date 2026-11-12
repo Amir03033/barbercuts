@@ -52,6 +52,11 @@ class NotifyStaffOfCustomerChange
 
     private function notify(Appointment $appointment, string $type): void
     {
+        // In een demozaak (fase 6) gaat er nooit een bericht uit.
+        if (Barbershop::query()->whereKey($appointment->barbershop_id)->where('is_demo', true)->exists()) {
+            return;
+        }
+
         $this->recipients($appointment)->each(
             fn (User $user) => $user->notify(new StaffAppointmentUpdate($appointment->id, $type))
         );

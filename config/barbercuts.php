@@ -75,6 +75,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Demo voor pitchers (fase 6): hoe lang een demozaak blijft bestaan
+    |--------------------------------------------------------------------------
+    */
+    'demo' => [
+        'hours' => (int) env('DEMO_HOURS', 24),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Gereserveerde slugs (§4)
     |--------------------------------------------------------------------------
     | Deze namen mogen niet als slug van een zaak gebruikt worden.
@@ -83,7 +92,7 @@ return [
         'app', 'admin', 'account', 'push', 'afspraak', 'aanmelden', 'inloggen', 'registreren', 'uitloggen',
         'wachtwoord-vergeten', 'wachtwoord-herstellen', 'e-mail-bevestigen', 'uitnodiging', 'prijzen', 'privacy',
         'voorwaarden', 'verwerkersovereenkomst', 'contact', 'impersonate', 'over', 'help', 'api', 'up', 'webhooks', 'storage', 'build',
-        'livewire', 'filament', 'css', 'js', 'images', 'kappers', 'zoeken', '_ui',
+        'livewire', 'filament', 'css', 'js', 'images', 'kappers', 'zoeken', '_ui', 'demo',
     ],
 
 ];

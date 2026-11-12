@@ -36,6 +36,9 @@ class Subscription extends Component
 
         // Gratis start: geen betaalschermen.
         abort_unless(Features::billing(), 404);
+
+        // Een demozaak (fase 6) heeft geen abonnement.
+        abort_if($this->shop()->is_demo, 404);
     }
 
     public function start(SubscriptionService $subscriptions): void

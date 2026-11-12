@@ -106,7 +106,8 @@ class BarbershopResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('plan'))
+            // Demozaken van pitchers (fase 6) horen niet tussen de echte zaken.
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('is_demo', false)->with('plan'))
             ->columns([
                 TextColumn::make('name')->label('Naam')->searchable()->sortable(),
                 TextColumn::make('city')->label('Plaats')->searchable()->sortable()->toggleable(),
@@ -129,7 +130,7 @@ class BarbershopResource extends Resource
                         return filled($data['value'] ?? null) ? $query->inAccessState(AccessState::from($data['value'])) : $query;
                     }),
                 SelectFilter::make('city')->label('Plaats')
-                    ->options(fn (): array => Barbershop::query()->whereNotNull('city')->distinct()->orderBy('city')->pluck('city', 'city')->all()),
+                    ->options(fn (): array => Barbershop::query()->real()->whereNotNull('city')->distinct()->orderBy('city')->pluck('city', 'city')->all()),
             ])
             ->recordActions([
                 ViewAction::make()->label('Bekijk'),

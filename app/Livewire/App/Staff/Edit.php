@@ -178,7 +178,10 @@ class Edit extends Component
         $staff->invited_at = now();
         $staff->save();
 
-        Notification::route('mail', $this->inviteEmail)->notify(new StaffInvitation($staff, $this->shop(), $this->user()->name));
+        // In een demozaak (fase 6) gaat de uitnodiging niet echt de deur uit.
+        if (! $this->shop()->is_demo) {
+            Notification::route('mail', $this->inviteEmail)->notify(new StaffInvitation($staff, $this->shop(), $this->user()->name));
+        }
 
         $this->dispatch('toast', message: 'Uitnodiging verstuurd');
     }
