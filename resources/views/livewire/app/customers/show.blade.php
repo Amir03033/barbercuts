@@ -29,6 +29,11 @@
             </form>
         </x-ui.section>
 
+        <x-ui.card flat>
+            <x-ui.toggle label="Berichten van de zaak" hint="Alleen aanzetten als de klant dat goed vindt. Nodig voor “klanten terughalen”."
+                :checked="$customer->marketing_opt_in" x-on:change="$wire.setMarketing($event.target.checked)" />
+        </x-ui.card>
+
         <x-ui.section title="Bezoeken">
             @if ($appointments->isEmpty())
                 <p class="text-sm text-muted">Nog geen afspraken.</p>

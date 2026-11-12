@@ -8,13 +8,15 @@
 @php
     $user = auth()->user();
     $groups = [
-        'Overzicht' => [
+        'Overzicht' => array_values(array_filter([
             ['route' => 'app.today', 'match' => ['app.today'], 'label' => 'Overzicht', 'icon' => 'layout-dashboard'],
             ['route' => 'app.calendar', 'match' => ['app.calendar', 'app.appointments.*'], 'label' => 'Agenda', 'icon' => 'calendar'],
             ['route' => 'app.customers', 'match' => ['app.customers', 'app.customers.*'], 'label' => 'Klanten', 'icon' => 'users'],
             ['route' => 'app.revenue', 'match' => ['app.revenue'], 'label' => $isOwner ? 'Omzet' : 'Mijn omzet', 'icon' => 'trending-up'],
             ['route' => 'app.reviews', 'match' => ['app.reviews'], 'label' => 'Reviews', 'icon' => 'star'],
-        ],
+            ['route' => 'app.waitlist', 'match' => ['app.waitlist'], 'label' => 'Wachtlijst', 'icon' => 'clock'],
+            $isOwner ? ['route' => 'app.winback', 'match' => ['app.winback'], 'label' => 'Klanten terughalen', 'icon' => 'users'] : null,
+        ])),
         'Beheer' => array_values(array_filter([
             ['route' => 'app.staff', 'match' => ['app.staff', 'app.staff.*'], 'label' => 'Kappers', 'icon' => 'user'],
             $isOwner ? ['route' => 'app.services', 'match' => ['app.services', 'app.services.*'], 'label' => 'Diensten', 'icon' => 'scissors'] : null,

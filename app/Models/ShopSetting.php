@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'slot_interval', 'min_notice', 'max_days_ahead', 'customer_cancel_limit', 'customer_reschedule_limit',
     'allow_guest_booking', 'allow_staff_choice', 'reminder_1_minutes', 'reminder_2_minutes', 'reminder_channels',
-    'sms_enabled', 'whatsapp_enabled', 'review_request_hours',
+    'sms_enabled', 'whatsapp_enabled', 'review_request_hours', 'winback_weeks', 'winback_message', 'waitlist_enabled',
 ])]
 class ShopSetting extends Model
 {
@@ -32,6 +32,7 @@ class ShopSetting extends Model
         'reminder_1_minutes' => 1440,
         'reminder_channels' => '["mail","push"]',
         'review_request_hours' => 2,
+        'waitlist_enabled' => true,
     ];
 
     /**
@@ -51,6 +52,8 @@ class ShopSetting extends Model
             'reminder_2_minutes' => 'integer',
             'reminder_channels' => 'array',
             'review_request_hours' => 'integer',
+            'winback_weeks' => 'integer',
+            'waitlist_enabled' => 'boolean',
             'sms_enabled' => 'boolean',
             'whatsapp_enabled' => 'boolean',
         ];

@@ -98,7 +98,7 @@ return [
         'app', 'admin', 'account', 'push', 'afspraak', 'aanmelden', 'inloggen', 'registreren', 'uitloggen',
         'wachtwoord-vergeten', 'wachtwoord-herstellen', 'e-mail-bevestigen', 'uitnodiging', 'prijzen', 'privacy',
         'voorwaarden', 'verwerkersovereenkomst', 'contact', 'impersonate', 'over', 'help', 'api', 'up', 'webhooks', 'storage', 'build',
-        'livewire', 'filament', 'css', 'js', 'images', 'kappers', 'zoeken', '_ui', 'demo',
+        'livewire', 'filament', 'css', 'js', 'images', 'kappers', 'zoeken', '_ui', 'demo', 'wachtlijst', 'afmelden',
     ],
 
 ];

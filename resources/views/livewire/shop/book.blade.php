@@ -1,5 +1,5 @@
 @php
-    $titles = ['service' => 'Kies een dienst', 'staff' => 'Kies een kapper', 'time' => 'Kies een dag en tijd', 'details' => 'Je gegevens'];
+    $titles = ['service' => 'Kies een dienst', 'staff' => 'Kies een kapper', 'time' => 'Kies een dag en tijd', 'details' => 'Je gegevens', 'waitlist' => 'Wachtlijst'];
 @endphp
 
 <div>
@@ -69,11 +69,52 @@
                 <x-ui.alert type="danger" class="mt-4">{{ $message }}</x-ui.alert>
             @enderror
 
+            {{-- Volle dag? Dan kan de klant op de wachtlijst (fase 8) --}}
+            @if ($fullDays !== [])
+                <x-ui.card flat class="mt-6 flex items-center justify-between gap-3">
+                    <p class="text-sm"><span class="font-semibold">Staat je dag er niet bij?</span> <span class="text-muted">Zet je op de wachtlijst en krijg bericht als er een plek vrijkomt.</span></p>
+                    <x-ui.button variant="secondary" size="sm" wire:click="startWaitlist" loading="startWaitlist" class="shrink-0">Wachtlijst</x-ui.button>
+                </x-ui.card>
+            @endif
+
             <x-ui.sticky-footer>
                 <x-ui.button full wire:click="confirmTime" loading="confirmTime" :disabled="$time === ''">
                     {{ $time === '' ? 'Kies een tijd' : 'Verder met '.$time }}
                 </x-ui.button>
             </x-ui.sticky-footer>
+        @endif
+
+        {{-- Wachtlijst voor een volle dag (fase 8) --}}
+        @if ($step === 'waitlist')
+            <form wire:submit="joinWaitlist" class="space-y-4" novalidate>
+                <div>
+                    <p class="mb-2 text-base font-semibold">Voor welke dag?</p>
+                    <div class="flex flex-wrap gap-2" role="radiogroup" aria-label="Kies een dag">
+                        @foreach ($fullDays as $day)
+                            <x-ui.chip name="waitlistDate" :value="$day" wire:model="waitlistDate" :checked="$waitlistDate === $day" wire:key="wl-{{ $day }}">
+                                {{ nl_date(\Carbon\CarbonImmutable::parse($day), 'dd D MMM') }}
+                            </x-ui.chip>
+                        @endforeach
+                    </div>
+                    <p class="mt-2 text-sm text-muted">Komt er een plek vrij, dan krijg je een bericht en heb je {{ \App\Models\WaitlistEntry::OFFER_MINUTES }} minuten voorrang om te boeken.</p>
+                </div>
+
+                <x-ui.input label="Naam" wire:model="name" autocomplete="name" required />
+                <x-ui.phone-input wire:model="phone" />
+                <x-ui.input label="E-mailadres" type="email" wire:model="email" autocomplete="email" inputmode="email" hint="Hier sturen we het bericht naartoe." />
+
+                <div class="hidden" aria-hidden="true">
+                    <label>Website <input type="text" class="text-base" wire:model="website" tabindex="-1" autocomplete="off" /></label>
+                </div>
+
+                @error('booking')
+                    <x-ui.alert type="danger">{{ $message }}</x-ui.alert>
+                @enderror
+
+                <x-ui.sticky-footer>
+                    <x-ui.button type="submit" loading="joinWaitlist" full>Zet me op de wachtlijst</x-ui.button>
+                </x-ui.sticky-footer>
+            </form>
         @endif
 
         {{-- Stap 4: gegevens --}}
@@ -102,6 +143,10 @@
                     <x-ui.input label="E-mailadres" type="email" wire:model.blur="email" autocomplete="email" inputmode="email" optional
                         :hint="$email === '' ? 'Zonder e-mail ontvang je geen bevestiging per mail.' : 'Hier sturen we je bevestiging naartoe.'" />
                     <x-ui.textarea label="Opmerking" wire:model="notes" optional rows="2" />
+
+                    @if ($askMarketing)
+                        <x-ui.toggle label="Houd me op de hoogte" hint="Af en toe een bericht van {{ $shop->name }}, bijvoorbeeld als het tijd is voor een nieuwe knipbeurt. Afmelden kan altijd." wire:model="marketingOptIn" :checked="$marketingOptIn" />
+                    @endif
 
                     {{-- Honeypot tegen bots: onzichtbaar voor mensen en schermlezers --}}
                     <div class="hidden" aria-hidden="true">

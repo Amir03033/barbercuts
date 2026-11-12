@@ -210,8 +210,46 @@ class DemoShopService
         }
 
         $this->insertReviews($shop);
+        $this->insertWinbackAndWaitlist($shop);
 
         return $shop;
+    }
+
+    /**
+     * "Klanten terughalen" staat aan met een resultaat om te laten zien, en er staan een paar klanten op de wachtlijst.
+     */
+    private function insertWinbackAndWaitlist(Barbershop $shop): void
+    {
+        DB::table('shop_settings')->where('barbershop_id', $shop->id)->update(['winback_weeks' => 6]);
+
+        // Berichten van de afgelopen weken, elk twee dagen voordat die klant weer een afspraak maakte.
+        $returned = DB::table('appointments')->where('barbershop_id', $shop->id)->where('status', AppointmentStatus::Completed->value)
+            ->where('created_at', '>', now()->subDays(50))->orderByDesc('id')->get(['customer_id', 'created_at'])->unique('customer_id')->take(18);
+
+        foreach ($returned as $visit) {
+            $sentAt = CarbonImmutable::parse($visit->created_at, 'UTC')->subDays(2);
+
+            DB::table('winback_messages')->insert([
+                'barbershop_id' => $shop->id, 'customer_id' => $visit->customer_id, 'channel' => 'mail', 'status' => 'sent',
+                'sent_at' => $sentAt, 'created_at' => $sentAt, 'updated_at' => $sentAt,
+            ]);
+        }
+
+        $serviceId = DB::table('services')->where('barbershop_id', $shop->id)->orderBy('id')->value('id');
+        $customers = DB::table('customers')->where('barbershop_id', $shop->id)->whereNotNull('email')->inRandomOrder()->limit(3)->pluck('id');
+        $day = CarbonImmutable::now($shop->timezone)->addDay();
+
+        foreach ($customers as $customerId) {
+            // Alleen dagen waarop de zaak open is (di–za).
+            while (! in_array($day->dayOfWeekIso, [2, 3, 4, 5, 6], true)) {
+                $day = $day->addDay();
+            }
+
+            DB::table('waitlist_entries')->insert([
+                'barbershop_id' => $shop->id, 'customer_id' => $customerId, 'service_id' => $serviceId, 'date' => $day->toDateString(),
+                'token' => Str::random(40), 'status' => 'waiting', 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
     }
 
     /**

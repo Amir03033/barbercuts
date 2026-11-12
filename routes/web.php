@@ -25,6 +25,8 @@ use App\Livewire\App\Staff\Edit as StaffEdit;
 use App\Livewire\App\Staff\Index as StaffIndex;
 use App\Livewire\App\Subscription;
 use App\Livewire\App\Today;
+use App\Livewire\App\Waitlist;
+use App\Livewire\App\Winback;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -38,6 +40,7 @@ use App\Livewire\ManageAppointment;
 use App\Livewire\Onboarding;
 use App\Livewire\Shop\Book as ShopBook;
 use App\Livewire\Shop\Show as ShopShow;
+use App\Livewire\WaitlistPage;
 use App\Models\ActivityLog;
 use App\Models\Appointment;
 use App\Models\Barbershop;
@@ -52,10 +55,12 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpFoundation\Response;
@@ -122,6 +127,19 @@ Route::get('/afspraak/{token}/agenda.ics', function (string $token): Response {
         'Content-Disposition' => 'attachment; filename="afspraak-'.$shop->slug.'.ics"',
     ]);
 })->where('token', '[A-Za-z0-9]{40}')->name('appointment.ics');
+
+// Wachtlijst (fase 8): de eigen pagina van een inschrijving, ook voor gasten
+Route::livewire('/wachtlijst/{token}', WaitlistPage::class)->where('token', '[A-Za-z0-9]{40}')->name('waitlist.show');
+
+// Afmelden voor berichten van een zaak (link onderaan "klanten terughalen", fase 8)
+Route::get('/afmelden/{customer}', function (int $customer): View {
+    $row = DB::table('customers')->where('id', $customer)->first(['id', 'barbershop_id']);
+    abort_if($row === null, 404);
+
+    DB::table('customers')->where('id', $row->id)->update(['marketing_opt_in' => false]);
+
+    return view('pages.unsubscribed', ['shopName' => (string) Barbershop::query()->whereKey($row->barbershop_id)->value('name')]);
+})->whereNumber('customer')->middleware('signed')->name('marketing.unsubscribe');
 
 Route::livewire('/account', Account::class)->middleware('auth')->name('account');
 
@@ -243,6 +261,8 @@ Route::middleware(['auth', ResolveShopFromApp::class])->prefix('app')->name('app
 
     Route::livewire('/omzet', Revenue::class)->name('revenue');
     Route::livewire('/reviews', Reviews::class)->name('reviews');
+    Route::livewire('/wachtlijst', Waitlist::class)->name('waitlist');
+    Route::livewire('/terughalen', Winback::class)->name('winback');
 
     // CSV-export van een maand: de eigenaar alles, een kapper alleen de eigen regels (§7.5)
     Route::get('/omzet/export', function (Request $request, CurrentShop $currentShop, ShopStatsService $stats): StreamedResponse {

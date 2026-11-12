@@ -10,3 +10,7 @@ Schedule::command('notifications:send-due')->everyMinute()->withoutOverlapping(5
 
 // Demozaken van pitchers (fase 6): elk uur opruimen wat verlopen is.
 Schedule::command('demo:cleanup')->hourly();
+
+// Fase 8: klanten terughalen (elke ochtend) en de wachtlijst (elke minuut).
+Schedule::command('winback:send')->dailyAt('10:30')->timezone('Europe/Amsterdam');
+Schedule::command('waitlist:advance')->everyMinute()->withoutOverlapping(5);

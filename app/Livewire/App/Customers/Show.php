@@ -54,6 +54,19 @@ class Show extends Component
         return Customer::query()->findOrFail($this->customerId);
     }
 
+    /**
+     * De klant wil (geen) berichten van de zaak ontvangen, zoals "klanten terughalen" (fase 8).
+     */
+    public function setMarketing(bool $optIn): void
+    {
+        $customer = $this->customer();
+        $this->authorize('update', $customer);
+
+        $customer->update(['marketing_opt_in' => $optIn]);
+
+        $this->dispatch('toast', message: $optIn ? 'Klant ontvangt berichten van de zaak' : 'Klant ontvangt geen berichten meer');
+    }
+
     public function saveNotes(): void
     {
         $customer = $this->customer();

@@ -5,6 +5,7 @@ namespace App\Livewire\Shop;
 use App\Exceptions\BookingException;
 use App\Livewire\Concerns\PicksSlot;
 use App\Models\Barbershop;
+use App\Models\Customer;
 use App\Models\Service;
 use App\Models\ShopSetting;
 use App\Models\StaffMember;
@@ -14,7 +15,9 @@ use App\Services\Booking\AvailabilityService;
 use App\Services\Booking\BookingData;
 use App\Services\Booking\CustomerInput;
 use App\Services\Booking\CustomerResolver;
+use App\Services\WaitlistService;
 use App\Support\CurrentShop;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -52,6 +55,12 @@ class Book extends Component
     public string $email = '';
 
     public string $notes = '';
+
+    /** De klant wil af en toe een bericht van de zaak (voor "klanten terughalen", fase 8). */
+    public bool $marketingOptIn = false;
+
+    /** De volle dag waarvoor de klant op de wachtlijst wil (fase 8). */
+    public string $waitlistDate = '';
 
     /** Honeypot: mensen zien dit veld niet, bots vullen het in. */
     public string $website = '';
@@ -147,7 +156,7 @@ class Book extends Component
      */
     public function updatedStep(): void
     {
-        if (! in_array($this->step, ['service', 'staff', 'time', 'details'], true) || $this->service() === null) {
+        if (! in_array($this->step, ['service', 'staff', 'time', 'details', 'waitlist'], true) || $this->service() === null) {
             $this->step = 'service';
         } elseif ($this->step === 'details' && ($this->chosenStart() === null || ! in_array($this->time, $this->pickerTimes(), true))) {
             $this->step = 'time';
@@ -227,10 +236,88 @@ class Book extends Component
         $this->resetErrorBag();
 
         $this->step = match ($this->step) {
-            'details' => 'time',
+            'details', 'waitlist' => 'time',
             'time' => $this->hasStaffStep() ? 'staff' : 'service',
             default => 'service',
         };
+    }
+
+    /**
+     * Dagen in de getoonde periode die vol zitten (de zaak is die dag wel open): daarvoor kan de klant op de wachtlijst.
+     *
+     * @param  list<array{date: string, disabled: bool}>  $days
+     * @return list<string>
+     */
+    private function fullDays(array $days): array
+    {
+        $shop = $this->slotShop();
+        $openDays = $shop->openingHours()->pluck('day_of_week')->unique()->all();
+
+        return collect($days)
+            ->filter(fn (array $day): bool => $day['disabled'] && ($openDays === [] || in_array(CarbonImmutable::parse($day['date'])->dayOfWeekIso, $openDays, true)))
+            ->pluck('date')->take(21)->values()->all();
+    }
+
+    public function startWaitlist(): void
+    {
+        $full = $this->fullDays($this->pickerDays());
+
+        if ($full === [] || ! $this->settings()->waitlist_enabled) {
+            return;
+        }
+
+        $this->resetErrorBag();
+        $this->waitlistDate = in_array($this->waitlistDate, $full, true) ? $this->waitlistDate : $full[0];
+        $this->step = 'waitlist';
+    }
+
+    public function joinWaitlist(WaitlistService $waitlist): void
+    {
+        $service = $this->service();
+
+        if ($service === null) {
+            $this->step = 'service';
+
+            return;
+        }
+
+        $this->validate([
+            'name' => ['required', 'string', 'max:80'],
+            'phone' => ['required', 'string', 'max:30'],
+            'email' => ['nullable', 'string', 'email', 'max:255'],
+        ], attributes: ['name' => 'naam', 'phone' => 'telefoonnummer', 'email' => 'e-mailadres']);
+
+        $key = 'waitlist-ip:'.request()->ip();
+
+        if ($this->website !== '' || RateLimiter::tooManyAttempts($key, (int) config('barbercuts.booking.max_per_ip_per_hour'))) {
+            $this->addError('booking', 'Dat is nu niet gelukt. Probeer het later opnieuw of bel de zaak.');
+
+            return;
+        }
+
+        if (! in_array($this->waitlistDate, $this->fullDays($this->pickerDays()), true)) {
+            $this->addError('booking', 'Op die dag is weer plek. Ga terug en kies een tijd.');
+
+            return;
+        }
+
+        $user = Auth::user();
+
+        try {
+            $entry = $waitlist->join(
+                $this->slotShop(), $service, $this->staff(), $this->waitlistDate,
+                new CustomerInput($this->name, CustomerResolver::normalizePhone($this->phone), $this->email ?: null),
+                $user instanceof User ? $user : null,
+            );
+        } catch (BookingException $exception) {
+            $this->addError('booking', $exception->getMessage());
+
+            return;
+        }
+
+        RateLimiter::hit($key, 3600);
+
+        $this->redirect($entry->url());
     }
 
     /**
@@ -329,6 +416,11 @@ class Book extends Component
             $user->forceFill(['phone' => $phone])->save();
         }
 
+        // Alleen aanzetten: een leeg vinkje trekt een eerdere toestemming niet in.
+        if ($this->marketingOptIn) {
+            Customer::withoutGlobalScopes()->whereKey($appointment->customer_id)->update(['marketing_opt_in' => true]);
+        }
+
         session()->flash('booked', $appointment->manage_token);
 
         $this->redirect($appointment->manageUrl());
@@ -340,7 +432,7 @@ class Book extends Component
         $service = $this->service();
         $staff = $this->staff();
         $settings = $this->settings();
-        $days = $this->step === 'time' ? $this->pickerDays() : [];
+        $days = in_array($this->step, ['time', 'waitlist'], true) ? $this->pickerDays() : [];
 
         return view('livewire.shop.book', [
             'shop' => $shop,
@@ -353,6 +445,8 @@ class Book extends Component
             'canLoadMore' => $this->daysShown < $this->maxDays(),
             'start' => $this->chosenStart()?->setTimezone($shop->timezone),
             'guestAllowed' => $settings->allow_guest_booking,
+            'fullDays' => $settings->waitlist_enabled ? $this->fullDays($days) : [],
+            'askMarketing' => $settings->winback_weeks !== null,
             'user' => Auth::user(),
         ])->layout('layouts::shop', ['shop' => $shop, 'title' => 'Afspraak maken bij '.$shop->name]);
     }
