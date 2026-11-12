@@ -43,6 +43,8 @@ class Appointment extends Model
     protected function casts(): array
     {
         return [
+            'loyalty_stamp' => 'boolean',
+            'loyalty_redeemed_stamps' => 'integer',
             'duration' => 'integer',
             'price_cents' => 'integer',
             'starts_at' => 'datetime',

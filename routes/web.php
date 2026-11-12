@@ -13,6 +13,7 @@ use App\Livewire\App\Appointments\Form as AppointmentForm;
 use App\Livewire\App\Calendar;
 use App\Livewire\App\Customers\Index as CustomerIndex;
 use App\Livewire\App\Customers\Show as CustomerShow;
+use App\Livewire\App\Loyalty;
 use App\Livewire\App\More;
 use App\Livewire\App\OpeningHours;
 use App\Livewire\App\Profile;
@@ -263,6 +264,7 @@ Route::middleware(['auth', ResolveShopFromApp::class])->prefix('app')->name('app
     Route::livewire('/reviews', Reviews::class)->name('reviews');
     Route::livewire('/wachtlijst', Waitlist::class)->name('waitlist');
     Route::livewire('/terughalen', Winback::class)->name('winback');
+    Route::livewire('/spaarkaart', Loyalty::class)->name('loyalty');
 
     // CSV-export van een maand: de eigenaar alles, een kapper alleen de eigen regels (§7.5)
     Route::get('/omzet/export', function (Request $request, CurrentShop $currentShop, ShopStatsService $stats): StreamedResponse {

@@ -16,6 +16,7 @@
             ['route' => 'app.reviews', 'match' => ['app.reviews'], 'label' => 'Reviews', 'icon' => 'star'],
             ['route' => 'app.waitlist', 'match' => ['app.waitlist'], 'label' => 'Wachtlijst', 'icon' => 'clock'],
             $isOwner ? ['route' => 'app.winback', 'match' => ['app.winback'], 'label' => 'Klanten terughalen', 'icon' => 'users'] : null,
+            $isOwner ? ['route' => 'app.loyalty', 'match' => ['app.loyalty'], 'label' => 'Spaarkaart', 'icon' => 'star'] : null,
         ])),
         'Beheer' => array_values(array_filter([
             ['route' => 'app.staff', 'match' => ['app.staff', 'app.staff.*'], 'label' => 'Kappers', 'icon' => 'user'],

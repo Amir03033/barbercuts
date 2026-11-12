@@ -20,6 +20,16 @@
         @endif
     </x-ui.section>
 
+    @if ($loyalty->isNotEmpty())
+        <x-ui.section title="Spaarkaarten">
+            <div class="space-y-3">
+                @foreach ($loyalty as $row)
+                    <x-shop.loyalty-card :card="$row['card']" :stamps="$row['customer']->loyalty_stamps" :shop-name="$row['customer']->barbershop->name" wire:key="loyalty-{{ $row['customer']->id }}" />
+                @endforeach
+            </div>
+        </x-ui.section>
+    @endif
+
     @if ($past->isNotEmpty())
         <x-ui.section title="Geschiedenis">
             <x-ui.card :padding="false" flat class="divide-y divide-border overflow-hidden">

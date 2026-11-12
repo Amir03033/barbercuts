@@ -4,7 +4,9 @@ namespace App\Livewire;
 
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
+use App\Models\Customer;
 use App\Models\User;
+use App\Services\LoyaltyService;
 use App\Support\Features;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -72,6 +74,9 @@ class Account extends Component
 
         return view('livewire.account', [
             'user' => $user,
+            'loyalty' => $user->customers()->where('loyalty_stamps', '>', 0)->with('barbershop')->get()
+                ->map(fn (Customer $customer): array => ['customer' => $customer, 'card' => app(LoyaltyService::class)->cardFor($customer->barbershop_id)])
+                ->filter(fn (array $row): bool => $row['card'] !== null)->values(),
             'upcoming' => $upcoming->values(),
             'past' => $past->sortByDesc('starts_at')->take(30)->values(),
             'smsAvailable' => Features::sms(),

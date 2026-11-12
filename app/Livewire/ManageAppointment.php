@@ -13,6 +13,7 @@ use App\Models\ShopSetting;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Services\Booking\AppointmentService;
+use App\Services\LoyaltyService;
 use App\Services\ReviewService;
 use App\Support\CurrentShop;
 use Illuminate\Auth\Events\Registered;
@@ -260,6 +261,7 @@ class ManageAppointment extends Component
         $review = Review::query()->with('staffMember', 'customer')->where('appointment_id', $appointment->id)->first();
 
         return view('livewire.manage-appointment', [
+            'loyaltyCard' => app(LoyaltyService::class)->cardFor($shop->id),
             'review' => $review,
             'canReview' => $review === null && $appointment->status === AppointmentStatus::Completed,
             'appointment' => $appointment,

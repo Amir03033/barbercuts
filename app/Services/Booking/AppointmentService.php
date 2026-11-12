@@ -20,6 +20,7 @@ use App\Models\Service;
 use App\Models\ShopSetting;
 use App\Models\StaffMember;
 use App\Models\User;
+use App\Services\LoyaltyService;
 use App\Services\Notifications\NotificationScheduler;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -223,7 +224,7 @@ class AppointmentService
         return $this->markCancelled($appointment, CancelledBy::System, $reason);
     }
 
-    public function complete(Appointment $appointment, User $actor, int $amountPaidCents, int $tipCents = 0, ?PaymentMethod $paymentMethod = null): Appointment
+    public function complete(Appointment $appointment, User $actor, int $amountPaidCents, int $tipCents = 0, ?PaymentMethod $paymentMethod = null, bool $redeemReward = false): Appointment
     {
         Gate::forUser($actor)->authorize('update', $appointment);
 
@@ -234,7 +235,10 @@ class AppointmentService
             throw new BookingException('Het bedrag kan niet negatief zijn.');
         }
 
-        return DB::transaction(function () use ($appointment, $amountPaidCents, $tipCents, $paymentMethod): Appointment {
+        return DB::transaction(function () use ($appointment, $amountPaidCents, $tipCents, $paymentMethod, $redeemReward): Appointment {
+            // Spaarkaart (fase 9): een stempel erbij, of de volle kaart verzilveren.
+            app(LoyaltyService::class)->completed($appointment, $redeemReward);
+
             $appointment->status = AppointmentStatus::Completed;
             $appointment->amount_paid_cents = $amountPaidCents;
             $appointment->tip_cents = $tipCents;
@@ -292,6 +296,7 @@ class AppointmentService
             $appointment->tip_cents = null;
             $appointment->payment_method = null;
             $appointment->completed_at = null;
+            app(LoyaltyService::class)->undone($appointment);
             $appointment->save();
 
             $this->refreshLastVisit($appointment);

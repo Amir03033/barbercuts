@@ -60,6 +60,11 @@
                 </div>
             </x-ui.card>
 
+            {{-- Spaarkaart van de klant bij deze zaak (fase 9) --}}
+            @if ($loyaltyCard && $appointment->status !== \App\Enums\AppointmentStatus::Cancelled)
+                <x-shop.loyalty-card :card="$loyaltyCard" :stamps="$appointment->customer->loyalty_stamps" />
+            @endif
+
             {{-- Review na het bezoek (fase 7) --}}
             @if ($canReview)
                 <x-ui.card flat wire:key="review-form">

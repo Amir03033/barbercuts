@@ -2,7 +2,7 @@
     Bottom sheet met de acties voor één afspraak (§9.1). Hoort bij de trait HandlesAppointmentActions.
     appointment: de gekozen afspraak (of null) · canUpdate: mag de kijker deze afspraak wijzigen (policy).
 --}}
-@props(['appointment', 'canUpdate', 'mode', 'timezone', 'customTip' => false, 'tip' => '0'])
+@props(['appointment', 'canUpdate', 'mode', 'timezone', 'customTip' => false, 'tip' => '0', 'redeem' => false])
 
 <x-ui.bottom-sheet name="appointment" :title="$appointment?->customer->name ?? 'Afspraak'">
     @if ($appointment)
@@ -11,6 +11,10 @@
             $status = $appointment->status->value;
             $started = $appointment->starts_at->isPast();
             $phone = $appointment->customer->phone;
+            // Spaarkaart (fase 9)
+            $card = app(\App\Services\LoyaltyService::class)->cardFor($appointment->barbershop_id);
+            $stamps = $appointment->customer->loyalty_stamps;
+            $canRedeem = $card !== null && $stamps >= $card->stamps_required;
         @endphp
 
         <div class="flex items-start justify-between gap-3">
@@ -26,7 +30,16 @@
         @if ($mode === 'complete' && $canUpdate)
             {{-- Voltooien: bedrag, fooi en betaalmethode. De betaalmethode slaat meteen op. --}}
             <div class="mt-4 space-y-4">
-                <x-ui.money-input label="Bedrag" wire:model="amount" />
+                @if ($canRedeem)
+                    <x-ui.card flat class="!bg-gold-soft">
+                        <x-ui.toggle label="Spaarkaart vol: {{ $card->rewardLabel() }}" hint="{{ $stamps }} stempels. Verzilveren haalt er {{ $card->stamps_required }} af."
+                            :checked="$redeem" wire:click.prevent="toggleRedeem" />
+                    </x-ui.card>
+                @elseif ($card)
+                    <p class="text-sm text-muted">{{ $card->name }}: {{ $stamps }} van {{ $card->stamps_required }} stempels.</p>
+                @endif
+
+                <x-ui.money-input label="Bedrag" wire:model="amount" wire:key="amount-{{ $redeem ? 'r' : 'n' }}" />
 
                 <x-ui.field label="Fooi" name="tip">
                     <div class="flex flex-wrap gap-2">

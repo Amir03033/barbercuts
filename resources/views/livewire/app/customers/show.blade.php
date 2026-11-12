@@ -29,6 +29,19 @@
             </form>
         </x-ui.section>
 
+        @if ($loyaltyCard)
+            <x-ui.card flat class="flex items-center justify-between gap-3">
+                <div>
+                    <p class="text-base font-medium lg:text-sm">{{ $loyaltyCard->name }}</p>
+                    <p class="text-xs text-muted">{{ $customer->loyalty_stamps }} van {{ $loyaltyCard->stamps_required }} stempels{{ $customer->loyalty_stamps >= $loyaltyCard->stamps_required ? ' · vol' : '' }}</p>
+                </div>
+                <div class="flex shrink-0 items-center gap-2">
+                    <x-ui.button variant="secondary" size="sm" wire:click="adjustStamps(-1)" aria-label="Stempel eraf" :disabled="$customer->loyalty_stamps === 0">−</x-ui.button>
+                    <x-ui.button variant="secondary" size="sm" wire:click="adjustStamps(1)" aria-label="Stempel erbij">+</x-ui.button>
+                </div>
+            </x-ui.card>
+        @endif
+
         <x-ui.card flat>
             <x-ui.toggle label="Berichten van de zaak" hint="Alleen aanzetten als de klant dat goed vindt. Nodig voor “klanten terughalen”."
                 :checked="$customer->marketing_opt_in" x-on:change="$wire.setMarketing($event.target.checked)" />

@@ -28,6 +28,7 @@ class Customer extends Model
     {
         return [
             'marketing_opt_in' => 'boolean',
+            'loyalty_stamps' => 'integer',
             'no_show_count' => 'integer',
             'last_visit_at' => 'datetime',
         ];

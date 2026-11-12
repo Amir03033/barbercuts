@@ -6,6 +6,7 @@ use App\Enums\PaymentMethod;
 use App\Exceptions\BookingException;
 use App\Models\Appointment;
 use App\Services\Booking\AppointmentService;
+use App\Services\LoyaltyService;
 use Closure;
 
 /**
@@ -25,6 +26,9 @@ trait HandlesAppointmentActions
 
     public bool $customTip = false;
 
+    /** De volle spaarkaart van de klant wordt bij deze afspraak verzilverd (fase 9). */
+    public bool $redeem = false;
+
     public function selectAppointment(int $appointmentId): void
     {
         $appointment = Appointment::query()->findOrFail($appointmentId);
@@ -34,6 +38,7 @@ trait HandlesAppointmentActions
         $this->amount = money_input($appointment->price_cents);
         $this->tip = '0';
         $this->customTip = false;
+        $this->redeem = false;
         $this->resetErrorBag();
 
         $this->dispatch('open-sheet', name: 'appointment');
@@ -48,6 +53,18 @@ trait HandlesAppointmentActions
     {
         $this->customTip = $tip === 'custom';
         $this->tip = $this->customTip ? '' : $tip;
+    }
+
+    /**
+     * Beloning van de spaarkaart verzilveren (of toch niet): het bedrag past zich aan, de kapper kan het nog wijzigen.
+     */
+    public function toggleRedeem(LoyaltyService $loyalty): void
+    {
+        $appointment = Appointment::query()->with('customer')->findOrFail($this->selectedId);
+        $card = $loyalty->cardFor($appointment->barbershop_id);
+
+        $this->redeem = ! $this->redeem && $loyalty->canRedeem($card, $appointment->customer);
+        $this->amount = money_input($this->redeem && $card !== null ? $card->amountAfterReward($appointment->price_cents) : $appointment->price_cents);
     }
 
     /**
@@ -71,7 +88,7 @@ trait HandlesAppointmentActions
         }
 
         $this->act(
-            fn (Appointment $appointment) => $appointments->complete($appointment, $this->user(), $amount, $tip, PaymentMethod::tryFrom($method) ?? PaymentMethod::Other),
+            fn (Appointment $appointment) => $appointments->complete($appointment, $this->user(), $amount, $tip, PaymentMethod::tryFrom($method) ?? PaymentMethod::Other, $this->redeem),
             'Voltooid · '.money($amount),
         );
     }

@@ -16,6 +16,9 @@
                 <x-ui.list-item :href="route('app.winback')" title="Klanten terughalen">
                     <x-slot:leading><x-ui.icon name="users" class="text-muted" /></x-slot:leading>
                 </x-ui.list-item>
+                <x-ui.list-item :href="route('app.loyalty')" title="Spaarkaart">
+                    <x-slot:leading><x-ui.icon name="check" class="text-muted" /></x-slot:leading>
+                </x-ui.list-item>
             @endif
             @if ($isOwner)
                 <x-ui.list-item :href="route('app.services')" title="Diensten">

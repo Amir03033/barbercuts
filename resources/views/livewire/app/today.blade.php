@@ -146,5 +146,5 @@
     </div>
 
     <x-app.appointment-sheet :appointment="$selected" :can-update="$canUpdateSelected" :mode="$sheetMode" :timezone="$shop->timezone"
-        :custom-tip="$customTip" :tip="$tip" />
+        :custom-tip="$customTip" :tip="$tip" :redeem="$redeem" />
 </div>

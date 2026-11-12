@@ -8,6 +8,7 @@ use App\Livewire\Concerns\InShop;
 use App\Models\Appointment;
 use App\Models\Customer;
 use App\Services\Booking\CustomerResolver;
+use App\Services\LoyaltyService;
 use App\Services\ShopStatsService;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -65,6 +66,17 @@ class Show extends Component
         $customer->update(['marketing_opt_in' => $optIn]);
 
         $this->dispatch('toast', message: $optIn ? 'Klant ontvangt berichten van de zaak' : 'Klant ontvangt geen berichten meer');
+    }
+
+    /**
+     * Met de hand een stempel erbij of eraf, bijvoorbeeld bij het overnemen van een papieren spaarkaart (fase 9).
+     */
+    public function adjustStamps(int $delta, LoyaltyService $loyalty): void
+    {
+        $customer = $this->customer();
+        $this->authorize('update', $customer);
+
+        $loyalty->adjust($customer, $delta > 0 ? 1 : -1);
     }
 
     public function saveNotes(): void
@@ -129,6 +141,7 @@ class Show extends Component
             'appointments' => $appointments,
             'spend' => $stats->customerSpend($shop, $this->user(), $customer),
             'isOwner' => $this->isOwner(),
+            'loyaltyCard' => app(LoyaltyService::class)->cardFor($shop->id),
             'visits' => $appointments->where('status', AppointmentStatus::Completed)->count(),
         ]);
     }

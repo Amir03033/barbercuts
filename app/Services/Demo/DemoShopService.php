@@ -211,8 +211,29 @@ class DemoShopService
 
         $this->insertReviews($shop);
         $this->insertWinbackAndWaitlist($shop);
+        $this->insertLoyalty($shop);
 
         return $shop;
+    }
+
+    /**
+     * Een actieve spaarkaart (10 stempels, gratis afspraak); elke klant heeft zoveel stempels als bezoeken, en een paar zijn vol.
+     */
+    private function insertLoyalty(Barbershop $shop): void
+    {
+        DB::table('loyalty_cards')->insert([
+            'barbershop_id' => $shop->id, 'name' => 'Spaarkaart', 'stamps_required' => 10, 'reward_type' => 'free',
+            'reward_cents' => 0, 'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $visits = DB::table('appointments')->where('barbershop_id', $shop->id)->where('status', AppointmentStatus::Completed->value)
+            ->groupBy('customer_id')->selectRaw('customer_id, COUNT(*) as visits')->pluck('visits', 'customer_id');
+
+        foreach ($visits as $customerId => $count) {
+            DB::table('customers')->where('id', $customerId)->update(['loyalty_stamps' => min(12, (int) $count * 2)]);
+        }
+
+        DB::table('appointments')->where('barbershop_id', $shop->id)->where('status', AppointmentStatus::Completed->value)->update(['loyalty_stamp' => true]);
     }
 
     /**

@@ -9,6 +9,7 @@
     'week',
     'images' => [],
     'reviews' => [],
+    'loyaltyCard' => null,
     'themeMode' => null,
     'accentColor' => null,
     'logoUrl' => null,
@@ -82,6 +83,13 @@
                 <x-ui.chip :href="$preview ? '#' : 'tel:'.$shop->phone"><x-ui.icon name="phone" size="16" /> Bellen</x-ui.chip>
             @endif
         </div>
+
+        @if ($loyaltyCard)
+            <p class="mt-4 flex items-center gap-2 rounded-card bg-surface px-3 py-2 text-sm">
+                <x-ui.icon name="star" size="16" class="shrink-0 text-gold" />
+                <span><span class="font-semibold">{{ $loyaltyCard->name }}:</span> spaar {{ $loyaltyCard->stamps_required }} stempels voor {{ $loyaltyCard->rewardLabel() }}.</span>
+            </p>
+        @endif
 
         @if (count($images) > 0)
             <div class="no-scrollbar -mx-4 mt-5 flex snap-x gap-2 overflow-x-auto px-4">

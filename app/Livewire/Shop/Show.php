@@ -5,6 +5,7 @@ namespace App\Livewire\Shop;
 use App\Models\Review;
 use App\Models\Service;
 use App\Models\StaffMember;
+use App\Services\LoyaltyService;
 use App\Support\CurrentShop;
 use App\Support\WeekSchedule;
 use Illuminate\Contracts\View\View;
@@ -28,6 +29,7 @@ class Show extends Component
             'staffMembers' => StaffMember::query()->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get(),
             'week' => WeekSchedule::fromRows($shop->openingHours()->get(), 'opens_at', 'closes_at'),
             'images' => $shop->images()->get(),
+            'loyaltyCard' => app(LoyaltyService::class)->cardFor($shop->id),
             'reviews' => Review::query()->visible()->with(['customer', 'staffMember'])->latest()->limit(10)->get(),
             'bookUrl' => Route::has('shop.book') && $shop->accessState()->canTakeBookings() ? route('shop.book', $shop->slug) : null,
             'bookingClosed' => ! $shop->accessState()->canTakeBookings(),
