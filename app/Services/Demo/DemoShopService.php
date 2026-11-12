@@ -11,6 +11,7 @@ use App\Models\ActivityLog;
 use App\Models\Barbershop;
 use App\Models\ShopSetting;
 use App\Models\User;
+use App\Services\ReviewService;
 use App\Support\Color;
 use App\Support\ImageStore;
 use Carbon\CarbonImmutable;
@@ -47,6 +48,12 @@ class DemoShopService
     private const array LAST_NAMES = [
         'de Vries', 'Jansen', 'Bakker', 'Visser', 'Smit', 'Meijer', 'de Boer', 'Mulder', 'Bos', 'Vos', 'Peters', 'Hendriks',
         'van Dijk', 'Yilmaz', 'El Amrani', 'Dekker', 'Brouwer', 'de Groot', 'Kok', 'Jacobs', 'Vermeulen', 'Kaya',
+    ];
+
+    private const array REVIEW_TEXTS = [
+        5 => ['Strakke fade, precies zoals ik wilde.', 'Altijd op tijd en altijd goed. Aanrader.', 'Beste kapper van Utrecht, en online boeken werkt super.', 'Top geknipt en gezellig.', 'Baard nog nooit zo strak gehad.'],
+        4 => ['Goed geknipt, volgende keer iets korter bovenop.', 'Prima zaak, fijne sfeer.', 'Netjes en snel geholpen.'],
+        3 => ['Oké, maar het was erg druk.', 'Knipbeurt was goed, wel wat gehaast.'],
     ];
 
     private const array NOTES = [
@@ -202,7 +209,47 @@ class DemoShopService
             }, $chunk));
         }
 
+        $this->insertReviews($shop);
+
         return $shop;
+    }
+
+    /**
+     * Reviews bij een deel van de voltooide afspraken, met een paar reacties en één lage score om op te reageren.
+     */
+    private function insertReviews(Barbershop $shop): void
+    {
+        $visits = DB::table('appointments')->where('barbershop_id', $shop->id)->where('status', AppointmentStatus::Completed->value)
+            ->inRandomOrder()->limit(60)->get(['id', 'customer_id', 'staff_member_id', 'ends_at']);
+
+        $rows = [];
+
+        foreach ($visits as $index => $visit) {
+            $rating = $index === 0 ? 2 : $this->pick([[5, 68], [4, 26], [3, 6]]);
+            $comment = match (true) {
+                $index === 0 => 'Moest twintig minuten wachten terwijl ik een afspraak had. Knipbeurt zelf was prima.',
+                $index % 3 === 0 => null,
+                default => self::REVIEW_TEXTS[$rating][$index % count(self::REVIEW_TEXTS[$rating])],
+            };
+            $at = CarbonImmutable::parse($visit->ends_at, 'UTC')->addHours(mt_rand(3, 30))->min(now());
+
+            $rows[] = [
+                'barbershop_id' => $shop->id,
+                'appointment_id' => $visit->id,
+                'customer_id' => $visit->customer_id,
+                'staff_member_id' => $visit->staff_member_id,
+                'rating' => $rating,
+                'comment' => $comment,
+                'reply' => $index % 10 === 5 ? 'Dank je wel, tot de volgende keer!' : null,
+                'replied_at' => $index % 10 === 5 ? $at->addDay()->min(now()) : null,
+                'created_at' => $at,
+                'updated_at' => $at,
+            ];
+        }
+
+        DB::table('reviews')->insert($rows);
+
+        app(ReviewService::class)->recalculate($shop->id);
     }
 
     /**

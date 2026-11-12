@@ -35,6 +35,7 @@
                 <x-ui.input label="Uren vooraf (2e herinnering)" type="text" inputmode="decimal" wire:model="reminder2Hours" />
             @endif
 
+            <x-ui.toggle label="Vraag na een bezoek om een review" hint="Een paar uur na een voltooide afspraak, hooguit één keer per maand per klant." wire:model="reviewRequests" :checked="$reviewRequests" />
             <x-ui.toggle label="Pushmeldingen aan klanten" hint="Voor klanten met een account die meldingen hebben aangezet" wire:model="channelPush" :checked="$channelPush" />
             @if (\App\Support\Features::sms())
                 <x-ui.toggle label="Sms voor klanten zonder e-mailadres" hint="Kost per bericht" wire:model="smsEnabled" :checked="$smsEnabled" />

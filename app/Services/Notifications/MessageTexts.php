@@ -41,6 +41,11 @@ class MessageTexts
                 'body' => "Je afspraak bij {$shop} op {$when} is geannuleerd.",
                 'url' => $url,
             ],
+            NotificationType::ReviewRequest => [
+                'title' => "Hoe was het bij {$shop}?",
+                'body' => "Bedankt voor je bezoek aan {$shop}. Laat in een paar tikken weten hoe het was.",
+                'url' => $url,
+            ],
         };
     }
 
@@ -51,8 +56,10 @@ class MessageTexts
     {
         $text = self::for($appointment, $type);
 
-        return $type === NotificationType::Cancelled
-            ? $text['body']
-            : $text['body'].' Verplaatsen of annuleren: '.$text['url'];
+        return match ($type) {
+            NotificationType::Cancelled => $text['body'],
+            NotificationType::ReviewRequest => $text['body'].' '.$text['url'],
+            default => $text['body'].' Verplaatsen of annuleren: '.$text['url'],
+        };
     }
 }

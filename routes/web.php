@@ -17,6 +17,7 @@ use App\Livewire\App\More;
 use App\Livewire\App\OpeningHours;
 use App\Livewire\App\Profile;
 use App\Livewire\App\Revenue;
+use App\Livewire\App\Reviews;
 use App\Livewire\App\Services\Form as ServiceForm;
 use App\Livewire\App\Services\Index as ServiceIndex;
 use App\Livewire\App\Settings;
@@ -31,6 +32,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Demo;
 use App\Livewire\Dev\UiShowcase;
+use App\Livewire\Directory;
 use App\Livewire\Home;
 use App\Livewire\ManageAppointment;
 use App\Livewire\Onboarding;
@@ -72,6 +74,10 @@ Route::view('/privacy', 'pages.privacy')->name('privacy');
 Route::view('/voorwaarden', 'pages.terms')->name('terms');
 Route::view('/verwerkersovereenkomst', 'pages.processor-agreement')->name('processor-agreement');
 Route::view('/contact', 'pages.contact')->name('contact');
+
+// Kappersgids (fase 7): best beoordeeld in de buurt en per plaats
+Route::livewire('/kappers', Directory::class)->name('directory');
+Route::livewire('/kappers/{city}', Directory::class)->where('city', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('directory.city');
 
 // Zaak aanmelden (§8) en uitnodiging voor kappers
 Route::livewire('/aanmelden', Onboarding::class)->name('onboarding');
@@ -236,6 +242,7 @@ Route::middleware(['auth', ResolveShopFromApp::class])->prefix('app')->name('app
     Route::livewire('/klanten/{customer}', CustomerShow::class)->whereNumber('customer')->name('customers.show');
 
     Route::livewire('/omzet', Revenue::class)->name('revenue');
+    Route::livewire('/reviews', Reviews::class)->name('reviews');
 
     // CSV-export van een maand: de eigenaar alles, een kapper alleen de eigen regels (§7.5)
     Route::get('/omzet/export', function (Request $request, CurrentShop $currentShop, ShopStatsService $stats): StreamedResponse {

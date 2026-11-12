@@ -9,6 +9,7 @@ use App\Enums\NotificationType;
 use App\Models\Appointment;
 use App\Models\AppointmentNotification;
 use App\Models\MessageLog;
+use App\Models\Review;
 use App\Notifications\AppointmentMessage;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
@@ -76,6 +77,14 @@ class NotificationDeliverer
 
         if ($type === NotificationType::Cancelled) {
             return null;
+        }
+
+        if ($type === NotificationType::ReviewRequest) {
+            return match (true) {
+                $appointment->status !== AppointmentStatus::Completed => 'Afspraak is niet voltooid.',
+                Review::withoutGlobalScopes()->where('appointment_id', $appointment->id)->exists() => 'Er is al een review.',
+                default => null,
+            };
         }
 
         if ($appointment->status !== AppointmentStatus::Scheduled) {

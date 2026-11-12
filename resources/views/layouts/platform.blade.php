@@ -9,6 +9,7 @@
         <div class="mx-auto flex min-h-14 max-w-5xl items-center justify-between gap-2 px-4">
             <x-brand :href="route('home')" class="shrink-0" />
             <nav aria-label="Hoofdmenu" class="flex min-w-0 items-center gap-1">
+                <x-ui.button :href="route('directory')" variant="ghost" size="sm" wire:navigate class="max-sm:hidden!">Kapper zoeken</x-ui.button>
                 <x-ui.button :href="route('pricing')" variant="ghost" size="sm" wire:navigate class="max-sm:hidden!">Prijzen</x-ui.button>
                 @auth
                     <x-ui.button :href="auth()->user()->homeRoute()" variant="ghost" size="sm" wire:navigate class="max-sm:hidden!">Account</x-ui.button>
@@ -33,6 +34,7 @@
         <div class="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
             <p>© {{ date('Y') }} {{ config('barbercuts.company.name') }}</p>
             <nav aria-label="Voetnavigatie" class="flex flex-wrap gap-x-4 gap-y-1">
+                <a href="{{ route('directory') }}" class="inline-flex min-h-11 items-center">Kapper zoeken</a>
                 <a href="{{ route('pricing') }}" class="inline-flex min-h-11 items-center">Prijzen</a>
                 <a href="{{ route('privacy') }}" class="inline-flex min-h-11 items-center">Privacy</a>
                 <a href="{{ route('terms') }}" class="inline-flex min-h-11 items-center">Voorwaarden</a>

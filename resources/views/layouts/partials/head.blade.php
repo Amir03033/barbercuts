@@ -3,6 +3,9 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <meta name="theme-color" content="{{ $themeColor ?? '#f7f6f3' }}">
 <title>{{ isset($title) ? $title.' · BarberCuts' : 'BarberCuts — afspraken, agenda en omzet voor je kapperszaak' }}</title>
+@isset($description)
+    <meta name="description" content="{{ $description }}">
+@endisset
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">

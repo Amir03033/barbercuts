@@ -6,6 +6,9 @@
             <x-ui.list-item :href="route('app.revenue')" :title="$isOwner ? 'Omzet' : 'Mijn omzet'">
                 <x-slot:leading><x-ui.icon name="euro" class="text-muted" /></x-slot:leading>
             </x-ui.list-item>
+            <x-ui.list-item :href="route('app.reviews')" title="Reviews" :subtitle="$shop->hasRating() ? number_format($shop->rating_avg, 1, ',', '').' · '.$shop->rating_count.' reviews' : null">
+                <x-slot:leading><x-ui.icon name="star" class="text-muted" /></x-slot:leading>
+            </x-ui.list-item>
             @if ($isOwner)
                 <x-ui.list-item :href="route('app.services')" title="Diensten">
                     <x-slot:leading><x-ui.icon name="scissors" class="text-muted" /></x-slot:leading>

@@ -60,6 +60,8 @@ class Settings extends Component
 
     public string $reminder2Hours = '';
 
+    public bool $reviewRequests = true;
+
     public function mount(): void
     {
         $this->authorizeOwner();
@@ -73,6 +75,7 @@ class Settings extends Component
         $this->rescheduleLimit = (string) $settings->customer_reschedule_limit;
         $this->allowGuestBooking = $settings->allow_guest_booking;
         $this->allowStaffChoice = $settings->allow_staff_choice;
+        $this->reviewRequests = $settings->review_request_hours !== null;
 
         if (isset(self::REMINDER_1_OPTIONS[$settings->reminder_1_minutes])) {
             $this->reminder1 = (string) $settings->reminder_1_minutes;
@@ -163,6 +166,7 @@ class Settings extends Component
             'reminder_channels' => $this->channelPush ? ['mail', 'push'] : ['mail'],
             'sms_enabled' => Features::sms() && $this->smsEnabled,
             'whatsapp_enabled' => Features::whatsapp() && $this->whatsappEnabled,
+            'review_request_hours' => $this->reviewRequests ? ($this->settings()->review_request_hours ?? 2) : null,
         ]);
 
         $this->dispatch('toast', message: 'Instellingen opgeslagen');

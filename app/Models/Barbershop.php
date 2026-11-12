@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AccessState;
 use App\Enums\SubscriptionStatus;
 use App\Enums\ThemeMode;
+use App\Jobs\GeocodeBarbershop;
 use App\Support\Color;
 use App\Support\Features;
 use App\Support\ImageStore;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * De zaak (tenant).
@@ -30,6 +32,10 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $suspended_at
  * @property bool $is_demo
  * @property Carbon|null $demo_expires_at
+ * @property float|null $rating_avg
+ * @property int $rating_count
+ * @property float|null $latitude
+ * @property float|null $longitude
  */
 #[Fillable([
     'slug', 'name', 'description', 'phone', 'email', 'address', 'postal_code', 'city', 'latitude', 'longitude',
@@ -61,6 +67,11 @@ class Barbershop extends Model
             'theme_mode' => ThemeMode::class,
             'is_public' => 'boolean',
             'is_demo' => 'boolean',
+            'rating_avg' => 'float',
+            'rating_count' => 'integer',
+            'rating_score' => 'float',
+            'latitude' => 'float',
+            'longitude' => 'float',
             'demo_expires_at' => 'datetime',
             'onboarding_step' => 'integer',
             'link_shared_at' => 'datetime',
@@ -135,6 +146,36 @@ class Barbershop extends Model
     }
 
     /**
+     * @return HasMany<Review, $this>
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Genoeg reviews om in "top beoordeeld" mee te doen.
+     */
+    public function hasRating(): bool
+    {
+        return $this->rating_count > 0 && $this->rating_avg !== null;
+    }
+
+    /**
+     * Zaken die in de kappersgids mogen staan: echt, publiek en klaar met aanmelden, niet geblokkeerd.
+     *
+     * @param  Builder<Barbershop>  $query
+     * @return Builder<Barbershop>
+     */
+    public function scopeListed(Builder $query): Builder
+    {
+        return $query->where('barbershops.is_demo', false)
+            ->where('barbershops.is_public', true)
+            ->whereNull('barbershops.onboarding_step')
+            ->whereNull('barbershops.suspended_at');
+    }
+
+    /**
      * @return HasOne<ShopSetting, $this>
      */
     public function settings(): HasOne
@@ -146,6 +187,19 @@ class Barbershop extends Model
     {
         // Een zaak wijzigen (thema, adres, ...) kan niet zolang hij alleen-lezen is (§7.7).
         static::saving(fn () => ShopWriteGuard::assertWritable());
+
+        // De plaats als slug voor de kappersgids (/kappers/{stad}); bij een nieuw adres opnieuw de coördinaten ophalen (fase 7).
+        static::saving(function (self $shop): void {
+            if ($shop->isDirty('city')) {
+                $shop->city_slug = Str::slug((string) $shop->city) ?: null;
+            }
+        });
+
+        static::saved(function (self $shop): void {
+            if ($shop->wasChanged(['address', 'postal_code', 'city']) || ($shop->wasRecentlyCreated && $shop->city !== null && $shop->latitude === null)) {
+                GeocodeBarbershop::dispatch($shop->id)->afterCommit();
+            }
+        });
     }
 
     /**
@@ -303,6 +357,36 @@ class Barbershop extends Model
     public function onAccentColor(): string
     {
         return Color::onColor($this->accent_color);
+    }
+
+    /**
+     * De zaak als schema.org HairSalon, met beoordeling als die er is (voor zoekmachines).
+     *
+     * @return array<string, mixed>
+     */
+    public function structuredData(): array
+    {
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'HairSalon',
+            'name' => $this->name,
+            'url' => $this->bookingUrl(),
+            'telephone' => $this->phone,
+            'image' => $this->coverUrl() ?? $this->logoUrl(),
+            'address' => array_filter([
+                '@type' => 'PostalAddress',
+                'streetAddress' => $this->address,
+                'postalCode' => $this->postal_code,
+                'addressLocality' => $this->city,
+                'addressCountry' => 'NL',
+            ]),
+            'geo' => $this->latitude !== null && $this->longitude !== null
+                ? ['@type' => 'GeoCoordinates', 'latitude' => $this->latitude, 'longitude' => $this->longitude]
+                : null,
+            'aggregateRating' => $this->hasRating()
+                ? ['@type' => 'AggregateRating', 'ratingValue' => round((float) $this->rating_avg, 1), 'reviewCount' => $this->rating_count, 'bestRating' => 5, 'worstRating' => 1]
+                : null,
+        ]);
     }
 
     public function bookingUrl(): string

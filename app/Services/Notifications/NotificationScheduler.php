@@ -6,6 +6,7 @@ use App\Enums\NotificationStatus;
 use App\Enums\NotificationType;
 use App\Models\Appointment;
 use App\Models\AppointmentNotification;
+use App\Models\Barbershop;
 use App\Models\ShopSetting;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
@@ -53,6 +54,40 @@ class NotificationScheduler
         $this->skipPending($appointment, 'Afspraak geannuleerd.');
 
         return [$this->create($appointment, NotificationType::Cancelled, now())];
+    }
+
+    /**
+     * Na het voltooien: een verzoek om een review, een paar uur later (fase 7). Niet als de zaak het uit heeft staan,
+     * niet in een demozaak en hooguit één keer per 30 dagen per klant.
+     */
+    public function completed(Appointment $appointment): ?AppointmentNotification
+    {
+        $settings = ShopSetting::withoutGlobalScopes()->where('barbershop_id', $appointment->barbershop_id)->first() ?? new ShopSetting;
+
+        if ($settings->review_request_hours === null || Barbershop::query()->whereKey($appointment->barbershop_id)->where('is_demo', true)->exists()) {
+            return null;
+        }
+
+        $recentlyAsked = AppointmentNotification::query()
+            ->where('type', NotificationType::ReviewRequest->value)
+            ->where('status', '!=', NotificationStatus::Skipped->value)
+            ->where('created_at', '>', now()->subDays(30))
+            ->whereIn('appointment_id', Appointment::withoutGlobalScopes()->where('customer_id', $appointment->customer_id)->select('id'))
+            ->exists();
+
+        if ($recentlyAsked) {
+            return null;
+        }
+
+        return $this->create($appointment, NotificationType::ReviewRequest, now()->addHours($settings->review_request_hours));
+    }
+
+    /**
+     * Voltooien ongedaan gemaakt: een openstaand reviewverzoek vervalt.
+     */
+    public function completionUndone(Appointment $appointment): void
+    {
+        $this->skipPending($appointment, 'Voltooien ongedaan gemaakt.');
     }
 
     private function scheduleReminders(Appointment $appointment): void

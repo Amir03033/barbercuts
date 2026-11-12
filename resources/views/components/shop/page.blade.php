@@ -8,6 +8,7 @@
     'staffMembers',
     'week',
     'images' => [],
+    'reviews' => [],
     'themeMode' => null,
     'accentColor' => null,
     'logoUrl' => null,
@@ -58,6 +59,13 @@
         </div>
 
         <h1 class="mt-3 text-lg font-bold">{{ $shop->name }}</h1>
+        @if ($shop->hasRating())
+            <a href="#reviews" class="mt-1 flex min-h-8 items-center gap-2 text-sm">
+                <x-ui.stars :rating="$shop->rating_avg" />
+                <span class="font-semibold tabular-nums">{{ number_format($shop->rating_avg, 1, ',', '') }}</span>
+                <span class="text-muted">· {{ $shop->rating_count }} {{ $shop->rating_count === 1 ? 'review' : 'reviews' }}</span>
+            </a>
+        @endif
         <p class="text-sm text-muted">{{ $status }}</p>
 
         @if ($shop->description)
@@ -102,7 +110,20 @@
                     <div class="flex w-16 shrink-0 flex-col items-center gap-1 text-center">
                         <x-ui.avatar :name="$staff->name" :color="$staff->color" size="lg" />
                         <span class="w-full truncate text-xs">{{ $staff->name }}</span>
+                        @if ($staff->rating_count > 0)
+                            <span class="text-xs text-muted tabular-nums">★ {{ number_format($staff->rating_avg, 1, ',', '') }}</span>
+                        @endif
                     </div>
+                @endforeach
+            </div>
+        @endif
+
+        @if (count($reviews) > 0)
+            <h2 id="reviews" class="mt-6 text-base font-semibold">Reviews</h2>
+            <p class="text-xs text-muted">Alleen van klanten die er geweest zijn.</p>
+            <div class="divide-y divide-border">
+                @foreach ($reviews as $review)
+                    <x-shop.review :review="$review" :shop-name="$shop->name" />
                 @endforeach
             </div>
         @endif

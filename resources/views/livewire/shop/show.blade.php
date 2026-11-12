@@ -9,5 +9,8 @@
         </x-ui.alert>
     @endif
 
-    <x-shop.page :shop="$shop" :services="$services" :staff-members="$staffMembers" :week="$week" :images="$images" :book-url="$bookUrl" />
+    <x-shop.page :shop="$shop" :services="$services" :staff-members="$staffMembers" :week="$week" :images="$images" :reviews="$reviews" :book-url="$bookUrl" />
+
+    {{-- Voor zoekmachines: de zaak met adres en beoordeling (schema.org) --}}
+    <script type="application/ld+json">{!! json_encode($shop->structuredData(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
 </div>

@@ -70,6 +70,7 @@ return [
             'reminder_2' => env('WHATSAPP_TEMPLATE_REMINDER'),
             'rescheduled' => env('WHATSAPP_TEMPLATE_RESCHEDULED'),
             'cancelled' => env('WHATSAPP_TEMPLATE_CANCELLED'),
+            'review_request' => env('WHATSAPP_TEMPLATE_REVIEW_REQUEST'),
         ],
     ],
 
@@ -78,6 +79,11 @@ return [
     | Demo voor pitchers (fase 6): hoe lang een demozaak blijft bestaan
     |--------------------------------------------------------------------------
     */
+    'geocoding' => [
+        // Adressen omzetten naar coördinaten via PDOK (fase 7). Staat uit in tests.
+        'enabled' => (bool) env('GEOCODING_ENABLED', true),
+    ],
+
     'demo' => [
         'hours' => (int) env('DEMO_HOURS', 24),
     ],

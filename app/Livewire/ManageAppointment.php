@@ -2,15 +2,18 @@
 
 namespace App\Livewire;
 
+use App\Enums\AppointmentStatus;
 use App\Exceptions\BookingException;
 use App\Livewire\Concerns\PicksSlot;
 use App\Models\Appointment;
 use App\Models\Barbershop;
+use App\Models\Review;
 use App\Models\Service;
 use App\Models\ShopSetting;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Services\Booking\AppointmentService;
+use App\Services\ReviewService;
 use App\Support\CurrentShop;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Contracts\View\View;
@@ -42,6 +45,10 @@ class ManageAppointment extends Component
     public string $accountEmail = '';
 
     public string $accountPassword = '';
+
+    public int $rating = 0;
+
+    public string $comment = '';
 
     private Appointment $appointment;
 
@@ -158,6 +165,28 @@ class ManageAppointment extends Component
     }
 
     /**
+     * Review na het bezoek (fase 7): wie de beheerlink heeft, is de klant van deze afspraak.
+     */
+    public function submitReview(ReviewService $reviews): void
+    {
+        $this->validate([
+            'rating' => ['required', 'integer', 'between:1,5'],
+            'comment' => ['nullable', 'string', 'max:1000'],
+        ], messages: ['rating.between' => 'Kies het aantal sterren.'], attributes: ['comment' => 'toelichting']);
+
+        try {
+            $reviews->submit($this->appointment, $this->rating, $this->comment);
+        } catch (BookingException $exception) {
+            $this->addError('rating', $exception->getMessage());
+
+            return;
+        }
+
+        $this->reset('rating', 'comment');
+        $this->dispatch('toast', message: 'Bedankt voor je review');
+    }
+
+    /**
      * Gast maakt een account: deze afspraak (en latere) staan dan in /account (§6.5).
      */
     public function createAccount(): void
@@ -228,7 +257,11 @@ class ManageAppointment extends Component
         $minutesLeft = now()->diffInMinutes($appointment->starts_at, false);
         $rescheduling = $this->mode === 'reschedule' && $scheduled;
 
+        $review = Review::query()->with('staffMember', 'customer')->where('appointment_id', $appointment->id)->first();
+
         return view('livewire.manage-appointment', [
+            'review' => $review,
+            'canReview' => $review === null && $appointment->status === AppointmentStatus::Completed,
             'appointment' => $appointment,
             'shop' => $shop,
             'start' => $appointment->localStart(),

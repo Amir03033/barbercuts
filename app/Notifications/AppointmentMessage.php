@@ -68,6 +68,11 @@ class AppointmentMessage extends Notification
                 ->line("Je afspraak bij {$shop->name} op {$when} is geannuleerd.")
                 ->line('Wil je een nieuwe afspraak maken? Dat kan via de boekingspagina van de zaak.')
                 ->action('Opnieuw boeken', route('shop.book', ['slug' => $shop->slug])),
+            NotificationType::ReviewRequest => $mail
+                ->subject("Hoe was het bij {$shop->name}?")
+                ->line("Bedankt voor je bezoek aan {$shop->name}.")
+                ->line("Wil je laten weten hoe het was bij {$appointment->staffMember->name}? Het kost een paar tikken en helpt anderen een goede kapper te vinden.")
+                ->action('Review achterlaten', $appointment->manageUrl()),
         };
     }
 

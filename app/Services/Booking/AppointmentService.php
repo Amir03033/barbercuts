@@ -20,6 +20,7 @@ use App\Models\Service;
 use App\Models\ShopSetting;
 use App\Models\StaffMember;
 use App\Models\User;
+use App\Services\Notifications\NotificationScheduler;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -243,6 +244,9 @@ class AppointmentService
 
             $this->refreshLastVisit($appointment);
 
+            // Na de commit: de klant een paar uur later om een review vragen (fase 7).
+            DB::afterCommit(fn () => app(NotificationScheduler::class)->completed($appointment));
+
             return $appointment;
         });
     }
@@ -291,6 +295,8 @@ class AppointmentService
             $appointment->save();
 
             $this->refreshLastVisit($appointment);
+
+            app(NotificationScheduler::class)->completionUndone($appointment);
 
             return $appointment;
         });

@@ -93,6 +93,24 @@
         </div>
     </section>
 
+    {{-- Voor klanten: best beoordeelde kappers (fase 7) --}}
+    <section class="mx-auto max-w-5xl px-4 py-12">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+            <div>
+                <h2 class="text-lg font-bold md:text-xl">Top beoordeelde kappers bij jou in de buurt</h2>
+                <p class="mt-1 text-sm text-muted">Reviews van klanten die er echt geweest zijn.</p>
+            </div>
+            <x-ui.button :href="route('directory')" variant="secondary" size="sm" icon="map-pin" wire:navigate>Zoek bij mij in de buurt</x-ui.button>
+        </div>
+        @if ($topShops->isNotEmpty())
+            <div class="mt-6 grid gap-3 md:grid-cols-2">
+                @foreach ($topShops as $shop)
+                    <x-platform.shop-card :shop="$shop" />
+                @endforeach
+            </div>
+        @endif
+    </section>
+
     {{-- Afsluiter --}}
     <section class="border-t border-border bg-surface">
         <div class="mx-auto max-w-5xl px-4 py-12 text-center">

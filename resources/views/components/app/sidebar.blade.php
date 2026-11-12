@@ -13,6 +13,7 @@
             ['route' => 'app.calendar', 'match' => ['app.calendar', 'app.appointments.*'], 'label' => 'Agenda', 'icon' => 'calendar'],
             ['route' => 'app.customers', 'match' => ['app.customers', 'app.customers.*'], 'label' => 'Klanten', 'icon' => 'users'],
             ['route' => 'app.revenue', 'match' => ['app.revenue'], 'label' => $isOwner ? 'Omzet' : 'Mijn omzet', 'icon' => 'trending-up'],
+            ['route' => 'app.reviews', 'match' => ['app.reviews'], 'label' => 'Reviews', 'icon' => 'star'],
         ],
         'Beheer' => array_values(array_filter([
             ['route' => 'app.staff', 'match' => ['app.staff', 'app.staff.*'], 'label' => 'Kappers', 'icon' => 'user'],

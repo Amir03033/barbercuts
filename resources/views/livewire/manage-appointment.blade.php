@@ -60,6 +60,35 @@
                 </div>
             </x-ui.card>
 
+            {{-- Review na het bezoek (fase 7) --}}
+            @if ($canReview)
+                <x-ui.card flat wire:key="review-form">
+                    <p class="text-base font-semibold">Hoe was het bij {{ $appointment->staffMember->name }}?</p>
+                    <p class="mt-1 text-sm text-muted">Je review staat op de pagina van {{ $shop->name }}, met je voornaam.</p>
+                    <form wire:submit="submitReview" class="mt-3 space-y-3" novalidate>
+                        <div x-data="{ rating: $wire.entangle('rating') }" role="radiogroup" aria-label="Aantal sterren" class="flex gap-1">
+                            @foreach (range(1, 5) as $star)
+                                <button type="button" role="radio" :aria-checked="rating === {{ $star }}" aria-label="{{ $star }} {{ $star === 1 ? 'ster' : 'sterren' }}"
+                                    x-on:click="rating = {{ $star }}" :class="rating >= {{ $star }} ? 'text-gold' : 'text-border-strong'"
+                                    class="flex size-12 items-center justify-center rounded-full transition-[color,transform] duration-150 active:scale-90">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.12 2.12 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.12 2.12 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.12 2.12 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.12 2.12 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.12 2.12 0 0 0 1.597-1.16z"/></svg>
+                                </button>
+                            @endforeach
+                        </div>
+                        @error('rating')
+                            <p class="text-sm text-danger">{{ $message }}</p>
+                        @enderror
+                        <x-ui.textarea label="Toelichting" wire:model="comment" optional maxlength="1000" />
+                        <x-ui.button type="submit" loading="submitReview" full>Review plaatsen</x-ui.button>
+                    </form>
+                </x-ui.card>
+            @elseif ($review)
+                <x-ui.card flat wire:key="review-done">
+                    <p class="text-base font-semibold">Jouw review</p>
+                    <x-shop.review :review="$review" :shop-name="$shop->name" class="!pb-0" />
+                </x-ui.card>
+            @endif
+
             @if ($upcoming)
                 <div class="space-y-3">
                     <x-ui.button :href="route('appointment.ics', $appointment->manage_token)" variant="secondary" icon="calendar" full>Zet in je agenda</x-ui.button>

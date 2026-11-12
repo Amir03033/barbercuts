@@ -9,6 +9,7 @@ enum NotificationType: string
     case Reminder2 = 'reminder_2';
     case Rescheduled = 'rescheduled';
     case Cancelled = 'cancelled';
+    case ReviewRequest = 'review_request';
 
     public function isReminder(): bool
     {

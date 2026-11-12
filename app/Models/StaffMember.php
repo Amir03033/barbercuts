@@ -29,6 +29,8 @@ class StaffMember extends Model
     {
         return [
             'is_active' => 'boolean',
+            'rating_avg' => 'float',
+            'rating_count' => 'integer',
             'invited_at' => 'datetime',
         ];
     }
