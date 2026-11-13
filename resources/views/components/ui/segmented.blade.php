@@ -9,7 +9,7 @@
         <label class="relative flex-1 cursor-pointer">
             <input type="radio" class="peer sr-only" name="{{ $name }}" value="{{ $optionValue }}"
                 @checked((string) $value === (string) $optionValue) {{ $model }} />
-            <span class="flex min-h-11 items-center justify-center rounded-[0.5rem] px-2 text-sm font-medium whitespace-nowrap text-muted transition-[background-color,color,box-shadow] duration-200 ease-out-soft hover:text-text peer-checked:bg-card peer-checked:text-text peer-checked:shadow-soft peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--focus)] lg:min-h-9">{{ $optionLabel }}</span>
+            <span class="flex min-h-11 items-center justify-center rounded-[0.5rem] px-2 text-sm font-medium whitespace-nowrap text-text transition-[background-color,color,box-shadow] duration-200 ease-out-soft peer-checked:bg-card peer-checked:font-semibold peer-checked:shadow-[0_1px_3px_rgb(0_0_0/0.12)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--focus)] lg:min-h-9">{{ $optionLabel }}</span>
         </label>
     @endforeach
 </div>

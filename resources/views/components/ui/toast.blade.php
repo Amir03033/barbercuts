@@ -24,10 +24,9 @@
         <div role="status"
             x-transition:enter="transition duration-300 ease-out-soft" x-transition:enter-start="translate-y-3 scale-95 opacity-0" x-transition:enter-end="translate-y-0 scale-100 opacity-100"
             x-transition:leave="transition duration-200 ease-in" x-transition:leave-start="opacity-100" x-transition:leave-end="translate-y-1 opacity-0"
-            class="pointer-events-auto flex max-w-sm items-center gap-3 rounded-input px-4 py-3 text-sm font-medium shadow-pop"
-            :class="item.type === 'error' ? 'bg-danger text-white' : 'bg-charcoal text-white'">
-            <span class="size-2 shrink-0 rounded-full" :class="item.type === 'error' ? 'bg-white/80' : 'bg-gold'"></span>
-            <span x-text="item.message"></span>
+            class="pointer-events-auto flex max-w-sm items-center gap-3 rounded-pill px-5 py-3 text-sm font-medium shadow-pop backdrop-blur-xl"
+            :class="item.type === 'error' ? 'bg-danger text-white' : 'bg-charcoal/90 text-white'">
+                        <span x-text="item.message"></span>
         </div>
     </template>
 </div>

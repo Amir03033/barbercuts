@@ -74,7 +74,7 @@
                         <div x-data="{ rating: $wire.entangle('rating') }" role="radiogroup" aria-label="Aantal sterren" class="flex gap-1">
                             @foreach (range(1, 5) as $star)
                                 <button type="button" role="radio" :aria-checked="rating === {{ $star }}" aria-label="{{ $star }} {{ $star === 1 ? 'ster' : 'sterren' }}"
-                                    x-on:click="rating = {{ $star }}" :class="rating >= {{ $star }} ? 'text-gold' : 'text-border-strong'"
+                                    x-on:click="rating = {{ $star }}" :class="rating >= {{ $star }} ? 'text-star' : 'text-border-strong'"
                                     class="flex size-12 items-center justify-center rounded-full transition-[color,transform] duration-150 active:scale-90">
                                     <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.12 2.12 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.12 2.12 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.12 2.12 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.12 2.12 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.12 2.12 0 0 0 1.597-1.16z"/></svg>
                                 </button>

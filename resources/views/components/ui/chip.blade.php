@@ -7,7 +7,7 @@
 @php
     $base = 'inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-pill border px-4 text-sm font-medium select-none lg:min-h-9 '
         .'transition-[background-color,border-color,color,transform] duration-150 ease-out-soft active:scale-[0.97]';
-    $idle = 'border-border-strong bg-card text-text hover:border-text/50 hover:bg-surface';
+    $idle = 'border-transparent bg-surface text-text hover:bg-border';
     $on = 'border-accent bg-accent text-on-accent';
     $model = $attributes->whereStartsWith('wire:model');
 @endphp

@@ -8,13 +8,14 @@
 |--------------------------------------------------------------------------
 | Ontwerpsysteem BarberCuts
 |--------------------------------------------------------------------------
-| Zwart, houtskool en gebroken wit, met champagne-goud als spaarzaam accent.
-| Goud is voor accenten (actieve staat, grafieken, merk); lopende tekst blijft inkt of --gold-ink,
-| zodat het contrast ≥ 4,5:1 blijft. De pagina's van een zaak overschrijven --accent en data-theme (B2),
-| dus componenten gebruiken altijd de tokens hieronder en nooit vaste kleuren voor knoppen of selecties.
+| Licht en rustig, in de stijl van iOS: grijswitte achtergrond, witte kaarten, haarlijnen in plaats van schaduw,
+| het systeemlettertype en één accentkleur (blauw) voor knoppen, links en selecties.
+| De tokens met "gold" in de naam zijn de tint van het accent (zachte achtergrond, tekst op die achtergrond);
+| de naam is gebleven zodat bestaande schermen meegaan. De pagina's van een zaak overschrijven --accent en
+| data-theme (B2), dus componenten gebruiken altijd de tokens hieronder en nooit vaste kleuren.
 */
 @theme {
-    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
 
     /* Kleuren (semantisch; de waarden staan in :root en [data-theme]) */
     --color-bg: var(--bc-bg);
@@ -24,44 +25,47 @@
     --color-border-strong: var(--bc-border-strong);
     --color-text: var(--bc-text);
     --color-muted: var(--bc-muted);
-    --color-primary: #121214;
+    --color-primary: #1d1d1f;
+    --color-link: var(--link);
+    --color-star: #ff9f0a;
+    --color-switch: #34c759;
     --color-accent: var(--accent);
     --color-on-accent: var(--on-accent);
 
-    --color-ink: #121214;
-    --color-charcoal: #18181b;
-    --color-charcoal-2: #212125;
+    --color-ink: #1d1d1f;
+    --color-charcoal: #1d1d1f;
+    --color-charcoal-2: #2c2c2e;
     --color-gold: var(--bc-gold);
     --color-gold-soft: var(--bc-gold-soft);
     --color-gold-ink: var(--bc-gold-ink);
 
-    --color-scheduled: #2f5fd0;
-    --color-completed: #1f8a4c;
-    --color-cancelled: #9a9890;
-    --color-no-show: #c43d3d;
-    --color-danger: #c43d3d;
+    --color-scheduled: #0071e3;
+    --color-completed: #248a3d;
+    --color-cancelled: #8e8e93;
+    --color-no-show: #d70015;
+    --color-danger: #d70015;
 
-    /* Typografie: 13 · 15 · 17 · 20, display 32 */
+    /* Typografie (iOS): 13 voetnoot · 15 subkop · 17 lopende tekst · 22 titel · 34 grote titel */
     --text-xs: 0.8125rem;
     --text-xs--line-height: 1.125rem;
     --text-sm: 0.9375rem;
     --text-sm--line-height: 1.375rem;
     --text-base: 1.0625rem;
     --text-base--line-height: 1.5rem;
-    --text-lg: 1.25rem;
+    --text-lg: 1.375rem;
     --text-lg--line-height: 1.75rem;
-    --text-display: 2rem;
-    --text-display--line-height: 2.375rem;
+    --text-display: 2.125rem;
+    --text-display--line-height: 2.5625rem;
 
-    /* Vorm: 14px voor kaarten, 12px voor velden, pillen voor chips */
-    --radius-card: 0.875rem;
+    /* Vorm: 16px voor kaarten, 12px voor velden en knoppen, pillen voor chips */
+    --radius-card: 1rem;
     --radius-input: 0.75rem;
     --radius-pill: 999px;
 
     /* Schaduwen: bijna onzichtbaar in rust, merkbaar bij zweven */
-    --shadow-soft: 0 1px 2px rgb(18 18 20 / 0.05), 0 0 0 1px rgb(18 18 20 / 0.02);
-    --shadow-lift: 0 8px 24px -8px rgb(18 18 20 / 0.14), 0 2px 6px rgb(18 18 20 / 0.05);
-    --shadow-pop: 0 18px 48px -12px rgb(18 18 20 / 0.28), 0 4px 12px rgb(18 18 20 / 0.08);
+    --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.04);
+    --shadow-lift: 0 8px 28px -10px rgb(0 0 0 / 0.16), 0 2px 6px rgb(0 0 0 / 0.04);
+    --shadow-pop: 0 20px 60px -16px rgb(0 0 0 / 0.3), 0 4px 14px rgb(0 0 0 / 0.08);
 
     /* Beweging */
     --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
@@ -84,39 +88,48 @@
 }
 
 :root {
-    --bc-bg: #f7f6f3;
+    --bc-bg: #f5f5f7;
     --bc-card: #ffffff;
-    --bc-surface: #f1efea;
-    --bc-border: #e7e4dd;
-    --bc-border-strong: #d5d1c7;
-    --bc-text: #121214;
-    --bc-muted: #6b6963;
-    --bc-gold: #b08d4f;
-    --bc-gold-soft: #f3ead6;
-    --bc-gold-ink: #7d5f27;
-    --accent: #121214;
+    --bc-surface: #ebebf0;
+    --bc-border: #e5e5ea;
+    --bc-border-strong: #d1d1d6;
+    --bc-text: #1d1d1f;
+    --bc-muted: #6e6e73;
+    --bc-gold: #0071e3;
+    --bc-gold-soft: #e8f2fd;
+    --bc-gold-ink: #0058b0;
+    --accent: #0071e3;
     --on-accent: #ffffff;
-    --focus: var(--bc-gold);
+    /* Tekstknoppen en links: op het platform de accentkleur */
+    --link: #0066cc;
+    --focus: var(--accent);
     color-scheme: light;
 }
 
 /* Donker thema: alleen op de publieke pagina's van een zaak (B2) */
 [data-theme='dark'] {
-    --bc-bg: #0e0e10;
-    --bc-card: #17171a;
-    --bc-surface: #1e1e22;
-    --bc-border: #2b2b31;
-    --bc-border-strong: #3a3a42;
-    --bc-text: #f5f4f1;
-    --bc-muted: #a3a19b;
-    --bc-gold-soft: #2a2417;
-    --bc-gold-ink: #d9bd86;
+    --bc-bg: #000000;
+    --bc-card: #1c1c1e;
+    --bc-surface: #2c2c2e;
+    --bc-border: #2c2c2e;
+    --bc-border-strong: #3a3a3c;
+    --bc-text: #f5f5f7;
+    --bc-muted: #98989d;
+    --bc-gold-soft: #2c2c2e;
+    --bc-gold-ink: #f5f5f7;
     color-scheme: dark;
 }
 
-/* Pagina's van een zaak: de focusring volgt de kleur van de zaak */
+/*
+ * Pagina's van een zaak: de accentkleur is van de zaak en kan licht zijn. Tekstknoppen en zachte vlakken
+ * gebruiken daarom de tekstkleur en het grijze vlak, zodat alles leesbaar blijft bij elke kleur.
+ */
 [data-theme] {
     --focus: var(--accent);
+    --link: var(--bc-text);
+    --bc-gold: var(--accent);
+    --bc-gold-soft: var(--bc-surface);
+    --bc-gold-ink: var(--bc-text);
 }
 
 @layer base {
@@ -131,7 +144,6 @@
         color: var(--color-text);
         font-size: var(--text-sm);
         line-height: var(--text-sm--line-height);
-        font-feature-settings: 'cv11', 'ss01', 'calt';
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
     }
@@ -139,7 +151,7 @@
     h1,
     h2,
     h3 {
-        letter-spacing: -0.015em;
+        letter-spacing: -0.022em;
     }
 
     ::selection {
@@ -181,10 +193,11 @@
         font-variant-numeric: tabular-nums;
     }
 
-    /* Een fijne gouden lijn als merkaccent */
+    /* Een korte lijn in de accentkleur */
     .gold-rule {
-        background: linear-gradient(90deg, transparent, var(--bc-gold), transparent);
-        height: 1px;
+        background: var(--bc-gold);
+        height: 2px;
+        border-radius: 2px;
     }
 }
 
@@ -311,7 +324,7 @@ main > * {
         width: 100%;
         min-height: 3rem;
         padding: 0.75rem 0.875rem;
-        border: 1px solid var(--color-border-strong);
+        border: 1px solid var(--color-border);
         border-radius: var(--radius-input);
         background-color: var(--color-card);
         color: var(--color-text);
@@ -337,13 +350,13 @@ main > * {
     }
 
     .bc-input:hover:not(:disabled) {
-        border-color: color-mix(in srgb, var(--color-text) 35%, var(--color-border));
+        border-color: var(--color-border-strong);
     }
 
     .bc-input:focus {
         outline: none;
-        border-color: var(--color-text);
-        box-shadow: 0 0 0 4px color-mix(in srgb, var(--focus) 22%, transparent);
+        border-color: var(--focus);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--focus) 18%, transparent);
     }
 
     .bc-input[aria-invalid='true'] {

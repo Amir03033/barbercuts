@@ -28,6 +28,6 @@
     @endisset
 
     @if ($chevron)
-        <x-ui.icon name="chevron-right" size="20" class="text-muted/70 transition-transform duration-200 ease-out-soft group-hover:translate-x-0.5" />
+        <x-ui.icon name="chevron-right" size="20" class="text-border-strong" />
     @endif
 </{{ $tag }}>

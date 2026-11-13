@@ -9,8 +9,8 @@
 <button type="button" wire:click="selectAppointment({{ $appointment->id }})"
     {{ $attributes->class([
         'flex w-full items-center gap-3 rounded-card border p-3 text-left active:bg-surface',
-        'border-text bg-card shadow-lift' => $highlight,
-        'border-border bg-card shadow-soft' => ! $highlight,
+        'border-accent/40 bg-card shadow-lift' => $highlight,
+        'border-border/70 bg-card' => ! $highlight,
         'opacity-60' => in_array($appointment->status->value, ['cancelled', 'no_show'], true),
     ]) }}>
     <span class="w-12 shrink-0 text-center">

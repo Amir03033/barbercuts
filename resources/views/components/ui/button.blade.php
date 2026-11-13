@@ -14,20 +14,20 @@
 
 @php
     $variants = [
-        'primary' => 'bg-accent text-on-accent shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_1px_2px_rgb(18_18_20/0.28)] hover:bg-[color-mix(in_srgb,var(--accent)_88%,white)] active:scale-[0.985]',
-        'secondary' => 'bg-card text-text border border-border-strong shadow-soft hover:bg-surface hover:border-text/40 active:scale-[0.985]',
-        'ghost' => 'bg-transparent text-text hover:bg-surface active:bg-border/70',
-        'danger' => 'bg-danger text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.14)] hover:brightness-110 active:scale-[0.985]',
-        'gold' => 'bg-gold text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_1px_2px_rgb(18_18_20/0.2)] hover:brightness-105 active:scale-[0.985]',
+        'primary' => 'bg-accent text-on-accent hover:brightness-110 active:scale-[0.98] active:brightness-95',
+        'secondary' => 'bg-surface text-link hover:bg-border active:scale-[0.98]',
+        'ghost' => 'bg-transparent text-link hover:bg-surface active:bg-border/70',
+        'danger' => 'bg-danger text-white hover:brightness-110 active:scale-[0.98]',
+        'gold' => 'bg-accent text-on-accent hover:brightness-110 active:scale-[0.98]',
     ];
 
     $sizes = [
-        'md' => 'min-h-12 px-5 text-base font-semibold lg:min-h-10 lg:px-4 lg:text-sm',
+        'md' => 'min-h-[3.125rem] px-5 text-base font-semibold lg:min-h-10 lg:px-4 lg:text-sm',
         'sm' => 'min-h-11 px-3 text-sm font-medium lg:min-h-9',
     ];
 
     $classes = 'relative inline-flex items-center justify-center gap-2 rounded-input select-none '
-        .'transition-[background-color,box-shadow,transform,border-color,filter] duration-150 ease-out-soft '
+        .'transition-[background-color,transform,filter] duration-150 ease-out-soft '
         .'disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 '
         .($sizes[$size] ?? $sizes['md']).' '
         .($variants[$variant] ?? $variants['primary'])

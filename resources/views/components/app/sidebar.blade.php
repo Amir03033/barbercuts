@@ -1,5 +1,5 @@
 {{--
-    Zijbalk voor desktop (lg en breder): donkere houtskool met een gouden accent op het actieve item.
+    Zijbalk voor desktop (lg en breder): licht, met het actieve item in de tint van de accentkleur.
     Inklapbaar; de staat wordt onthouden. Op mobiel en tablet neemt de bottom navigation dit over.
     Verwacht `collapsed` uit een omliggende Alpine-scope (zie layouts/app).
 --}}
@@ -30,20 +30,20 @@
 @endphp
 
 <aside aria-label="Navigatie" :class="collapsed ? 'w-[4.5rem]' : 'w-60'"
-    class="fixed inset-y-0 left-0 z-30 hidden flex-col bg-charcoal text-[#a9a7a2] transition-[width] duration-300 ease-out-soft lg:flex">
+    class="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-border bg-card text-muted transition-[width] duration-300 ease-out-soft lg:flex">
     {{-- Merk en inklappen --}}
     <div class="flex h-16 shrink-0 items-center justify-between px-4">
-        <x-brand :href="route('app.today')" inverse size="sm" x-show="! collapsed" class="!min-h-0" />
-        <span x-show="collapsed" x-cloak class="mx-auto"><x-brand :href="route('app.today')" inverse size="sm" :mark="true" class="!min-h-0 [&>span:last-child]:hidden" /></span>
+        <x-brand :href="route('app.today')" size="sm" x-show="! collapsed" class="!min-h-0" />
+        <span x-show="collapsed" x-cloak class="mx-auto"><x-brand :href="route('app.today')" size="sm" :mark="true" class="!min-h-0 [&>span:last-child]:hidden" /></span>
         <button type="button" x-on:click="collapsed = ! collapsed" x-show="! collapsed" :aria-label="collapsed ? 'Zijbalk uitklappen' : 'Zijbalk inklappen'"
-            class="flex size-8 items-center justify-center rounded-lg text-[#8d8b86] transition-colors duration-150 hover:bg-charcoal-2 hover:text-white">
+            class="flex size-8 items-center justify-center rounded-lg text-muted transition-colors duration-150 hover:bg-surface hover:text-text">
             <x-ui.icon name="panel-left" size="18" />
         </button>
     </div>
 
     <div class="px-3 pb-2">
         <a href="{{ route('app.appointments.create') }}" wire:navigate title="Nieuwe afspraak"
-            class="flex min-h-10 items-center justify-center gap-2 rounded-input bg-gold text-sm font-semibold text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.3)] transition-[filter,transform] duration-150 ease-out-soft hover:brightness-105 active:scale-[0.98]">
+            class="flex min-h-10 items-center justify-center gap-2 rounded-input bg-accent text-sm font-semibold text-on-accent transition-[filter,transform] duration-150 ease-out-soft hover:brightness-110 active:scale-[0.98]">
             <x-ui.icon name="plus" size="18" />
             <span x-show="! collapsed" x-transition.opacity.duration.200ms>Nieuwe afspraak</span>
         </a>
@@ -53,8 +53,8 @@
     <nav class="no-scrollbar flex-1 space-y-5 overflow-y-auto px-3 py-3">
         @foreach ($groups as $group => $items)
             <div>
-                <p x-show="! collapsed" x-transition.opacity.duration.200ms class="px-3 pb-1.5 text-[0.6875rem] font-semibold tracking-[0.08em] text-[#6f6d69] uppercase">{{ $group }}</p>
-                <div x-show="collapsed" x-cloak class="mx-3 mb-2 h-px bg-white/10"></div>
+                <p x-show="! collapsed" x-transition.opacity.duration.200ms class="px-3 pb-1.5 text-[0.6875rem] font-semibold tracking-[0.08em] text-muted uppercase">{{ $group }}</p>
+                <div x-show="collapsed" x-cloak class="mx-3 mb-2 h-px bg-border"></div>
                 <ul class="space-y-0.5">
                     @foreach ($items as $item)
                         @php($isActive = request()->routeIs(...$item['match']))
@@ -62,13 +62,10 @@
                             <a href="{{ route($item['route']) }}" wire:navigate title="{{ $item['label'] }}" @if ($isActive) aria-current="page" @endif
                                 @class([
                                     'group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-[background-color,color] duration-150',
-                                    'bg-charcoal-2 text-white' => $isActive,
-                                    'hover:bg-charcoal-2/70 hover:text-white' => ! $isActive,
+                                    'bg-gold-soft text-gold-ink' => $isActive,
+                                    'hover:bg-surface hover:text-text' => ! $isActive,
                                 ])>
-                                @if ($isActive)
-                                    <span class="animate-pop-in absolute top-2 bottom-2 -left-3 w-[3px] rounded-r-full bg-gold"></span>
-                                @endif
-                                <x-ui.icon :name="$item['icon']" size="20" @class(['shrink-0 transition-colors duration-150', 'text-gold' => $isActive, 'group-hover:text-white' => ! $isActive]) />
+                                <x-ui.icon :name="$item['icon']" size="20" @class(['shrink-0 transition-colors duration-150', 'text-gold' => $isActive, 'group-hover:text-text' => ! $isActive]) />
                                 <span x-show="! collapsed" x-transition.opacity.duration.200ms class="truncate">{{ $item['label'] }}</span>
                             </a>
                         </li>
@@ -79,14 +76,14 @@
     </nav>
 
     {{-- Zaak en gebruiker --}}
-    <div class="shrink-0 space-y-2 border-t border-white/10 p-3">
+    <div class="shrink-0 space-y-2 border-t border-border p-3">
         <button type="button" x-show="collapsed" x-cloak x-on:click="collapsed = false" aria-label="Zijbalk uitklappen"
-            class="flex min-h-10 w-full items-center justify-center rounded-lg text-[#8d8b86] transition-colors duration-150 hover:bg-charcoal-2 hover:text-white">
+            class="flex min-h-10 w-full items-center justify-center rounded-lg text-muted transition-colors duration-150 hover:bg-surface hover:text-text">
             <x-ui.icon name="panel-left" size="18" />
         </button>
 
         <a href="{{ $shop->bookingUrl() }}" target="_blank" rel="noopener" title="Boekingspagina openen"
-            class="group flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm transition-colors duration-150 hover:bg-charcoal-2/70 hover:text-white">
+            class="group flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm transition-colors duration-150 hover:bg-surface hover:text-text">
             <x-ui.icon name="eye" size="20" class="shrink-0" />
             <span x-show="! collapsed" x-transition.opacity.duration.200ms class="min-w-0 flex-1 truncate">Mijn boekingspagina</span>
             <x-ui.icon name="arrow-up-right" size="14" x-show="! collapsed" class="shrink-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
@@ -94,11 +91,11 @@
 
         <x-ui.dropdown align="left" placement="top" width="w-56" label="Account">
             <x-slot:trigger>
-                <button type="button" class="flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors duration-150 hover:bg-charcoal-2/70">
+                <button type="button" class="flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors duration-150 hover:bg-surface">
                     <x-ui.avatar :name="$user->name" size="sm" />
                     <span x-show="! collapsed" x-transition.opacity.duration.200ms class="min-w-0 flex-1">
-                        <span class="block truncate text-sm font-medium text-white">{{ $user->name }}</span>
-                        <span class="block truncate text-xs text-[#8d8b86]">{{ $isOwner ? 'Eigenaar' : 'Kapper' }} · {{ $shop->name }}</span>
+                        <span class="block truncate text-sm font-medium text-text">{{ $user->name }}</span>
+                        <span class="block truncate text-xs text-muted">{{ $isOwner ? 'Eigenaar' : 'Kapper' }} · {{ $shop->name }}</span>
                     </span>
                     <x-ui.icon name="chevron-up" size="16" x-show="! collapsed" class="shrink-0" />
                 </button>

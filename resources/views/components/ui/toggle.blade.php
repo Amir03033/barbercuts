@@ -12,5 +12,5 @@
     </span>
     <input type="checkbox" class="peer sr-only" @if ($name) name="{{ $name }}" @endif @checked($checked) {{ $model }} />
     <span aria-hidden="true"
-        class="relative h-7 w-12 shrink-0 rounded-pill bg-border-strong transition-colors duration-200 ease-out-soft peer-checked:bg-gold peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--focus)] peer-focus-visible:ring-offset-2 after:absolute after:top-0.5 after:left-0.5 after:size-6 after:rounded-full after:bg-white after:shadow-soft after:transition-transform after:duration-200 after:ease-out-soft peer-checked:after:translate-x-5"></span>
+        class="relative h-[1.9375rem] w-[3.1875rem] shrink-0 rounded-pill bg-border-strong transition-colors duration-200 ease-out-soft peer-checked:bg-switch peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--focus)] peer-focus-visible:ring-offset-2 after:absolute after:top-0.5 after:left-0.5 after:size-[1.6875rem] after:rounded-full after:bg-white after:shadow-soft after:transition-transform after:duration-200 after:ease-out-soft peer-checked:after:translate-x-5"></span>
 </label>
