@@ -57,6 +57,7 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -240,7 +241,10 @@ Route::middleware(['auth', EnsurePitcher::class])->group(function (): void {
 Route::get('/demo/welkom/{user}', function (User $user): RedirectResponse {
     abort_unless($user->is_pitcher, 404);
 
-    return redirect()->route('password.reset', ['token' => Password::broker()->createToken($user), 'email' => $user->email]);
+    // Twee verzoeken tegelijk (een mailscanner en de pitcher zelf) willen allebei een token aanmaken: probeer het dan nog een keer.
+    $token = retry(2, fn (): string => Password::broker()->createToken($user), 200, fn (Throwable $exception): bool => $exception instanceof UniqueConstraintViolationException);
+
+    return redirect()->route('password.reset', ['token' => $token, 'email' => $user->email]);
 })->whereNumber('user')->middleware(['signed', 'guest', 'throttle:6,1'])->name('demo.welcome');
 
 /*

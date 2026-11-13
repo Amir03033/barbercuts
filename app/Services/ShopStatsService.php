@@ -363,10 +363,10 @@ class ShopStatsService
 
         $row = DB::query()
             ->fromSub($visits, 'visits')
-            ->selectRaw('COUNT(*) AS customers, COALESCE(SUM(CASE WHEN visits >= 2 THEN 1 ELSE 0 END), 0) AS returning')
+            ->selectRaw('COUNT(*) AS customers, COALESCE(SUM(CASE WHEN visits >= 2 THEN 1 ELSE 0 END), 0) AS returning_customers')
             ->first();
 
-        return $row !== null && (int) $row->customers > 0 ? (int) $row->returning / (int) $row->customers : null;
+        return $row !== null && (int) $row->customers > 0 ? (int) $row->returning_customers / (int) $row->customers : null;
     }
 
     /**
