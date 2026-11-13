@@ -23,6 +23,7 @@
 
     <footer class="mx-auto max-w-2xl px-4 py-8 pb-safe text-center text-xs text-muted">
         Online boeken via <x-brand :href="route('home')" size="sm" class="!text-xs !text-muted align-middle" />
+        <p class="mt-1"><x-credit /></p>
     </footer>
 
     <x-ui.toast />

@@ -8,7 +8,7 @@ use App\Support\Features;
 
 it('shows the landing page with the three benefits and the call to action', function () {
     $this->get('/')->assertOk()
-        ->assertSee('Afspraken, agenda en omzet voor je kapperszaak')
+        ->assertSee('Afspraken, agenda en omzet voor je kapperszaak')->assertSee('Je hele kapperszaak.')
         ->assertSee('Klanten boeken zelf')->assertSee('Een agenda per kapper')->assertSee('Omzet in één oogopslag')
         ->assertSee('Start gratis')
         ->assertSee('Zo ziet het eruit')

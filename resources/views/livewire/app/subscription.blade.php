@@ -3,6 +3,23 @@
     $untilFree = $shop->free_until?->isFuture() ? $shop->free_until : null;
 @endphp
 
+@if (! $billing)
+    {{-- Betalen via Mollie staat uit in het adminpanel: geen betaalschermen, wel uitleg. --}}
+    <div>
+        <x-ui.page-header title="Abonnement" :back="route('app.more')" />
+
+        <div class="space-y-4 px-4 py-4">
+            <x-ui.card flat class="space-y-3 text-center">
+                <span class="mx-auto flex size-14 items-center justify-center rounded-full bg-surface text-muted"><x-ui.icon name="credit-card" /></span>
+                <div>
+                    <x-ui.badge status="neutral">Tijdelijk uit</x-ui.badge>
+                    <p class="mt-3 text-lg font-bold">Betalen staat tijdelijk uit</p>
+                    <p class="mt-1 text-sm text-muted">Je gebruikt BarberCuts op dit moment gratis en hoeft niets te doen. Zodra betalen via Mollie aan gaat, lees je dat hier en krijg je ruim van tevoren bericht.</p>
+                </div>
+            </x-ui.card>
+        </div>
+    </div>
+@else
 <div>
     <x-ui.page-header title="Abonnement" :back="route('app.more')" />
 
@@ -89,3 +106,4 @@
         </div>
     </x-ui.bottom-sheet>
 </div>
+@endif

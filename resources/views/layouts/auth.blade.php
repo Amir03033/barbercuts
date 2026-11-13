@@ -35,6 +35,7 @@
                 <a href="{{ route('privacy') }}" class="inline-flex min-h-11 items-center px-2">Privacy</a>
                 <a href="{{ route('terms') }}" class="inline-flex min-h-11 items-center px-2">Voorwaarden</a>
                 <a href="{{ route('contact') }}" class="inline-flex min-h-11 items-center px-2">Contact</a>
+                <p><x-credit /></p>
             </footer>
         </div>
     </div>

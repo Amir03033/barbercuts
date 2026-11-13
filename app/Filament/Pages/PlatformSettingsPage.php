@@ -86,21 +86,21 @@ class PlatformSettingsPage extends Page
         $days = $plan !== null ? $plan->trial_days : (int) config('barbercuts.billing.trial_days');
 
         return [
-            Action::make('enableBilling')->label('Facturering aanzetten')->icon(Heroicon::OutlinedCreditCard)->color('success')
+            Action::make('enableBilling')->label('Betalen via Mollie aanzetten')->icon(Heroicon::OutlinedCreditCard)->color('success')
                 ->visible(fn (): bool => ! Features::billing())
                 ->requiresConfirmation()
-                ->modalHeading('Facturering aanzetten?')
+                ->modalHeading('Betalen via Mollie aanzetten?')
                 ->modalDescription("Zaken die nu gratis meedraaien krijgen een proefperiode van {$days} dagen en daarna moeten ze betalen. Zaken met een gratis periode van jou behouden die. Dit kun je later weer uitzetten.")
                 ->action(function () use ($days): void {
                     $updated = app(ShopAdminService::class)->enableBilling($days);
 
                     Notification::make()->title('Facturering staat aan')->body("{$updated} zaken kregen een proefperiode van {$days} dagen.")->success()->send();
                 }),
-            Action::make('disableBilling')->label('Facturering uitzetten')->icon(Heroicon::OutlinedCreditCard)->color('gray')
+            Action::make('disableBilling')->label('Betalen via Mollie uitzetten')->icon(Heroicon::OutlinedCreditCard)->color('gray')
                 ->visible(fn (): bool => Features::billing())
                 ->requiresConfirmation()
-                ->modalHeading('Facturering uitzetten?')
-                ->modalDescription('Alle zaken zijn dan weer gratis en er verschijnen geen betaalschermen meer. Bestaande abonnementen bij Mollie lopen door; zeg die zelf op in Mollie als dat nodig is.')
+                ->modalHeading('Betalen via Mollie uitzetten?')
+                ->modalDescription('Alle zaken zijn dan weer gratis. Eigenaren zien bij Abonnement dat betalen tijdelijk uit staat. Bestaande abonnementen bij Mollie lopen door; zeg die zelf op in Mollie als dat nodig is.')
                 ->action(function (): void {
                     app(ShopAdminService::class)->disableBilling();
 

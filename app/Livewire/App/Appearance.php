@@ -28,7 +28,7 @@ class Appearance extends Component
     use InShop;
     use WithFileUploads;
 
-    private const int MAX_PHOTOS = 12;
+    private const int MAX_PHOTOS = 24;
 
     public string $themeMode = 'light';
 
@@ -49,6 +49,17 @@ class Appearance extends Component
     /** @var array<int, UploadedFile> */
     public array $photos = [];
 
+    public bool $bannerActive = false;
+
+    public string $bannerText = '';
+
+    /** @var UploadedFile|null */
+    public $bannerImage = null;
+
+    public string $instagram = '';
+
+    public string $website = '';
+
     public function mount(): void
     {
         $this->authorizeOwner();
@@ -60,6 +71,47 @@ class Appearance extends Component
         $this->description = (string) $shop->description;
         $this->address = (string) $shop->address;
         $this->postalCode = (string) $shop->postal_code;
+        $this->bannerActive = (bool) $shop->banner_active;
+        $this->bannerText = (string) $shop->banner_text;
+        $this->instagram = (string) $shop->instagram;
+        $this->website = (string) $shop->website;
+    }
+
+    public function updatedBannerImage(): void
+    {
+        $this->validateOnly('bannerImage', ['bannerImage' => ['nullable', 'image', 'max:8192']], attributes: ['bannerImage' => 'afbeelding']);
+    }
+
+    public function removeBannerImage(): void
+    {
+        $this->authorizeOwner();
+        $this->bannerImage = null;
+
+        $shop = $this->shop();
+        ImageStore::delete($shop->banner_path);
+        $shop->update(['banner_path' => null]);
+    }
+
+    /**
+     * Zet een foto één plek naar voren: de eerste foto's ziet een klant het eerst.
+     */
+    public function movePhotoForward(int $imageId): void
+    {
+        $this->authorizeOwner();
+
+        $images = ShopImage::query()->orderBy('sort_order')->orderBy('id')->get()->values();
+        $index = $images->search(fn (ShopImage $image): bool => $image->id === $imageId);
+
+        if ($index === false || $index === 0) {
+            return;
+        }
+
+        $ordered = $images->all();
+        [$ordered[$index - 1], $ordered[$index]] = [$ordered[$index], $ordered[$index - 1]];
+
+        foreach ($ordered as $position => $image) {
+            $image->update(['sort_order' => $position]);
+        }
     }
 
     public function updatedLogo(): void
@@ -144,14 +196,48 @@ class Appearance extends Component
             'postalCode' => ['nullable', 'string', 'max:10'],
             'logo' => ['nullable', 'image', 'max:5120'],
             'cover' => ['nullable', 'image', 'max:8192'],
+            'bannerText' => ['nullable', 'string', 'max:160'],
+            'bannerImage' => ['nullable', 'image', 'max:8192'],
+            'instagram' => ['nullable', 'string', 'max:120'],
+            'website' => ['nullable', 'string', 'max:255'],
         ], attributes: [
+            'bannerText' => 'tekst van de banner', 'bannerImage' => 'afbeelding', 'website' => 'website',
             'accentColor' => 'accentkleur', 'description' => 'omschrijving', 'address' => 'adres', 'postalCode' => 'postcode',
             'logo' => 'logo', 'cover' => 'omslagfoto',
         ]);
 
+        // Instagram: een naam, @naam of een hele link mag; we bewaren alleen de naam.
+        $instagram = trim((string) preg_replace('#^(https?://)?(www\.)?instagram\.com/#i', '', trim($this->instagram)), "@/ \t");
+        $instagram = explode('?', explode('/', $instagram)[0])[0];
+
+        if ($instagram !== '' && preg_match('/^[A-Za-z0-9._]{1,30}$/', $instagram) !== 1) {
+            $this->addError('instagram', 'Vul je Instagram-naam in, bijvoorbeeld studiofade.');
+
+            return;
+        }
+
+        $website = trim($this->website);
+
+        if ($website !== '' && ! preg_match('#^https?://#i', $website)) {
+            $website = 'https://'.$website;
+        }
+
+        if ($website !== '' && filter_var($website, FILTER_VALIDATE_URL) === false) {
+            $this->addError('website', 'Vul een geldig webadres in, bijvoorbeeld studiofade.nl.');
+
+            return;
+        }
+
+        $this->instagram = $instagram;
+        $this->website = $website;
+
         $shop = $this->shop();
 
         $data = [
+            'banner_active' => $this->bannerActive,
+            'banner_text' => trim($this->bannerText) ?: null,
+            'instagram' => $instagram ?: null,
+            'website' => $website ?: null,
             'theme_mode' => $this->themeMode,
             'accent_color' => $this->accentColor,
             'description' => trim($this->description) ?: null,
@@ -169,8 +255,14 @@ class Appearance extends Component
             $data['cover_path'] = ImageStore::storeWebp($this->cover, "shops/{$shop->id}", 1600, 900);
         }
 
+        if ($this->bannerImage !== null) {
+            ImageStore::delete($shop->banner_path);
+            $data['banner_path'] = ImageStore::storeWebp($this->bannerImage, "shops/{$shop->id}", 1600, 900);
+        }
+
         $shop->update($data);
 
+        $this->bannerImage = null;
         $this->logo = null;
         $this->cover = null;
 
@@ -207,6 +299,8 @@ class Appearance extends Component
             'images' => $shop->images()->get(),
             'logoPreview' => $this->previewUrl($this->logo),
             'coverPreview' => $this->previewUrl($this->cover),
+            'bannerPreview' => $this->previewUrl($this->bannerImage),
+            'maxPhotos' => self::MAX_PHOTOS,
         ]);
     }
 

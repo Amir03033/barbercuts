@@ -39,25 +39,57 @@
             </div>
         </x-ui.section>
 
+        <x-ui.section title="Banner" text="Een mededeling of actie bovenaan je pagina, bijvoorbeeld: “Deze maand 10% korting voor studenten”.">
+            <x-ui.card flat class="space-y-4">
+                <x-ui.toggle label="Banner tonen" wire:model.live="bannerActive" :checked="$bannerActive" />
+                <x-ui.input label="Tekst" wire:model.blur="bannerText" maxlength="160" optional />
+                @if ($bannerPreview || $shop->bannerUrl())
+                    <img src="{{ $bannerPreview ?? $shop->bannerUrl() }}" alt="Afbeelding van de banner" class="aspect-[16/9] w-full rounded-card object-cover" width="640" height="360" />
+                @endif
+                <div class="grid grid-cols-2 gap-3">
+                    <x-ui.file-button wire:model="bannerImage">{{ $shop->banner_path || $bannerPreview ? 'Andere afbeelding' : 'Afbeelding kiezen' }}</x-ui.file-button>
+                    @if ($shop->banner_path)
+                        <x-ui.button variant="ghost" size="sm" full wire:click="removeBannerImage">Afbeelding weghalen</x-ui.button>
+                    @endif
+                </div>
+                @error('bannerImage')
+                    <p class="text-sm text-danger">{{ $message }}</p>
+                @enderror
+            </x-ui.card>
+        </x-ui.section>
+
+        <x-ui.section title="Links" text="Staan als knoppen op je pagina.">
+            <x-ui.input label="Instagram" wire:model.blur="instagram" optional placeholder="studiofade" autocapitalize="none" autocomplete="off" />
+            <x-ui.input label="Website" wire:model.blur="website" optional placeholder="studiofade.nl" inputmode="url" autocapitalize="none" autocomplete="url" />
+        </x-ui.section>
+
         <x-ui.section title="Over je zaak">
             <x-ui.textarea label="Omschrijving" wire:model.blur="description" optional placeholder="Bijvoorbeeld: Barbershop in het centrum, sinds 2015." />
             <x-ui.input label="Adres" wire:model.blur="address" autocomplete="street-address" optional />
             <x-ui.input label="Postcode" wire:model.blur="postalCode" autocomplete="postal-code" optional />
         </x-ui.section>
 
-        <x-ui.section title="Foto's" text="Laat je zaak en je werk zien. Foto's worden meteen opgeslagen.">
+        <x-ui.section title="Foto's" text="Laat je zaak en je werk zien. Foto's worden meteen opgeslagen; de eerste foto's ziet een klant het eerst.">
             @if ($images->isNotEmpty())
                 <div class="grid grid-cols-3 gap-2">
                     @foreach ($images as $image)
                         <div class="relative" wire:key="photo-{{ $image->id }}">
                             <img src="{{ $image->url() }}" alt="Foto" loading="lazy" width="200" height="200" class="aspect-square w-full rounded-card object-cover" />
-                            <x-ui.icon-button icon="x" label="Foto verwijderen" wire:click="deletePhoto({{ $image->id }})"
+                            <x-ui.icon-button icon="x" label="Foto verwijderen" wire:click="deletePhoto({{ $image->id }})" wire:confirm="Deze foto verwijderen?"
                                 class="absolute top-1 right-1 !size-9 bg-bg/90 !text-text shadow-soft" />
+                            @unless ($loop->first)
+                                <x-ui.icon-button icon="chevron-left" label="Foto naar voren" wire:click="movePhotoForward({{ $image->id }})"
+                                    class="absolute bottom-1 left-1 !size-9 bg-bg/90 !text-text shadow-soft" />
+                            @endunless
                         </div>
                     @endforeach
                 </div>
             @endif
+            <p class="text-xs text-muted">{{ $images->count() }} van {{ $maxPhotos }} foto's</p>
             <x-ui.file-button wire:model="photos" multiple icon="plus">Foto's toevoegen</x-ui.file-button>
+            @error('photos.*')
+                <p class="text-sm text-danger">{{ $message }}</p>
+            @enderror
         </x-ui.section>
 
         <x-ui.section title="Voorbeeld" text="Zo zien klanten je boekingspagina.">

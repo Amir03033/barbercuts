@@ -398,3 +398,35 @@ main > * {
         }
     }
 }
+
+/*
+|--------------------------------------------------------------------------
+| Landingspagina: zwevende kaartjes rond de telefoon en een zachte gloed erachter
+|--------------------------------------------------------------------------
+*/
+@keyframes float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.float-slow {
+    animation: float 6s var(--ease-in-out-soft) infinite;
+}
+
+.float-slower {
+    animation: float 8s var(--ease-in-out-soft) infinite;
+    animation-delay: -3s;
+}
+
+.hero-glow {
+    background:
+        radial-gradient(38rem 26rem at 50% 62%, rgb(0 113 227 / 0.22), transparent 62%),
+        radial-gradient(26rem 20rem at 78% 40%, rgb(175 82 222 / 0.16), transparent 60%),
+        radial-gradient(24rem 18rem at 20% 46%, rgb(52 199 89 / 0.12), transparent 60%);
+}

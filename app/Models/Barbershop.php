@@ -40,6 +40,7 @@ use Illuminate\Support\Str;
 #[Fillable([
     'slug', 'name', 'description', 'phone', 'email', 'address', 'postal_code', 'city', 'latitude', 'longitude',
     'timezone', 'theme_mode', 'accent_color', 'logo_path', 'cover_path',
+    'banner_active', 'banner_text', 'banner_path', 'instagram', 'website',
 ])]
 class Barbershop extends Model
 {
@@ -56,6 +57,7 @@ class Barbershop extends Model
         'theme_mode' => 'light',
         'accent_color' => self::DEFAULT_ACCENT,
         'is_public' => false,
+        'banner_active' => false,
     ];
 
     /**
@@ -67,6 +69,7 @@ class Barbershop extends Model
             'theme_mode' => ThemeMode::class,
             'is_public' => 'boolean',
             'is_demo' => 'boolean',
+            'banner_active' => 'boolean',
             'rating_avg' => 'float',
             'rating_count' => 'integer',
             'rating_score' => 'float',
@@ -405,6 +408,24 @@ class Barbershop extends Model
     public function logoUrl(): ?string
     {
         return ImageStore::url($this->logo_path);
+    }
+
+    public function bannerUrl(): ?string
+    {
+        return ImageStore::url($this->banner_path);
+    }
+
+    /**
+     * De banner staat op de pagina als hij aan staat en er iets te tonen is.
+     */
+    public function hasBanner(): bool
+    {
+        return $this->banner_active && ($this->banner_text !== null || $this->banner_path !== null);
+    }
+
+    public function instagramUrl(): ?string
+    {
+        return $this->instagram ? 'https://instagram.com/'.$this->instagram : null;
     }
 
     public function coverUrl(): ?string

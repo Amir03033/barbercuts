@@ -19,7 +19,7 @@ use Livewire\Component;
 use Throwable;
 
 /**
- * Abonnement (§9.1): status, prijs, starten en opzeggen. Alleen voor de eigenaar, en alleen als facturering aan staat (B12).
+ * Abonnement (§9.1): status, prijs, starten en opzeggen. Alleen voor de eigenaar. Staat betalen uit (B12), dan laat de pagina zien dat het tijdelijk uit staat.
  */
 #[Layout('layouts::app', ['active' => 'more'])]
 #[Title('Abonnement')]
@@ -34,9 +34,6 @@ class Subscription extends Component
     {
         $this->authorizeOwner();
 
-        // Gratis start: geen betaalschermen.
-        abort_unless(Features::billing(), 404);
-
         // Een demozaak (fase 6) heeft geen abonnement.
         abort_if($this->shop()->is_demo, 404);
     }
@@ -44,6 +41,9 @@ class Subscription extends Component
     public function start(SubscriptionService $subscriptions): void
     {
         $this->authorizeOwner();
+
+        // Betalen via Mollie staat uit (schakelaar in het adminpanel): er kan niets gestart worden.
+        abort_unless(Features::billing(), 403);
 
         try {
             $url = $subscriptions->startCheckout($this->shop(), $this->user());
@@ -100,6 +100,7 @@ class Subscription extends Component
 
         return view('livewire.app.subscription', [
             'shop' => $shop,
+            'billing' => Features::billing(),
             'state' => $state,
             'subscription' => $subscription,
             'running' => $shop->activeSubscription(),

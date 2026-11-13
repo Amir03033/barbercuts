@@ -2,57 +2,42 @@
     <x-ui.page-header title="Meer" :subtitle="$shop->name" />
 
     <div class="space-y-6 px-4 py-4">
-        <x-ui.card :padding="false" flat class="divide-y divide-border overflow-hidden">
-            <x-ui.list-item :href="route('app.revenue')" :title="$isOwner ? 'Omzet' : 'Mijn omzet'">
-                <x-slot:leading><x-ui.icon name="euro" class="text-muted" /></x-slot:leading>
-            </x-ui.list-item>
-            <x-ui.list-item :href="route('app.reviews')" title="Reviews" :subtitle="$shop->hasRating() ? number_format($shop->rating_avg, 1, ',', '').' · '.$shop->rating_count.' reviews' : null">
-                <x-slot:leading><x-ui.icon name="star" class="text-muted" /></x-slot:leading>
-            </x-ui.list-item>
-            <x-ui.list-item :href="route('app.waitlist')" title="Wachtlijst">
-                <x-slot:leading><x-ui.icon name="clock" class="text-muted" /></x-slot:leading>
-            </x-ui.list-item>
-            @if ($isOwner)
-                <x-ui.list-item :href="route('app.winback')" title="Klanten terughalen">
-                    <x-slot:leading><x-ui.icon name="users" class="text-muted" /></x-slot:leading>
-                </x-ui.list-item>
-                <x-ui.list-item :href="route('app.loyalty')" title="Spaarkaart">
-                    <x-slot:leading><x-ui.icon name="check" class="text-muted" /></x-slot:leading>
-                </x-ui.list-item>
-            @endif
-            @if ($isOwner)
-                <x-ui.list-item :href="route('app.services')" title="Diensten">
-                    <x-slot:leading><x-ui.icon name="scissors" class="text-muted" /></x-slot:leading>
-                </x-ui.list-item>
-            @endif
-            <x-ui.list-item :href="route('app.staff')" title="Kappers">
-                <x-slot:leading><x-ui.icon name="users" class="text-muted" /></x-slot:leading>
-            </x-ui.list-item>
-            <x-ui.list-item :href="route('app.profile')" title="Mijn profiel">
-                <x-slot:leading><x-ui.icon name="user" class="text-muted" /></x-slot:leading>
-            </x-ui.list-item>
-            @if (! $isOwner && $ownStaffId)
-                <x-ui.list-item :href="route('app.staff.edit', $ownStaffId)" title="Mijn werktijden">
-                    <x-slot:leading><x-ui.icon name="clock" class="text-muted" /></x-slot:leading>
-                </x-ui.list-item>
-            @endif
-            @if ($isOwner)
-                <x-ui.list-item :href="route('app.opening-hours')" title="Openingstijden">
-                    <x-slot:leading><x-ui.icon name="clock" class="text-muted" /></x-slot:leading>
-                </x-ui.list-item>
-                <x-ui.list-item :href="route('app.appearance')" title="Uiterlijk">
-                    <x-slot:leading><x-ui.icon name="palette" class="text-muted" /></x-slot:leading>
-                </x-ui.list-item>
-                <x-ui.list-item :href="route('app.settings')" title="Instellingen">
-                    <x-slot:leading><x-ui.icon name="settings" class="text-muted" /></x-slot:leading>
-                </x-ui.list-item>
-                @if (\App\Support\Features::billing() && ! $shop->is_demo)
-                    <x-ui.list-item :href="route('app.subscription')" title="Abonnement" :subtitle="$shop->accessState()->label()">
-                        <x-slot:leading><x-ui.icon name="euro" class="text-muted" /></x-slot:leading>
-                    </x-ui.list-item>
-                @endif
-            @endif
-        </x-ui.card>
+        @php
+            $billing = \App\Support\Features::billing();
+            $groups = [
+                'Je zaak' => array_filter([
+                    ['route' => 'app.revenue', 'title' => $isOwner ? 'Omzet' : 'Mijn omzet', 'icon' => 'trending-up', 'color' => '#34c759'],
+                    ['route' => 'app.reviews', 'title' => 'Reviews', 'icon' => 'star', 'color' => '#ff9f0a', 'subtitle' => $shop->hasRating() ? number_format($shop->rating_avg, 1, ',', '').' · '.$shop->rating_count.' reviews' : null],
+                    ['route' => 'app.waitlist', 'title' => 'Wachtlijst', 'icon' => 'clock', 'color' => '#5e5ce6'],
+                    $isOwner ? ['route' => 'app.winback', 'title' => 'Klanten terughalen', 'icon' => 'heart', 'color' => '#ff375f'] : null,
+                    $isOwner ? ['route' => 'app.loyalty', 'title' => 'Spaarkaart', 'icon' => 'gift', 'color' => '#bf5af2'] : null,
+                ]),
+                'Beheer' => array_filter([
+                    $isOwner ? ['route' => 'app.services', 'title' => 'Diensten', 'icon' => 'scissors', 'color' => '#0071e3'] : null,
+                    ['route' => 'app.staff', 'title' => 'Kappers', 'icon' => 'users', 'color' => '#30b0c7'],
+                    $isOwner ? ['route' => 'app.opening-hours', 'title' => 'Openingstijden', 'icon' => 'clock', 'color' => '#ff9f0a'] : null,
+                    $isOwner ? ['route' => 'app.appearance', 'title' => 'Uiterlijk', 'icon' => 'palette', 'color' => '#ff375f', 'subtitle' => "Kleuren, foto's en banner"] : null,
+                    $isOwner ? ['route' => 'app.settings', 'title' => 'Instellingen', 'icon' => 'settings', 'color' => '#8e8e93'] : null,
+                    $isOwner && ! $shop->is_demo ? ['route' => 'app.subscription', 'title' => 'Abonnement', 'icon' => 'credit-card', 'color' => '#1d1d1f', 'subtitle' => $billing ? $shop->accessState()->label() : 'Betalen staat tijdelijk uit'] : null,
+                ]),
+                'Jij' => array_filter([
+                    ['route' => 'app.profile', 'title' => 'Mijn profiel', 'icon' => 'user', 'color' => '#8e8e93'],
+                    ! $isOwner && $ownStaffId ? ['href' => route('app.staff.edit', $ownStaffId), 'title' => 'Mijn werktijden', 'icon' => 'clock', 'color' => '#ff9f0a'] : null,
+                ]),
+            ];
+        @endphp
+
+        @foreach ($groups as $group => $items)
+            <x-ui.section :title="$group">
+                <x-ui.card :padding="false" flat class="divide-y divide-border overflow-hidden">
+                    @foreach ($items as $item)
+                        <x-ui.list-item :href="$item['href'] ?? route($item['route'])" :title="$item['title']" :subtitle="$item['subtitle'] ?? null">
+                            <x-slot:leading><x-ui.icon-tile :name="$item['icon']" :color="$item['color']" /></x-slot:leading>
+                        </x-ui.list-item>
+                    @endforeach
+                </x-ui.card>
+            </x-ui.section>
+        @endforeach
 
         <x-ui.section title="Boekingslink delen">
             <x-ui.copy-link :url="$shop->bookingUrl()" :label="$shop->bookingUrlLabel()" />
@@ -81,5 +66,7 @@
             @csrf
             <x-ui.button type="submit" variant="secondary" icon="log-out" full>Uitloggen</x-ui.button>
         </form>
+
+        <p class="pb-2 text-center text-xs text-muted"><x-credit /></p>
     </div>
 </div>

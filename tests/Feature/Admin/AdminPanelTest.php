@@ -462,7 +462,7 @@ it('turns billing on and gives shops without a trial a trial, then turns it off 
     expect(Features::billing())->toBeFalse();
 
     $page = Livewire::actingAs($this->admin)->test(PlatformSettingsPage::class)
-        ->assertSee('Facturering aanzetten')->assertDontSee('Facturering uitzetten')
+        ->assertSee('Betalen via Mollie aanzetten')->assertDontSee('Betalen via Mollie uitzetten')
         ->callAction('enableBilling')->assertNotified('Facturering staat aan');
 
     expect(Features::billing())->toBeTrue()
@@ -473,7 +473,7 @@ it('turns billing on and gives shops without a trial a trial, then turns it off 
         ->and($paying->fresh()->trial_ends_at)->toBeNull()->and($paying->fresh()->accessState())->toBe(AccessState::Active)
         ->and($blocked->fresh()->trial_ends_at)->toBeNull();
 
-    $page->assertSee('Facturering uitzetten')->callAction('disableBilling')->assertNotified('Facturering staat uit');
+    $page->assertSee('Betalen via Mollie uitzetten')->callAction('disableBilling')->assertNotified('Facturering staat uit');
 
     expect(Features::billing())->toBeFalse()->and($noTrial->fresh()->accessState())->toBe(AccessState::Free)
         ->and(ActivityLog::query()->pluck('action')->all())->toBe(['billing.enabled', 'billing.disabled']);

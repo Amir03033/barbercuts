@@ -249,8 +249,8 @@ it('shows no payment screens while billing is off', function () {
     config(['barbercuts.billing.enabled' => false]);
     [$shop, $owner] = shopWithOwner();
 
-    $this->actingAs($owner)->get('/app/abonnement')->assertNotFound();
-    $this->actingAs($owner)->get('/app/meer')->assertOk()->assertDontSee('Abonnement');
+    $this->actingAs($owner)->get('/app/abonnement')->assertOk()->assertSee('Betalen staat tijdelijk uit')->assertDontSee('Abonnement starten');
+    $this->actingAs($owner)->get('/app/meer')->assertOk()->assertSee('Betalen staat tijdelijk uit');
     $this->actingAs($owner)->get('/app')->assertOk()->assertDontSee('Alleen lezen')->assertDontSee('Proefperiode');
     $this->get('/prijzen')->assertSee('Tijdens de lancering gratis');
     $this->get('/')->assertSee('Tijdens de lancering gratis')->assertDontSee('dagen gratis');

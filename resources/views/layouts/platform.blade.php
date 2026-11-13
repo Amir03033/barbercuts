@@ -32,7 +32,7 @@
 
     <footer class="border-t border-border pb-safe">
         <div class="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-            <p>© {{ date('Y') }} {{ config('barbercuts.company.name') }}</p>
+            <p>© {{ date('Y') }} {{ config('barbercuts.company.name') }} · <x-credit /></p>
             <nav aria-label="Voetnavigatie" class="flex flex-wrap gap-x-4 gap-y-1">
                 <a href="{{ route('directory') }}" class="inline-flex min-h-11 items-center">Kapper zoeken</a>
                 <a href="{{ route('pricing') }}" class="inline-flex min-h-11 items-center">Prijzen</a>

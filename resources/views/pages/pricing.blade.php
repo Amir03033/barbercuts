@@ -15,6 +15,9 @@
                     @endif
                 </p>
             </div>
+            @unless ($billing)
+                <p class="flex items-center gap-2 rounded-card bg-surface px-3 py-2 text-sm text-muted"><x-ui.icon name="credit-card" size="18" class="shrink-0" />Betalen via Mollie staat tijdelijk uit. Je kunt gratis beginnen.</p>
+            @endunless
             <ul class="space-y-2 text-sm">
                 @foreach (['Eigen boekingspagina met je logo en kleuren', 'Onbeperkt kappers, elk met een eigen agenda', 'Onbeperkt afspraken en klanten', 'Omzet per dag, week, maand en jaar', 'Herinneringen aan klanten', 'App op je telefoon, zonder installatie uit een winkel'] as $feature)
                     <li class="flex gap-2"><x-ui.icon name="check" size="20" class="text-completed" /><span>{{ $feature }}</span></li>

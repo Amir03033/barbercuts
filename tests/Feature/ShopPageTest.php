@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\App\Appearance;
 use App\Models\Barbershop;
 use App\Models\OpeningHour;
 use App\Models\Service;
@@ -58,4 +59,21 @@ it('keeps platform routes ahead of the slug route', function () {
 
     $this->get('/inloggen')->assertOk()->assertSee('Welkom terug');
     $this->get('/aanmelden')->assertOk()->assertSee('Meld je zaak aan');
+});
+
+test('de zaak zet een banner en links op haar pagina', function () {
+    [$shop, $owner] = shopWithOwner();
+    actingInShop($owner, $shop);
+
+    Livewire\Livewire::test(Appearance::class)
+        ->set('bannerActive', true)->set('bannerText', 'Deze maand 10% korting')
+        ->set('instagram', 'https://instagram.com/studiofade/')->set('website', 'studiofade.nl')
+        ->call('save')->assertHasNoErrors();
+
+    expect($shop->fresh()->instagram)->toBe('studiofade')->and($shop->fresh()->website)->toBe('https://studiofade.nl');
+
+    $this->get('/'.$shop->slug)->assertOk()->assertSee('Deze maand 10% korting')->assertSee('instagram.com/studiofade')->assertSee('KVK 93721382');
+
+    $shop->update(['banner_active' => false]);
+    $this->get('/'.$shop->slug)->assertDontSee('Deze maand 10% korting');
 });
