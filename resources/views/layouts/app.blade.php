@@ -31,6 +31,7 @@
     </div>
 
     <x-ui.bottom-nav :active="$active ?? null" />
+    <x-account-switcher />
     <x-ui.toast nav />
     @livewireScripts
 </body>

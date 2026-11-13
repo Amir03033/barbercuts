@@ -2,6 +2,17 @@
     <x-ui.page-header title="Meer" :subtitle="$shop->name" />
 
     <div class="space-y-6 px-4 py-4">
+        {{-- Wie je bent, met de knop om te wisselen van zaak of account --}}
+        <button type="button" x-data x-on:click="$dispatch('open-sheet', 'account-switch')"
+            class="flex w-full items-center gap-3 rounded-card border border-border/70 bg-card p-4 text-left transition-[background-color,transform] duration-150 ease-out-soft hover:bg-surface/60 active:scale-[0.99]">
+            <x-ui.avatar :name="auth()->user()->name" size="lg" />
+            <span class="min-w-0 flex-1">
+                <span class="block truncate text-lg font-bold tracking-tight">{{ auth()->user()->name }}</span>
+                <span class="block truncate text-sm text-muted">{{ $isOwner ? 'Eigenaar' : 'Kapper' }} · {{ $shop->name }}</span>
+            </span>
+            <span class="shrink-0 rounded-pill bg-surface px-3 py-1.5 text-sm font-semibold text-link">Wissel</span>
+        </button>
+
         @php
             $billing = \App\Support\Features::billing();
             $groups = [

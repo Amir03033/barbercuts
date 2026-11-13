@@ -5,6 +5,7 @@ use App\Livewire\App\Staff\Edit as StaffEdit;
 use App\Livewire\App\Staff\Index as StaffIndex;
 use App\Livewire\App\Today;
 use App\Models\Appointment;
+use App\Models\Barbershop;
 use App\Models\Customer;
 use App\Models\Service;
 use App\Models\StaffMember;
@@ -109,4 +110,21 @@ it('applies the customer policy: members see and edit, only the owner deletes', 
         ->and($this->barber->can('delete', $customer))->toBeFalse()
         ->and($this->owner->can('delete', $customer))->toBeTrue()
         ->and($otherOwner->can('view', $customer))->toBeFalse();
+});
+
+test('wisselen van account: alleen naar je eigen zaken, en "ander account" gaat naar het inlogscherm', function () {
+    [$first, $owner] = shopWithOwner();
+    $second = Barbershop::factory()->ownedBy($owner)->create();
+    [$foreign] = shopWithOwner();
+
+    $this->actingAs($owner)->get('/app/meer')->assertOk()->assertSee('Wissel van account')->assertSee($second->name);
+
+    $this->post('/wissel-zaak/'.$second->id)->assertRedirect(route('app.today'));
+    expect(session('current_shop_id'))->toBe($second->id);
+
+    $this->post('/wissel-zaak/'.$foreign->id)->assertNotFound();
+    expect(session('current_shop_id'))->toBe($second->id);
+
+    $this->post('/uitloggen', ['switch' => 1])->assertRedirect(route('login'));
+    $this->assertGuest();
 });

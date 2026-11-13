@@ -27,7 +27,7 @@ class ShareImage
     {
         $key = sha1(implode('|', [
             $shop->name, $shop->city, $shop->accent_color, $shop->cover_path, $shop->logo_path,
-            $shop->rating_avg, $shop->rating_count, 'v2',
+            $shop->rating_avg, $shop->rating_count, 'v3',
         ]));
         $directory = storage_path('app/share');
         $path = "{$directory}/{$shop->id}-{$key}.png";
@@ -56,12 +56,11 @@ class ShareImage
     public function platform(): GdImage
     {
         $image = $this->canvas();
-        $this->gradient($image, '#0a84ff', '#5e5ce6');
-        $this->shade($image, 0.18);
+        $this->gradient($image, '#1d1d1f', '#000000');
         $white = imagecolorallocate($image, 255, 255, 255);
         $soft = imagecolorallocatealpha($image, 255, 255, 255, 30);
 
-        imagecopy($image, BrandMark::image(104), 72, 72, 0, 0, 104, 104);
+        imagecopy($image, BrandMark::image(104, dark: false), 72, 72, 0, 0, 104, 104);
         imagettftext($image, 34, 0, 196, 138, $white, $this->font('Bold'), 'barbercuts');
         imagettftext($image, 78, 0, 72, 330, $white, $this->font('Bold'), 'Je hele kapperszaak.');
         imagettftext($image, 78, 0, 72, 430, $white, $this->font('Bold'), 'In je broekzak.');
@@ -144,7 +143,7 @@ class ShareImage
         $box = imagettfbbox(28, 0, $this->font('Bold'), $brand);
         $textWidth = $box[2] - $box[0];
         imagettftext($image, 28, 0, self::WIDTH - $x - $textWidth, self::HEIGHT - 72 - 24, $white, $this->font('Bold'), $brand);
-        imagecopy($image, BrandMark::image(52), self::WIDTH - $x - $textWidth - 68, self::HEIGHT - 72 - 60, 0, 0, 52, 52);
+        imagecopy($image, BrandMark::image(52, dark: false), self::WIDTH - $x - $textWidth - 68, self::HEIGHT - 72 - 60, 0, 0, 52, 52);
 
         return $image;
     }

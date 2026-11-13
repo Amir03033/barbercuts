@@ -625,3 +625,28 @@ html.reveal-on [data-reveal].is-visible {
         shine 9s linear infinite;
     animation-delay: var(--rise-delay, 0ms), 0ms;
 }
+
+/* Meldingen rond de telefoon komen één voor één binnen, zoals op een iPhone, en zweven daarna */
+@keyframes notif-in {
+    0% {
+        opacity: 0;
+        transform: translateY(-28px) scale(0.82);
+        filter: blur(8px);
+    }
+
+    60% {
+        opacity: 1;
+        transform: translateY(5px) scale(1.04);
+        filter: blur(0);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+.notif {
+    animation:
+        notif-in 720ms var(--ease-out-soft) var(--notif-delay, 0ms) backwards,
+        float 6s var(--ease-in-out-soft) calc(var(--notif-delay, 0ms) + 720ms) infinite;
+}

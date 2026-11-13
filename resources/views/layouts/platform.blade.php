@@ -12,7 +12,7 @@
                 <x-ui.button :href="route('directory')" variant="ghost" size="sm" wire:navigate class="max-sm:hidden!">Kapper zoeken</x-ui.button>
                 <x-ui.button :href="route('pricing')" variant="ghost" size="sm" wire:navigate class="max-sm:hidden!">Prijzen</x-ui.button>
                 @auth
-                    <x-ui.button :href="auth()->user()->homeRoute()" variant="ghost" size="sm" wire:navigate class="max-sm:hidden!">Account</x-ui.button>
+                    <x-ui.button variant="ghost" size="sm" x-data x-on:click="$dispatch('open-sheet', 'account-switch')">Account</x-ui.button>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <x-ui.button type="submit" variant="ghost" size="sm">Uitloggen</x-ui.button>
@@ -44,6 +44,7 @@
         </div>
     </footer>
 
+    <x-account-switcher />
     <x-ui.toast />
     @livewireScripts
 </body>

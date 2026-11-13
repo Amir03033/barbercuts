@@ -5,26 +5,29 @@ namespace App\Support;
 use GdImage;
 
 /**
- * Het beeldmerk van BarberCuts: een blauwe tegel met een witte "b" uit een stam en een ring.
+ * Het beeldmerk van BarberCuts: een zwarte tegel met een witte "b" uit een stam en een ring (of andersom, wit met zwart).
  * Eén plek voor de vorm, zodat de iconen, de deelafbeeldingen en de svg in de site gelijk blijven.
  * Alle maten zijn op een vlak van 100 × 100.
  */
 class BrandMark
 {
-    public const string TOP = '#2997ff';
+    public const string BLACK = '#000000';
 
-    public const string BOTTOM = '#0058d0';
+    public const string WHITE = '#ffffff';
 
     /**
      * Het beeldmerk als svg (voor favicon.svg).
      */
-    public static function svg(): string
+    public static function svg(bool $dark = true): string
     {
+        [$tile, $letter] = $dark ? [self::BLACK, self::WHITE] : [self::WHITE, self::BLACK];
+
+        // In een donker browsertabblad draait het om (wit met zwart), zodat het icoon zichtbaar blijft.
         return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
-            .'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'.self::TOP.'"/><stop offset="1" stop-color="'.self::BOTTOM.'"/></linearGradient></defs>'
-            .'<rect width="100" height="100" rx="22" fill="url(#g)"/>'
-            .'<rect x="30" y="20" width="12" height="59" rx="6" fill="#fff"/>'
-            .'<circle cx="50" cy="60" r="13" fill="none" stroke="#fff" stroke-width="12"/>'
+            .'<style>.t{fill:'.$tile.'}.s{fill:'.$letter.'}.r{stroke:'.$letter.'}@media (prefers-color-scheme:dark){.t{fill:'.$letter.'}.s{fill:'.$tile.'}.r{stroke:'.$tile.'}}</style>'
+            .'<rect class="t" width="100" height="100" rx="22"/>'
+            .'<rect class="s" x="30" y="20" width="12" height="59" rx="6"/>'
+            .'<circle class="r" cx="50" cy="60" r="13" fill="none" stroke-width="12"/>'
             .'</svg>';
     }
 
@@ -33,8 +36,9 @@ class BrandMark
      *
      * @param  bool  $rounded  afgeronde hoeken met doorzichtige randen (false = volledig vlak, voor iOS en "maskable")
      * @param  float  $scale  grootte van de letter binnen het vlak (0.72 voor "maskable": de rand kan worden afgesneden)
+     * @param  bool  $dark  zwarte tegel met witte letter (false = witte tegel met zwarte letter, voor op een gekleurde achtergrond)
      */
-    public static function image(int $size, bool $rounded = true, float $scale = 1.0): GdImage
+    public static function image(int $size, bool $rounded = true, float $scale = 1.0, bool $dark = true): GdImage
     {
         // Drie keer zo groot tekenen en verkleinen geeft gladde randen.
         $factor = 3;
@@ -43,17 +47,15 @@ class BrandMark
         imagealphablending($canvas, false);
         imagesavealpha($canvas, true);
 
-        [$r1, $g1, $b1] = Color::rgb(self::TOP);
-        [$r2, $g2, $b2] = Color::rgb(self::BOTTOM);
+        [$tr, $tg, $tb] = Color::rgb($dark ? self::BLACK : self::WHITE);
+        [$lr, $lg, $lb] = Color::rgb($dark ? self::WHITE : self::BLACK);
         $clear = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
-        $white = imagecolorallocate($canvas, 255, 255, 255);
+        $tile = imagecolorallocate($canvas, $tr, $tg, $tb);
+        $white = imagecolorallocate($canvas, $lr, $lg, $lb);
         $unit = $big / 100;
         $radius = 22 * $unit;
 
         for ($y = 0; $y < $big; $y++) {
-            $t = $y / max(1, $big - 1);
-            $row = imagecolorallocate($canvas, (int) round($r1 + ($r2 - $r1) * $t), (int) round($g1 + ($g2 - $g1) * $t), (int) round($b1 + ($b2 - $b1) * $t));
-
             for ($x = 0; $x < $big; $x++) {
                 // Coördinaten op het vlak van 100, met de letter geschaald rond het midden.
                 $u = ($x / $unit - 50) / $scale + 50;
@@ -71,7 +73,7 @@ class BrandMark
                 }
 
                 $outside = $rounded && self::outsideCorner($x, $y, $big, $radius);
-                imagesetpixel($canvas, $x, $y, $outside ? $clear : $row);
+                imagesetpixel($canvas, $x, $y, $outside ? $clear : $tile);
             }
         }
 

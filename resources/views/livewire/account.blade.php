@@ -1,7 +1,10 @@
 <div class="mx-auto max-w-2xl space-y-8 px-4 py-6">
-    <div>
-        <h1 class="text-lg font-bold">Mijn afspraken</h1>
-        <p class="text-sm text-muted">{{ $user->name }} · {{ $user->email }}</p>
+    <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+            <h1 class="text-[1.75rem] leading-9 font-bold tracking-tight">Mijn afspraken</h1>
+            <p class="truncate text-sm text-muted">{{ $user->name }} · {{ $user->email }}</p>
+        </div>
+        <x-ui.button variant="secondary" size="sm" class="shrink-0 !rounded-pill" x-data x-on:click="$dispatch('open-sheet', 'account-switch')">Wissel</x-ui.button>
     </div>
 
     <x-ui.section title="Komende afspraken">

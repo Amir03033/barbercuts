@@ -193,8 +193,18 @@ Route::middleware('auth')->group(function (): void {
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('home');
+        // "Inloggen met een ander account": meteen door naar het inlogscherm.
+        return redirect()->route($request->boolean('switch') ? 'login' : 'home');
     })->name('logout');
+
+    // Wisselen naar een andere zaak waar je bij hoort (knop "Wissel van account").
+    Route::post('/wissel-zaak/{shop}', function (Request $request, Barbershop $shop): RedirectResponse {
+        abort_unless($request->user()->isMemberOf($shop) && $shop->hasFinishedOnboarding() && ! $shop->isExpiredDemo(), 404);
+
+        $request->session()->put('current_shop_id', $shop->id);
+
+        return redirect()->route('app.today');
+    })->whereNumber('shop')->name('switch.shop');
 });
 
 /*

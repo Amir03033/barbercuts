@@ -104,6 +104,7 @@
             <div>
                 <x-ui.dropdown-item :href="route('app.profile')" icon="user">Mijn profiel</x-ui.dropdown-item>
                 <x-ui.dropdown-item :href="route('app.more')" icon="menu">Alle onderdelen</x-ui.dropdown-item>
+                <x-ui.dropdown-item type="button" icon="users" x-on:click="$dispatch('open-sheet', 'account-switch')">Wissel van account</x-ui.dropdown-item>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <x-ui.dropdown-item type="submit" icon="log-out" danger>Uitloggen</x-ui.dropdown-item>
