@@ -39,7 +39,11 @@
             </x-ui.section>
         @endforeach
 
-        <x-ui.section title="Boekingslink delen">
+        <x-ui.section title="Boekingslink delen" text="Zo ziet je link eruit in WhatsApp, Instagram en iMessage.">
+            <div class="overflow-hidden rounded-card border border-border/70 bg-card">
+                <img src="{{ route('shop.share', ['slug' => $shop->slug, 'v' => substr(sha1($shop->updated_at.'|'.$shop->rating_count), 0, 8)]) }}" alt="Voorbeeld van je gedeelde link" width="1200" height="630" loading="lazy" class="aspect-[1200/630] w-full" />
+                <p class="px-4 py-2.5 text-sm"><span class="block font-semibold">{{ $shop->name }} · online een afspraak maken</span><span class="text-muted">{{ $shop->bookingUrlLabel() }}</span></p>
+            </div>
             <x-ui.copy-link :url="$shop->bookingUrl()" :label="$shop->bookingUrlLabel()" />
             <div class="grid grid-cols-2 gap-3">
                 <x-ui.button variant="secondary" icon="message-circle" target="_blank" rel="noopener"

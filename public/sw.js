@@ -3,7 +3,7 @@
  * Cachet alleen de app-shell en statische bestanden. Pagina's en afspraakdata komen altijd van het netwerk;
  * zonder verbinding verschijnt de offline-pagina.
  */
-const CACHE = 'barbercuts-static-v1';
+const CACHE = 'barbercuts-static-v2';
 const SHELL = ['/offline.html', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {

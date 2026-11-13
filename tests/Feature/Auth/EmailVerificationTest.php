@@ -37,6 +37,17 @@ it('verifies the email address through the signed link', function () {
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
 });
 
+it('verifies through the link without being logged in, for example from another browser', function () {
+    $user = User::factory()->unverified()->create();
+
+    $url = URL::temporarySignedRoute('verification.verify', now()->addHour(), ['id' => $user->id, 'hash' => sha1($user->email)]);
+
+    $this->get($url)->assertRedirect(route('login'));
+    expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
+
+    $this->get('/e-mail-bevestigen/'.$user->id.'/'.sha1($user->email))->assertForbidden();
+});
+
 it('rejects a verification link with a wrong hash', function () {
     $user = User::factory()->unverified()->create();
 

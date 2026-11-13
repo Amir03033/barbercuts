@@ -77,3 +77,14 @@ test('de zaak zet een banner en links op haar pagina', function () {
     $shop->update(['banner_active' => false]);
     $this->get('/'.$shop->slug)->assertDontSee('Deze maand 10% korting');
 });
+
+test('een gedeelde link van een zaak heeft een eigen afbeelding en tekst', function () {
+    [$shop] = shopWithOwner(['name' => 'Studio Fade', 'city' => 'Utrecht']);
+
+    $this->get('/'.$shop->slug)->assertOk()
+        ->assertSee('og:image', false)->assertSee('/'.$shop->slug.'/deel.png', false)
+        ->assertSee('Studio Fade · online een afspraak maken');
+
+    $response = $this->get('/'.$shop->slug.'/deel.png')->assertOk()->assertHeader('Content-Type', 'image/png');
+    expect(getimagesize($response->baseResponse->getFile()->getPathname()))->toMatchArray([0 => 1200, 1 => 630]);
+});

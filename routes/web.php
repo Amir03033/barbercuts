@@ -48,6 +48,7 @@ use App\Models\Barbershop;
 use App\Models\Plan;
 use App\Models\User;
 use App\Services\Demo\DemoShopService;
+use App\Services\ShareImage;
 use App\Services\ShopStatsService;
 use App\Support\CurrentShop;
 use App\Support\Features;
@@ -56,9 +57,9 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -166,14 +167,26 @@ Route::middleware('guest')->group(function (): void {
     Route::livewire('/wachtwoord-herstellen/{token}', ResetPassword::class)->name('password.reset');
 });
 
+// E-mailadres bevestigen via de link uit de mail. De gesigneerde link wijst zelf het account aan, dus dit werkt ook
+// als de mail in een andere browser of app opent dan waar je bent ingelogd (bijvoorbeeld de app op je beginscherm).
+Route::get('/e-mail-bevestigen/{id}/{hash}', function (Request $request, int $id, string $hash): RedirectResponse {
+    $user = User::query()->findOrFail($id);
+
+    abort_unless(hash_equals(sha1($user->getEmailForVerification()), $hash), 403);
+
+    if (! $user->hasVerifiedEmail() && $user->markEmailAsVerified()) {
+        event(new Verified($user));
+    }
+
+    if ($request->user()?->is($user)) {
+        return redirect()->to($user->homeRoute())->with('toast', 'Je e-mailadres is bevestigd.');
+    }
+
+    return redirect()->route($request->user() === null ? 'login' : 'home')->with('toast', 'Je e-mailadres is bevestigd.');
+})->whereNumber('id')->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+
 Route::middleware('auth')->group(function (): void {
     Route::livewire('/e-mail-bevestigen', VerifyEmail::class)->name('verification.notice');
-
-    Route::get('/e-mail-bevestigen/{id}/{hash}', function (EmailVerificationRequest $request): RedirectResponse {
-        $request->fulfill();
-
-        return redirect()->to($request->user()->homeRoute())->with('toast', 'Je e-mailadres is bevestigd.');
-    })->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
 
     Route::post('/uitloggen', function (Request $request): RedirectResponse {
         Auth::guard('web')->logout();
@@ -339,5 +352,10 @@ if (app()->environment('local')) {
 */
 Route::middleware(ResolveShopFromSlug::class)->group(function (): void {
     Route::livewire('/{slug}', ShopShow::class)->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('shop.show');
+    // De afbeelding die verschijnt als iemand de link van de zaak deelt (WhatsApp, Instagram, iMessage).
+    Route::get('/{slug}/deel.png', fn (CurrentShop $currentShop, ShareImage $share) => response()->file(
+        $share->forShop($currentShop->get() ?? abort(404)),
+        ['Content-Type' => 'image/png', 'Cache-Control' => 'public, max-age=3600'],
+    ))->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('shop.share');
     Route::livewire('/{slug}/boeken', ShopBook::class)->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('shop.book');
 });

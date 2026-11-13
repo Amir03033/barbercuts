@@ -11,9 +11,11 @@ use App\Services\ShopStatsService;
 use App\Support\Period;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Throwable;
 
 /**
  * Vandaag (§9.1): omzet en aantal afspraken, de eerstvolgende afspraak uitgelicht en de tijdlijn van vandaag.
@@ -75,6 +77,39 @@ class Today extends Component
             '30' => Period::make('custom', $today->subDays(29)->toDateString(), $shop->timezone, $today->toDateString()),
             default => Period::make('custom', $today->subDays(6)->toDateString(), $shop->timezone, $today->toDateString()),
         };
+    }
+
+    /**
+     * Stuur de bevestigingsmail opnieuw, direct vanaf het overzicht (hooguit drie keer per minuut).
+     */
+    public function resendVerification(): void
+    {
+        $user = $this->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return;
+        }
+
+        $key = 'verify-email:'.$user->id;
+
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            $this->dispatch('toast', message: 'Even geduld — probeer het over een minuut opnieuw.', type: 'error');
+
+            return;
+        }
+
+        RateLimiter::hit($key, 60);
+
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->dispatch('toast', message: 'De mail versturen is niet gelukt. Probeer het later opnieuw.', type: 'error');
+
+            return;
+        }
+
+        $this->dispatch('toast', message: 'We hebben een nieuwe link gestuurd naar '.$user->email);
     }
 
     public function render(ShopStatsService $stats): View

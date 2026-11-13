@@ -11,8 +11,8 @@
     <div class="space-y-6 px-4 py-4 lg:space-y-8 lg:py-6">
         @unless ($emailVerified)
             <x-ui.alert type="warning" title="Bevestig je e-mailadres">
-                <p>We hebben je een mail gestuurd met een link.</p>
-                <x-ui.button :href="route('verification.notice')" variant="ghost" size="sm" class="-ml-3">Link opnieuw sturen</x-ui.button>
+                <p>We hebben een link gestuurd naar <strong>{{ auth()->user()->email }}</strong>. Niets ontvangen? Kijk ook bij ongewenste mail.</p>
+                <x-ui.button variant="ghost" size="sm" class="-ml-3" wire:click="resendVerification" loading="resendVerification">Stuur de link opnieuw</x-ui.button>
             </x-ui.alert>
         @endunless
 

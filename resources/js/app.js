@@ -105,3 +105,75 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 });
+
+// Landingspagina: onderdelen met data-reveal schuiven in beeld zodra ze zichtbaar worden. Zonder dit script
+// (of met "minder beweging" aan) staat alles er gewoon; de css verbergt alleen als html.reveal-on gezet is.
+const startReveal = () => {
+    const items = document.querySelectorAll('[data-reveal]:not(.is-visible)');
+
+    if (!items.length) {
+        return;
+    }
+
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        items.forEach((item) => item.classList.add('is-visible'));
+
+        return;
+    }
+
+    document.documentElement.classList.add('reveal-on');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+    items.forEach((item) => observer.observe(item));
+};
+
+document.addEventListener('DOMContentLoaded', startReveal);
+document.addEventListener('livewire:navigated', startReveal);
+
+document.addEventListener('alpine:init', () => {
+    // Een getal dat optelt zodra het in beeld komt (bedragen op de landingspagina).
+    window.Alpine.data('bcCount', (target, duration = 1400) => ({
+        value: 0,
+
+        init() {
+            if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                this.value = target;
+
+                return;
+            }
+
+            const observer = new IntersectionObserver(([entry]) => {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+
+                observer.disconnect();
+                const start = performance.now();
+                const tick = (now) => {
+                    const progress = Math.min(1, (now - start) / duration);
+                    this.value = Math.round(target * (1 - Math.pow(1 - progress, 3)));
+
+                    if (progress < 1) {
+                        requestAnimationFrame(tick);
+                    }
+                };
+
+                requestAnimationFrame(tick);
+            }, { threshold: 0.4 });
+
+            observer.observe(this.$el);
+        },
+
+        get label() {
+            return this.value.toLocaleString('nl-NL');
+        },
+    }));
+});

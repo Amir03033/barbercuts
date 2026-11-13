@@ -29,6 +29,18 @@ class Color
     /**
      * Relatieve luminantie volgens WCAG 2.
      */
+    /**
+     * De kleur als rood, groen en blauw (0–255).
+     *
+     * @return array{0: int, 1: int, 2: int}
+     */
+    public static function rgb(string $hex): array
+    {
+        $hex = ltrim($hex, '#');
+
+        return [(int) hexdec(substr($hex, 0, 2)), (int) hexdec(substr($hex, 2, 2)), (int) hexdec(substr($hex, 4, 2))];
+    }
+
     public static function luminance(string $hex): float
     {
         $channels = array_map(

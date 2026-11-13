@@ -59,6 +59,21 @@
             <div class="absolute inset-0 bg-[radial-gradient(120%_90%_at_10%_0%,rgb(255_255_255/0.28),transparent_60%)]"></div>
         @endif
         <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 to-transparent"></div>
+        @unless ($preview)
+            {{-- Delen: het deelmenu van de telefoon, of anders de link kopiëren --}}
+            <button type="button" aria-label="Deel {{ $shop->name }}"
+                x-data="{ async share() {
+                    const data = { title: @js($shop->name), text: @js('Maak je afspraak bij '.$shop->name), url: @js($shop->bookingUrl()) };
+                    try {
+                        if (navigator.share) { await navigator.share(data); return; }
+                        await navigator.clipboard.writeText(data.url);
+                        $dispatch('toast', 'Link gekopieerd');
+                    } catch (error) {}
+                } }" x-on:click="share()"
+                class="absolute top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 flex size-11 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-md transition-transform duration-150 active:scale-90">
+                <x-ui.icon name="share" size="20" />
+            </button>
+        @endunless
     </div>
 
     <div class="relative px-4 pb-6">

@@ -1,14 +1,14 @@
 {{-- Concept: laat deze tekst juridisch controleren voordat je klanten ermee laat werken. --}}
 <x-legal.page title="Verwerkersovereenkomst">
-    <p>Deze verwerkersovereenkomst hoort bij de <a href="{{ route('terms') }}">algemene voorwaarden</a> en geldt tussen de kapperszaak ("Verwerkingsverantwoordelijke") en {{ config('barbercuts.company.name') }} ("Verwerker"), op grond van artikel 28 van de Algemene verordening gegevensbescherming (AVG). Ze gaat in zodra de zaak BarberCuts gebruikt.</p>
+    <p>Deze verwerkersovereenkomst hoort bij de <a href="{{ route('terms') }}">algemene voorwaarden</a> en geldt tussen de kapperszaak ("Verwerkingsverantwoordelijke") en {{ config('barbercuts.company.legal_name') }}, aanbieder van BarberCuts ("Verwerker"), op grond van artikel 28 van de Algemene verordening gegevensbescherming (AVG). Ze gaat in zodra de zaak BarberCuts gebruikt.</p>
 
     <h2>1. Onderwerp en doel</h2>
-    <p>De Verwerker verwerkt persoonsgegevens van klanten van de Verwerkingsverantwoordelijke uitsluitend om de dienst BarberCuts te leveren: afspraken, agenda, klantenbestand, herinneringen en omzetoverzichten.</p>
+    <p>De Verwerker verwerkt persoonsgegevens van klanten van de Verwerkingsverantwoordelijke uitsluitend om de dienst BarberCuts te leveren: afspraken, agenda, klantenbestand, herinneringen, reviews, wachtlijst, spaarkaart, berichten namens de zaak en omzetoverzichten.</p>
 
     <h2>2. Gegevens en betrokkenen</h2>
     <ul>
         <li><strong>Betrokkenen:</strong> klanten van de zaak en medewerkers.</li>
-        <li><strong>Gegevens:</strong> naam, telefoonnummer, e-mailadres, afspraakgegevens, notities, bedragen, en bij een klantaccount inloggegevens.</li>
+        <li><strong>Gegevens:</strong> naam, telefoonnummer, e-mailadres, afspraakgegevens, notities, bedragen, reviews, stempels op de spaarkaart, inschrijvingen op de wachtlijst, de keuze van de klant voor berichten van de zaak, en bij een klantaccount inloggegevens.</li>
         <li>Bijzondere persoonsgegevens worden niet gevraagd. De zaak legt in notities geen gezondheidsgegevens vast.</li>
     </ul>
 
@@ -22,7 +22,7 @@
     </ul>
 
     <h2>4. Subverwerkers</h2>
-    <p>De Verwerker mag subverwerkers inschakelen voor hosting en het versturen van berichten (zie de <a href="{{ route('privacy') }}">privacyverklaring</a>). Hij legt hen dezelfde verplichtingen op en blijft verantwoordelijk. Een actuele lijst is op aanvraag beschikbaar. Voorgenomen wijzigingen meldt de Verwerker vooraf; de Verwerkingsverantwoordelijke kan bezwaar maken.</p>
+    <p>De Verwerker mag subverwerkers inschakelen voor hosting, het versturen van berichten (e-mail, en sms of WhatsApp als de zaak die aanzet), pushmeldingen en het omzetten van adressen naar een plek op de kaart (zie de <a href="{{ route('privacy') }}">privacyverklaring</a>). Hij legt hen dezelfde verplichtingen op en blijft verantwoordelijk. Een actuele lijst is op aanvraag beschikbaar. Voorgenomen wijzigingen meldt de Verwerker vooraf; de Verwerkingsverantwoordelijke kan bezwaar maken.</p>
 
     <h2>5. Doorgifte buiten de EER</h2>
     <p>De Verwerker geeft geen persoonsgegevens door buiten de Europese Economische Ruimte, tenzij met passende waarborgen die de AVG vereist.</p>

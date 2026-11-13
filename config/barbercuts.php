@@ -33,7 +33,9 @@ return [
     */
     'company' => [
         'name' => env('COMPANY_NAME', 'BarberCuts'),
-        'kvk' => env('COMPANY_KVK'),
+        // De onderneming achter BarberCuts, zoals die in de juridische teksten staat.
+        'legal_name' => env('COMPANY_LEGAL_NAME', 'Jebbari'),
+        'kvk' => env('COMPANY_KVK', '93721382'),
         'vat' => env('COMPANY_VAT'),
         'address' => env('COMPANY_ADDRESS'),
         'email' => env('COMPANY_EMAIL', 'hallo@barbercuts.nl'),
