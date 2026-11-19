@@ -22,8 +22,9 @@
     ];
 
     $sizes = [
-        'md' => 'min-h-[3.125rem] px-5 text-base font-semibold lg:min-h-10 lg:px-4 lg:text-sm',
-        'sm' => 'min-h-11 px-3 text-sm font-medium lg:min-h-9',
+        // py + text-center: als een label toch over twee regels gaat, raakt de tekst de rand niet en staat hij netjes in het midden.
+        'md' => 'min-h-[3.125rem] px-5 py-2 text-center text-base leading-snug font-semibold lg:min-h-10 lg:px-4 lg:text-sm',
+        'sm' => 'min-h-11 px-3 py-1.5 text-center text-sm leading-snug font-medium lg:min-h-9',
     ];
 
     $classes = 'relative inline-flex items-center justify-center gap-2 rounded-input select-none '

@@ -54,7 +54,7 @@
     @endif
 
     <p class="mt-10 text-sm text-muted">
-        Heb je zelf een kapperszaak? <a href="{{ route('onboarding') }}" class="font-semibold text-text underline">Meld je zaak aan</a> en sta hier ook tussen.
+        Heb je zelf een kapperszaak? <a href="{{ route('onboarding') }}" class="font-semibold whitespace-nowrap text-text underline">Meld je zaak aan</a> en sta hier ook tussen.
     </p>
 
     <script type="application/ld+json">{!! json_encode($structuredData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>

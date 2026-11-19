@@ -476,7 +476,7 @@
     <section class="mx-auto max-w-3xl px-4 pb-16 md:pb-24">
         <h2 class="text-center text-[2rem] leading-10 font-bold tracking-tight md:text-5xl" data-reveal>Veelgestelde vragen</h2>
         <x-platform.faq :items="$faq" class="mt-8" data-reveal />
-        <p class="mt-5 text-center text-sm text-muted">Staat je vraag er niet bij? <a href="{{ route('contact') }}" wire:navigate class="font-medium text-link underline">Stuur ons een bericht</a>.</p>
+        <p class="mt-5 text-center text-sm text-muted">Staat je vraag er niet bij? <a href="{{ route('contact') }}" wire:navigate class="font-medium whitespace-nowrap text-link underline">Stuur ons een bericht</a>.</p>
     </section>
 
     {{-- Voor klanten: best beoordeelde kappers (fase 7) --}}

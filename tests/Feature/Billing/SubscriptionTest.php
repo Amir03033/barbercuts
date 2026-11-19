@@ -323,7 +323,7 @@ it('shows how many days of the trial are left, and what happens after', function
         ->assertSee('Je proeft gratis')
         ->assertSee('dagen over')
         ->assertSee('Daarna start je een abonnement om door te gaan')
-        ->assertSee('Alvast een abonnement starten');
+        ->assertSee('Abonnement alvast starten');
 });
 
 it('warns clearly when the trial is almost over and when it has ended', function () {

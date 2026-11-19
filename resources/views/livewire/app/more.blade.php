@@ -56,7 +56,7 @@
                 <p class="px-4 py-2.5 text-sm"><span class="block font-semibold">{{ $shop->name }} · online een afspraak maken</span><span class="text-muted">{{ $shop->bookingUrlLabel() }}</span></p>
             </div>
             <x-ui.copy-link :url="$shop->bookingUrl()" :label="$shop->bookingUrlLabel()" />
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-3 [&>*]:px-3 [&>*]:whitespace-nowrap">
                 <x-ui.button variant="secondary" icon="message-circle" target="_blank" rel="noopener"
                     :href="'https://wa.me/?text='.rawurlencode('Maak je afspraak bij '.$shop->name.': '.$shop->bookingUrl())">WhatsApp</x-ui.button>
                 <x-ui.button variant="secondary" icon="qr" :href="route('app.qr')" download>QR-code</x-ui.button>

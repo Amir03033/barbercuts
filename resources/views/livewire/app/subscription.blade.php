@@ -60,7 +60,8 @@
 
         {{-- Hoe lang heb je nog? Een ring met de resterende dagen --}}
         <x-ui.card flat class="overflow-hidden !p-0 shadow-soft">
-            <div class="flex items-center gap-5 p-5">
+            {{-- Op een heel smalle telefoon staat de teller boven de tekst, anders wordt de tekstkolom te smal --}}
+            <div class="flex flex-col items-start gap-4 p-5 min-[360px]:flex-row min-[360px]:items-center min-[360px]:gap-5">
                 @if ($endsAt)
                     <div class="relative size-28 shrink-0" x-data="{ offset: {{ round($circumference, 2) }} }" x-init="setTimeout(() => offset = {{ round($circumference * (1 - $progress / 100), 2) }}, 200)">
                         <svg viewBox="0 0 120 120" class="size-full -rotate-90" aria-hidden="true">
@@ -127,7 +128,7 @@
                         <span class="flex size-6 items-center justify-center rounded-full text-[0.6875rem] font-bold transition-colors {{ $done ? 'bg-completed text-white' : ($index + 1 === $step ? 'bg-accent text-on-accent' : 'bg-border text-muted') }}">
                             @if ($done)<x-ui.icon name="check" size="14" />@else{{ $index + 1 }}@endif
                         </span>
-                        {{ $label }}
+                        <span class="leading-tight">{{ $label }}</span>
                     </li>
                 @endforeach
             </ol>
@@ -135,9 +136,9 @@
 
         @if ($canStart && $plan)
             <div class="space-y-3">
-                <x-ui.button full wire:click="start" loading="start">{{ $isExpired || $isPastDue ? 'Abonnement starten' : 'Alvast een abonnement starten' }} · {{ money($plan->price_cents) }} per maand</x-ui.button>
+                <x-ui.button full wire:click="start" loading="start">{{ $isExpired || $isPastDue ? 'Abonnement starten' : 'Abonnement alvast starten' }}</x-ui.button>
                 <p class="text-xs text-muted">
-                    Je betaalt de eerste maand met iDEAL en geeft toestemming voor een automatische maandelijkse incasso.
+                    <strong class="font-semibold text-text">{{ money($plan->price_cents) }} per maand.</strong> Je betaalt de eerste maand met iDEAL en geeft toestemming voor een automatische maandelijkse incasso.
                     @if ($untilTrial || $untilFree)
                         Die maand gaat in na je {{ $untilTrial ? 'proefperiode' : 'gratis periode' }}, dus je betaalt nooit dubbel.
                     @endif
