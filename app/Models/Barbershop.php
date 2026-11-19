@@ -27,6 +27,7 @@ use Illuminate\Support\Str;
  * De zaak (tenant).
  *
  * @property ThemeMode $theme_mode
+ * @property int|null $referred_by_user_id
  * @property Carbon|null $trial_ends_at
  * @property Carbon|null $free_until
  * @property Carbon|null $suspended_at
@@ -177,6 +178,16 @@ class Barbershop extends Model
             ->where('barbershops.is_public', true)
             ->whereNull('barbershops.onboarding_step')
             ->whereNull('barbershops.suspended_at');
+    }
+
+    /**
+     * De pitcher die deze zaak heeft aangebracht, als die er is.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by_user_id');
     }
 
     /**

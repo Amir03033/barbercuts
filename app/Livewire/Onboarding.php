@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Rules\AvailableSlug;
 use App\Services\ShopSetupService;
 use App\Support\CurrentShop;
+use App\Support\Referral;
 use App\Support\WeekSchedule;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Contracts\View\View;
@@ -201,7 +202,7 @@ class Onboarding extends Component
         $phone = (new PhoneNumber($this->phone, 'NL'))->formatE164();
 
         if ($this->shop === null) {
-            $this->shop = $setup->createShop($user, trim($this->shopName), trim($this->city), $phone, $this->slug);
+            $this->shop = $setup->createShop($user, trim($this->shopName), trim($this->city), $phone, $this->slug, Referral::current(request()));
             $this->shopId = $this->shop->id;
             $currentShop->set($this->shop);
         } else {

@@ -7,8 +7,10 @@ use App\Enums\AppointmentStatus;
 use App\Enums\ShopRole;
 use App\Filament\Resources\Barbershops\Pages\ListBarbershops;
 use App\Filament\Resources\Barbershops\Pages\ViewBarbershop;
+use App\Models\ActivityLog;
 use App\Models\Appointment;
 use App\Models\Barbershop;
+use App\Models\User;
 use App\Services\ShopAdminService;
 use BackedEnum;
 use Carbon\CarbonImmutable;
@@ -107,7 +109,7 @@ class BarbershopResource extends Resource
     {
         return $table
             // Demozaken van pitchers (fase 6) horen niet tussen de echte zaken.
-            ->modifyQueryUsing(fn (Builder $query) => $query->where('is_demo', false)->with('plan'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('is_demo', false)->with(['plan', 'referrer']))
             ->columns([
                 TextColumn::make('name')->label('Naam')->searchable()->sortable(),
                 TextColumn::make('city')->label('Plaats')->searchable()->sortable()->toggleable(),
@@ -116,6 +118,7 @@ class BarbershopResource extends Resource
                     ->badge()->color(fn (Barbershop $record): string => $record->accessState()->color()),
                 TextColumn::make('onboarding')->label('Aanmelden')
                     ->state(fn (Barbershop $record): string => $record->hasFinishedOnboarding() ? 'Afgerond' : 'Stap '.$record->onboarding_step)->toggleable(),
+                TextColumn::make('referrer.name')->label('Pitcher')->placeholder('-')->toggleable(),
                 TextColumn::make('trial_ends_at')->label('Proef tot')->date('d-m-Y')->sortable()->placeholder('-')->toggleable(),
                 TextColumn::make('free_until')->label('Gratis tot')->date('d-m-Y')->sortable()->placeholder('-')->toggleable(),
                 TextColumn::make('appointments_count')->label('Afspraken')->counts('appointments')->sortable()->toggleable(),
@@ -129,6 +132,8 @@ class BarbershopResource extends Resource
                         /** @var Builder<Barbershop> $query */
                         return filled($data['value'] ?? null) ? $query->inAccessState(AccessState::from($data['value'])) : $query;
                     }),
+                SelectFilter::make('referred_by_user_id')->label('Pitcher')
+                    ->options(fn (): array => User::query()->where('is_pitcher', true)->orderBy('name')->pluck('name', 'id')->all()),
                 SelectFilter::make('city')->label('Plaats')
                     ->options(fn (): array => Barbershop::query()->real()->whereNotNull('city')->distinct()->orderBy('city')->pluck('city', 'city')->all()),
             ])
@@ -137,6 +142,7 @@ class BarbershopResource extends Resource
                 ActionGroup::make([
                     self::freePeriodAction(),
                     self::extendTrialAction(),
+                    self::assignPitcherAction(),
                     self::suspendAction(),
                     self::unsuspendAction(),
                     self::impersonateAction(),
@@ -144,6 +150,31 @@ class BarbershopResource extends Resource
                         ->url(fn (Barbershop $record): string => $record->bookingUrl(), shouldOpenInNewTab: true),
                 ]),
             ]);
+    }
+
+    /**
+     * Koppel een zaak achteraf aan de pitcher die haar heeft aangebracht (bijvoorbeeld als er zonder de link is aangemeld).
+     */
+    public static function assignPitcherAction(): Action
+    {
+        return Action::make('assignPitcher')->label('Pitcher koppelen')->icon(Heroicon::OutlinedUserPlus)
+            ->modalHeading('Aangebracht door')
+            ->schema([
+                Select::make('pitcher')->label('Pitcher')->searchable()
+                    ->options(fn (): array => User::query()->where('is_pitcher', true)->orderBy('name')->pluck('name', 'id')->all())
+                    ->helperText('Laat leeg om de koppeling weg te halen.')
+                    ->default(fn (Barbershop $record): ?int => $record->referred_by_user_id),
+            ])
+            ->action(function (array $data, Barbershop $record): void {
+                $pitcherId = filled($data['pitcher'] ?? null) ? (int) $data['pitcher'] : null;
+                $before = $record->referred_by_user_id;
+
+                $record->forceFill(['referred_by_user_id' => $pitcherId])->save();
+
+                ActivityLog::record('shop.pitcher_assigned', $record, $record, ['from' => $before, 'to' => $pitcherId]);
+
+                Notification::make()->title($pitcherId === null ? 'Koppeling weggehaald' : 'Pitcher gekoppeld')->success()->send();
+            });
     }
 
     public static function freePeriodAction(): Action

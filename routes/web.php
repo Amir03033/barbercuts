@@ -2,6 +2,7 @@
 
 use App\Enums\ShopRole;
 use App\Http\Controllers\MollieWebhookController;
+use App\Http\Controllers\PitcherToolsController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\EnsurePitcher;
@@ -40,6 +41,7 @@ use App\Livewire\Directory;
 use App\Livewire\Home;
 use App\Livewire\ManageAppointment;
 use App\Livewire\Onboarding;
+use App\Livewire\PitcherOverview;
 use App\Livewire\Shop\Book as ShopBook;
 use App\Livewire\Shop\Show as ShopShow;
 use App\Livewire\WaitlistPage;
@@ -253,6 +255,11 @@ Route::middleware('auth')->group(function (): void {
 */
 Route::middleware(['auth', EnsurePitcher::class])->group(function (): void {
     Route::livewire('/demo', Demo::class)->name('demo');
+
+    // Het eigen overzicht van een pitcher: aanmeldlink, QR-code en de zaken die hij heeft aangebracht.
+    Route::livewire('/pitcher', PitcherOverview::class)->name('pitcher.overview');
+    Route::get('/pitcher/berichten', [PitcherToolsController::class, 'messages'])->name('pitcher.messages');
+    Route::get('/pitcher/flyer', [PitcherToolsController::class, 'flyer'])->name('pitcher.flyer');
 
     // Verse demozaak: wist de vorige demo van deze pitcher en logt hem in als eigenaar van de nieuwe.
     Route::post('/demo/start', function (Request $request, DemoShopService $demos): RedirectResponse {

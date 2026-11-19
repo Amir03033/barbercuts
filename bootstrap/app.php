@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CaptureReferral;
 use App\Http\Middleware\TrustConfiguredProxies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // De vertrouwde proxy's komen uit de config en worden pas per verzoek gelezen (zie TrustConfiguredProxies).
         $middleware->replace(TrustProxies::class, TrustConfiguredProxies::class);
+
+        // Een link van een pitcher (?ref=code) wordt onthouden voor het aanmelden van een zaak.
+        $middleware->web(append: [CaptureReferral::class]);
         $middleware->redirectGuestsTo(fn (): string => route('login'));
         $middleware->redirectUsersTo(fn (Request $request): string => $request->user()?->homeRoute() ?? route('home'));
     })

@@ -26,6 +26,7 @@ class Demo extends Component
             'pitcher' => $pitcher,
             'shop' => $demos->current($pitcher),
             'hours' => (int) config('barbercuts.demo.hours'),
+            'referred' => $pitcher->referredShops()->count(),
         ]);
     }
 }

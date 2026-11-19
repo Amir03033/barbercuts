@@ -19,10 +19,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 
 /**
  * @property array<string, bool>|null $notification_preferences
+ * @property string|null $referral_code
  */
 #[Fillable(['name', 'email', 'phone', 'password', 'notification_preferences'])]
 #[Hidden(['password', 'remember_token', 'app_authentication_secret', 'app_authentication_recovery_codes'])]
@@ -126,6 +128,37 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         }
 
         return $this->shops()->exists() ? route('app.today', absolute: false) : route('account', absolute: false);
+    }
+
+    /**
+     * De unieke code van een pitcher voor de aanmeldlink (?ref=code). Wordt bij het eerste gebruik aangemaakt.
+     */
+    public function referralCode(): string
+    {
+        if (filled($this->referral_code)) {
+            return (string) $this->referral_code;
+        }
+
+        $base = Str::slug(explode(' ', trim((string) $this->name))[0]) ?: 'pitcher';
+        $code = $base;
+
+        for ($number = 2; self::query()->where('referral_code', $code)->exists(); $number++) {
+            $code = $base.$number;
+        }
+
+        $this->forceFill(['referral_code' => $code])->save();
+
+        return $code;
+    }
+
+    /**
+     * De zaken die deze pitcher heeft aangebracht.
+     *
+     * @return HasMany<Barbershop, $this>
+     */
+    public function referredShops(): HasMany
+    {
+        return $this->hasMany(Barbershop::class, 'referred_by_user_id');
     }
 
     /**

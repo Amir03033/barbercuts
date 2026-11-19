@@ -3,6 +3,7 @@ Disallow: /app
 Disallow: /admin
 Disallow: /account
 Disallow: /afspraak/
+Disallow: /pitcher
 Disallow: /impersonate
 Disallow: /webhooks
 Allow: /

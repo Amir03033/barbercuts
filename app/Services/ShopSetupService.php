@@ -65,9 +65,9 @@ class ShopSetupService
     /**
      * Maak de zaak aan met de eigenaar, standaardinstellingen en proefperiode (§8, na stap 2).
      */
-    public function createShop(User $owner, string $name, string $city, ?string $phone, string $slug): Barbershop
+    public function createShop(User $owner, string $name, string $city, ?string $phone, string $slug, ?User $referrer = null): Barbershop
     {
-        return DB::transaction(function () use ($owner, $name, $city, $phone, $slug): Barbershop {
+        return DB::transaction(function () use ($owner, $name, $city, $phone, $slug, $referrer): Barbershop {
             $shop = new Barbershop([
                 'name' => $name,
                 'city' => $city,
@@ -76,6 +76,8 @@ class ShopSetupService
                 'email' => $owner->email,
             ]);
             $shop->is_public = false;
+            // De pitcher die deze zaak aanbracht (alleen een echte pitcher, en nooit de eigenaar zelf).
+            $shop->referred_by_user_id = $referrer !== null && $referrer->is_pitcher && ! $referrer->is($owner) ? $referrer->id : null;
             $shop->onboarding_step = 3;
             // Facturering aan: een proefperiode uit het actieve plan. Uit (gratis start): geen proefperiode nodig.
             $plan = Features::billing() ? Plan::current() : null;

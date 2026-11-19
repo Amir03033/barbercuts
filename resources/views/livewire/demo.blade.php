@@ -20,6 +20,14 @@
         @endif
     </form>
 
+    <a href="{{ route('pitcher.overview') }}" wire:navigate class="mt-4 flex items-center justify-between gap-3 rounded-card border border-border/70 bg-card p-4 shadow-soft transition-transform duration-150 active:scale-[0.99]">
+        <span class="min-w-0">
+            <span class="block text-sm font-semibold text-text">Mijn aanmeldingen</span>
+            <span class="block text-sm text-muted">Je aanmeldlink en de zaken die jij hebt aangebracht{{ $referred > 0 ? ' ('.$referred.')' : '' }}.</span>
+        </span>
+        <x-ui.icon name="chevron-right" size="20" class="shrink-0 text-border-strong" />
+    </a>
+
     <x-ui.card class="mt-8">
         <p class="text-sm font-semibold text-text">Wat je kunt laten zien</p>
         <ul class="mt-2 space-y-2 text-sm text-muted">

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Pitchers;
 
+use App\Enums\AccessState;
 use App\Filament\Resources\Pitchers\Pages\ListPitchers;
 use App\Models\ActivityLog;
 use App\Models\Barbershop;
@@ -53,7 +54,11 @@ class PitcherResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('is_pitcher', true);
+        return parent::getEloquentQuery()->where('is_pitcher', true)->withCount([
+            'referredShops as signups_count' => fn ($query) => $query->where('is_demo', false),
+            'referredShops as trial_count' => fn ($query) => $query->where('is_demo', false)->inAccessState(AccessState::Trial),
+            'referredShops as paying_count' => fn ($query) => $query->where('is_demo', false)->inAccessState(AccessState::Active),
+        ]);
     }
 
     /**
@@ -71,6 +76,7 @@ class PitcherResource extends Resource
 
         $user->is_pitcher = true;
         $user->save();
+        $user->referralCode();
 
         $user->notify(new PitcherInvitation);
         ActivityLog::record('pitcher.invited', null, $user);
@@ -84,7 +90,11 @@ class PitcherResource extends Resource
             ->columns([
                 TextColumn::make('name')->label('Naam')->searchable()->sortable(),
                 TextColumn::make('email')->label('E-mail')->searchable()->copyable(),
-                TextColumn::make('demo_count')->label('Demo\'s gestart')->sortable(),
+                TextColumn::make('referral_code')->label('Code')->copyable()->placeholder('-')->toggleable(),
+                TextColumn::make('signups_count')->label('Aangemeld')->sortable()->alignEnd(),
+                TextColumn::make('trial_count')->label('In proef')->sortable()->alignEnd()->toggleable(),
+                TextColumn::make('paying_count')->label('Betalend')->sortable()->alignEnd()->color('success'),
+                TextColumn::make('demo_count')->label('Demo\'s gestart')->sortable()->toggleable(),
                 TextColumn::make('last_demo_at')->label('Laatste demo')->since()->sortable()->placeholder('Nog niet'),
                 IconColumn::make('running')->label('Demo loopt')->boolean()
                     ->state(fn (User $record): bool => app(DemoShopService::class)->current($record) !== null),
@@ -92,6 +102,10 @@ class PitcherResource extends Resource
             ->defaultSort('last_demo_at', 'desc')
             ->recordActions([
                 ActionGroup::make([
+                    Action::make('link')->label('Aanmeldlink tonen')->icon(Heroicon::OutlinedLink)
+                        ->modalHeading('Aanmeldlink van deze pitcher')
+                        ->modalDescription(fn (User $record): string => route('onboarding', ['ref' => $record->referralCode()]))
+                        ->modalSubmitAction(false)->modalCancelActionLabel('Sluiten'),
                     Action::make('resend')->label('Uitnodiging opnieuw sturen')->icon(Heroicon::OutlinedEnvelope)
                         ->requiresConfirmation()
                         ->action(function (User $record): void {
