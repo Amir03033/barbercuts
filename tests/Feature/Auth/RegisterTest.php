@@ -50,3 +50,27 @@ it('cannot make itself admin through registration', function () {
         ->set('is_admin', true)
         ->call('register');
 })->throws(Exception::class);
+
+it('limits how many accounts one IP address can create per hour', function () {
+    Notification::fake();
+
+    foreach (range(1, 5) as $number) {
+        Livewire::test(Register::class)
+            ->set('name', 'Sam '.$number)
+            ->set('email', "sam{$number}@example.com")
+            ->set('password', 'geheim-wachtwoord')
+            ->call('register')
+            ->assertHasNoErrors();
+
+        auth()->logout();
+    }
+
+    Livewire::test(Register::class)
+        ->set('name', 'Te veel')
+        ->set('email', 'te-veel@example.com')
+        ->set('password', 'geheim-wachtwoord')
+        ->call('register')
+        ->assertHasErrors('email');
+
+    expect(User::where('email', 'te-veel@example.com')->exists())->toBeFalse();
+});

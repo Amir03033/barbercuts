@@ -69,3 +69,20 @@ it('logs a user out', function () {
 
     $this->assertGuest();
 });
+
+it('locks out an email address after fifteen failed attempts from different IP addresses', function () {
+    $user = User::factory()->create();
+
+    foreach (range(1, 15) as $attempt) {
+        $this->app['request']->server->set('REMOTE_ADDR', '10.0.0.'.$attempt);
+
+        Livewire::test(Login::class)->set('email', $user->email)->set('password', 'wrong-password')->call('login');
+    }
+
+    $this->app['request']->server->set('REMOTE_ADDR', '10.0.1.1');
+
+    Livewire::test(Login::class)->set('email', $user->email)->set('password', 'password')->call('login')
+        ->assertSee('Te veel inlogpogingen');
+
+    $this->assertGuest();
+});

@@ -3,6 +3,7 @@
 use App\Enums\ShopRole;
 use App\Http\Controllers\MollieWebhookController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\EnsurePitcher;
 use App\Http\Middleware\ResolveShopFromApp;
 use App\Http\Middleware\ResolveShopFromSlug;
@@ -82,6 +83,8 @@ Route::view('/privacy', 'pages.privacy')->name('privacy');
 Route::view('/voorwaarden', 'pages.terms')->name('terms');
 Route::view('/verwerkersovereenkomst', 'pages.processor-agreement')->name('processor-agreement');
 Route::view('/contact', 'pages.contact')->name('contact');
+
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 // Kappersgids (fase 7): best beoordeeld in de buurt en per plaats
 Route::livewire('/kappers', Directory::class)->name('directory');

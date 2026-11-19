@@ -21,6 +21,9 @@ class Login extends Component
 {
     private const int MAX_ATTEMPTS = 5;
 
+    // Per e-mailadres, ongeacht het IP-adres: stopt een aanval die van veel adressen tegelijk komt.
+    private const int MAX_ATTEMPTS_PER_EMAIL = 15;
+
     #[Validate('required|string|email')]
     public string $email = '';
 
@@ -36,6 +39,7 @@ class Login extends Component
 
         if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             RateLimiter::hit($this->throttleKey());
+            RateLimiter::hit($this->emailThrottleKey(), 900);
 
             throw ValidationException::withMessages([
                 'email' => 'Deze combinatie van e-mailadres en wachtwoord klopt niet.',
@@ -43,6 +47,7 @@ class Login extends Component
         }
 
         RateLimiter::clear($this->throttleKey());
+        RateLimiter::clear($this->emailThrottleKey());
         Session::regenerate();
 
         /** @var User $user */
@@ -53,13 +58,15 @@ class Login extends Component
 
     private function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), self::MAX_ATTEMPTS)) {
+        $perEmail = RateLimiter::tooManyAttempts($this->emailThrottleKey(), self::MAX_ATTEMPTS_PER_EMAIL);
+
+        if (! $perEmail && ! RateLimiter::tooManyAttempts($this->throttleKey(), self::MAX_ATTEMPTS)) {
             return;
         }
 
         event(new Lockout(request()));
 
-        $seconds = RateLimiter::availableIn($this->throttleKey());
+        $seconds = RateLimiter::availableIn($perEmail ? $this->emailThrottleKey() : $this->throttleKey());
 
         throw ValidationException::withMessages([
             'email' => "Te veel inlogpogingen. Probeer het over {$seconds} seconden opnieuw.",
@@ -69,6 +76,11 @@ class Login extends Component
     private function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
+    }
+
+    private function emailThrottleKey(): string
+    {
+        return 'login-email:'.Str::transliterate(Str::lower($this->email));
     }
 
     public function render(): View

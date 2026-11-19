@@ -6,3 +6,5 @@ Disallow: /afspraak/
 Disallow: /impersonate
 Disallow: /webhooks
 Allow: /
+
+Sitemap: https://barbercuts.nl/sitemap.xml

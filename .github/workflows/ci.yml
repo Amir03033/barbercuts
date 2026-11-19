@@ -38,6 +38,8 @@ jobs:
           extensions: bcmath, intl, mbstring, pdo_mysql, zip, gd
           coverage: none
       - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer audit --no-dev
+      - run: npm audit --omit=dev --audit-level=high
       - run: vendor/bin/pint --test
       - run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
 

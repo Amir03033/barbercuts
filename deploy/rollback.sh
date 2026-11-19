@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# NIET IN GEBRUIK op productie: barbercuts.nl draait op Plesk (zie docs/DEPLOY.md, hoofdstuk Plesk). Alleen voor een eventuele eigen VPS.
 #
 # Zet de vorige release terug. Migraties worden NIET teruggedraaid.
 #

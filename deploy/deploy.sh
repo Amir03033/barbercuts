@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# NIET IN GEBRUIK op productie: barbercuts.nl draait op Plesk (zie docs/DEPLOY.md, hoofdstuk Plesk). Alleen voor een eventuele eigen VPS.
 #
 # Zero-downtime deploy met releases-mappen. Staat op de server als <APP_DIR>/deploy.sh.
 # Gebruik: ./deploy.sh [git-ref]      (standaard: main; CI geeft een commit-sha mee)
