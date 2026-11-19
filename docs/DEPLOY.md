@@ -42,6 +42,10 @@ Of handmatig, als de sitegebruiker (`sudo -u 'barbercuts.nl_…' -H bash`): `cd 
 /opt/plesk/php/8.4/bin/php artisan barbercuts:make-admin jouw@adres.nl
 ```
 
+**Echt IP-adres van bezoekers (Plesk):** zet in `.env` `TRUSTED_PROXIES=*`, en ververs de cache. Zonder dit ziet Laravel alle bezoekers als één IP-adres en delen ze de limieten op inloggen, registreren en boeken.
+
+**Mollie live-sleutel:** `MOLLIE_KEY=live_...` in `.env`, daarna `php artisan optimize:clear && php artisan optimize`. Een opgeslagen testklant wordt bij de eerste echte betaling automatisch vervangen. Het script `billing:remind-trials` mailt eigenaren 3 en 1 dag voor het einde van de proefperiode en bij het verlopen; het draait via de gewone `schedule:run`.
+
 **Facturering aanzetten** (staat standaard uit, B12): zet in `.env` `MOLLIE_KEY=test_…` (eerst een testsleutel), draai
 `php artisan optimize:clear && php artisan optimize`, ga naar `/admin` → Instellingen → *Facturering aanzetten*. Zaken die op dat
 moment geen proefperiode of gratis periode hebben, krijgen een proefperiode uit het actieve plan. Mollie moet de webhook

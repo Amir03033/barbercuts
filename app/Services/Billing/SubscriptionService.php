@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
+use Throwable;
 
 /**
  * Abonnementen met Mollie (docs/BOUWOPDRACHT.md §7.7).
@@ -49,11 +50,11 @@ class SubscriptionService
             throw new BookingException('Er is op dit moment geen abonnement beschikbaar. Probeer het later opnieuw.');
         }
 
-        $customerId = $shop->mollie_customer_id ?? $this->gateway->createCustomer(
-            $shop->name,
-            $owner->email,
-            ['barbershop_id' => $shop->id],
-        );
+        // Een eerdere betaling die mislukte maar nog als abonnement bij Mollie staat, mag niet naast het nieuwe blijven doorlopen.
+        $this->retireFailedSubscriptions($shop);
+
+        $reusedCustomer = $shop->mollie_customer_id !== null;
+        $customerId = $shop->mollie_customer_id ?? $this->newCustomer($shop, $owner);
 
         // De betaalde maand gaat in na de proefperiode of gratis periode; is er geen, dan nu.
         $periodStart = collect([$shop->trial_ends_at, $shop->free_until, now()])
@@ -80,14 +81,30 @@ class SubscriptionService
             return $subscription;
         });
 
-        $payment = $this->gateway->createFirstPayment(
-            $customerId,
+        $pay = fn (string $customer): array => $this->gateway->createFirstPayment(
+            $customer,
             $plan->price_cents,
             "BarberCuts abonnement {$shop->name}",
             route('app.subscription', ['terug' => 1]),
             $this->webhookUrl(),
             ['barbershop_id' => $shop->id, 'subscription_id' => $subscription->id],
         );
+
+        try {
+            $payment = $pay($customerId);
+        } catch (Throwable $exception) {
+            // Een klant die bij een andere sleutel hoort (bijvoorbeeld uit de testperiode) bestaat in live niet meer: maak er één opnieuw aan.
+            if (! $reusedCustomer) {
+                throw $exception;
+            }
+
+            report($exception);
+
+            $customerId = $this->newCustomer($shop, $owner);
+            Barbershop::withoutEvents(fn () => $shop->forceFill(['mollie_customer_id' => $customerId, 'mollie_mandate_id' => null])->save());
+
+            $payment = $pay($customerId);
+        }
 
         $record = new Payment;
         $record->barbershop_id = $shop->id;
@@ -99,6 +116,25 @@ class SubscriptionService
         $record->save();
 
         return $payment['checkout_url'];
+    }
+
+    private function newCustomer(Barbershop $shop, User $owner): string
+    {
+        return $this->gateway->createCustomer($shop->name, $owner->email, ['barbershop_id' => $shop->id]);
+    }
+
+    /**
+     * Een abonnement met een mislukte betaling stopt bij Mollie en in onze administratie, zodat de zaak nooit dubbel betaalt.
+     */
+    private function retireFailedSubscriptions(Barbershop $shop): void
+    {
+        $shop->subscriptions()->where('status', SubscriptionStatus::PastDue->value)->get()->each(function (Subscription $old) use ($shop): void {
+            if ($old->mollie_subscription_id !== null && $shop->mollie_customer_id !== null) {
+                $this->gateway->cancelSubscription($shop->mollie_customer_id, $old->mollie_subscription_id);
+            }
+
+            $old->forceFill(['status' => SubscriptionStatus::Cancelled, 'cancelled_at' => now(), 'current_period_ends_at' => null])->save();
+        });
     }
 
     /**
@@ -133,6 +169,17 @@ class SubscriptionService
 
             $record->status = $remote->status;
             $record->paid_at = $remote->isPaid() ? ($remote->paidAt ?? now()) : $record->paid_at;
+
+            // Een terugbetaling of chargeback verandert de status niet, maar wel wat we echt hebben ontvangen.
+            if ($remote->amountRefundedCents > 0 || $remote->amountChargedBackCents > 0) {
+                $record->refunded_at ??= now();
+                $record->metadata = [...(array) $record->metadata, 'refunded_cents' => $remote->amountRefundedCents, 'charged_back_cents' => $remote->amountChargedBackCents];
+
+                if ($remote->amountChargedBackCents > 0) {
+                    Log::warning('Chargeback op een abonnementsbetaling', ['payment' => $remote->id, 'barbershop_id' => $subscription->barbershop_id]);
+                }
+            }
+
             $record->save();
 
             // Dezelfde webhook kan vaker binnenkomen: een betaling telt maar één keer.

@@ -20,6 +20,9 @@ final readonly class BillingPayment
         /** oneoff | first | recurring */
         public string $sequenceType = 'oneoff',
         public ?CarbonImmutable $paidAt = null,
+        /** Bedrag dat inmiddels is terugbetaald of teruggeboekt (chargeback). */
+        public int $amountRefundedCents = 0,
+        public int $amountChargedBackCents = 0,
     ) {}
 
     public function isPaid(): bool

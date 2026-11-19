@@ -4,6 +4,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Vertrouwde proxy's
+    |--------------------------------------------------------------------------
+    | Leeg: geen. '*' of een lijst met IP-adressen gescheiden door komma's, voor een server achter nginx/Plesk.
+    */
+    'trusted_proxies' => env('TRUSTED_PROXIES', ''),
+
+    /*
+    |--------------------------------------------------------------------------
     | Facturering (B12)
     |--------------------------------------------------------------------------
     | Zolang dit uit staat is het platform gratis en zijn er geen betaalschermen.

@@ -50,6 +50,9 @@ class PaymentResource extends Resource
                         'failed', 'canceled', 'expired' => 'danger',
                         default => 'gray',
                     }),
+                TextColumn::make('refunded_at')->label('Terugbetaald')->placeholder('-')
+                    ->formatStateUsing(fn (mixed $state, Payment $record): string => money((int) ($record->metadata['refunded_cents'] ?? 0)).' op '.$record->refunded_at?->format('d-m-Y'))
+                    ->color('warning')->toggleable(),
                 TextColumn::make('paid_at')->label('Betaald op')->dateTime('d-m-Y H:i')->placeholder('-')->toggleable(),
                 TextColumn::make('mollie_payment_id')->label('Mollie')->copyable()->searchable(),
             ])

@@ -173,9 +173,14 @@
                         <x-ui.list-item wire:key="payment-{{ $payment->id }}" :chevron="false" :title="money($payment->amount_cents)"
                             :subtitle="nl_date($payment->created_at->setTimezone($shop->timezone), 'D MMM YYYY')">
                             <x-slot:trailing>
-                                <x-ui.badge :status="$payment->status === 'paid' ? 'completed' : (in_array($payment->status, ['failed', 'canceled', 'expired'], true) ? 'no_show' : 'scheduled')">
-                                    {{ match ($payment->status) { 'paid' => 'Betaald', 'failed' => 'Mislukt', 'canceled' => 'Geannuleerd', 'expired' => 'Verlopen', default => 'In behandeling' } }}
-                                </x-ui.badge>
+                                @php($refunded = (int) ($payment->metadata['refunded_cents'] ?? 0))
+                                @if ($refunded > 0)
+                                    <x-ui.badge status="neutral">{{ $refunded >= $payment->amount_cents ? 'Terugbetaald' : 'Deels terugbetaald' }}</x-ui.badge>
+                                @else
+                                    <x-ui.badge :status="$payment->status === 'paid' ? 'completed' : (in_array($payment->status, ['failed', 'canceled', 'expired'], true) ? 'no_show' : 'scheduled')">
+                                        {{ match ($payment->status) { 'paid' => 'Betaald', 'failed' => 'Mislukt', 'canceled' => 'Geannuleerd', 'expired' => 'Verlopen', default => 'In behandeling' } }}
+                                    </x-ui.badge>
+                                @endif
                             </x-slot:trailing>
                         </x-ui.list-item>
                     @endforeach

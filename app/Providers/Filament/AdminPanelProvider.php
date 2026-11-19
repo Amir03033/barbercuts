@@ -14,7 +14,6 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Width;
-use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -43,7 +42,7 @@ class AdminPanelProvider extends PanelProvider
             ->darkMode(false)
             ->colors(['primary' => Color::hex('#0071e3'), 'gray' => Color::Zinc])
             ->brandLogo(fn () => view('filament.brand'))
-            ->brandLogoHeight('2rem')
+            ->brandLogoHeight('2.25rem')
             ->favicon('/favicon.svg')
             ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth(Width::Full)
@@ -59,9 +58,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->navigationGroups([
-                NavigationGroup::make('Platform')->icon(Heroicon::OutlinedGlobeAlt),
-                NavigationGroup::make('Betalingen')->icon(Heroicon::OutlinedBanknotes),
-                NavigationGroup::make('Support')->icon(Heroicon::OutlinedLifebuoy),
+                NavigationGroup::make('Platform'),
+                NavigationGroup::make('Betalingen'),
+                NavigationGroup::make('Support'),
             ])
             ->middleware([
                 EncryptCookies::class,

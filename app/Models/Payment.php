@@ -4,12 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Een Mollie-betaling: voor een abonnement (fase 4) of een aanbetaling op een afspraak (later, §7.8).
  * Geen tenant-scope: webhooks en het adminpanel werken over alle zaken heen.
  *
  * @property array<string, mixed>|null $metadata
+ * @property Carbon|null $paid_at
+ * @property Carbon|null $refunded_at
  */
 class Payment extends Model
 {

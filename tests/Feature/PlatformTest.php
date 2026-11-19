@@ -20,3 +20,21 @@ it('reserves every first-level route as a slug', function () {
 
     expect($segments->diff($reserved)->values()->all())->toBe([]);
 });
+
+it('trusts the forwarded IP address only when proxies are configured', function () {
+    expect(config('barbercuts.trusted_proxies'))->toBe('');
+
+    Route::get('/_test-ip', fn () => request()->ip());
+
+    $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.1'])->withHeaders(['X-Forwarded-For' => '203.0.113.9'])
+        ->get('/_test-ip')->assertSee('10.0.0.1');
+});
+
+it('uses the visitor IP from X-Forwarded-For once the proxy is trusted', function () {
+    config(['barbercuts.trusted_proxies' => '*']);
+
+    Route::get('/_test-ip-proxy', fn () => request()->ip());
+
+    $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.1'])->withHeaders(['X-Forwarded-For' => '203.0.113.9'])
+        ->get('/_test-ip-proxy')->assertSee('203.0.113.9');
+});

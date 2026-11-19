@@ -14,3 +14,6 @@ Schedule::command('demo:cleanup')->hourly();
 // Fase 8: klanten terughalen (elke ochtend) en de wachtlijst (elke minuut).
 Schedule::command('winback:send')->dailyAt('10:30')->timezone('Europe/Amsterdam');
 Schedule::command('waitlist:advance')->everyMinute()->withoutOverlapping(5);
+
+// Eigenaren een mail sturen voor het einde van de proefperiode (alleen als facturering aan staat).
+Schedule::command('billing:remind-trials')->dailyAt('09:00')->timezone('Europe/Amsterdam');

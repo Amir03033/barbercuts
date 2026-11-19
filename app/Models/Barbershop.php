@@ -69,6 +69,7 @@ class Barbershop extends Model
             'theme_mode' => ThemeMode::class,
             'is_public' => 'boolean',
             'is_demo' => 'boolean',
+            'billing_notices' => 'array',
             'banner_active' => 'boolean',
             'rating_avg' => 'float',
             'rating_count' => 'integer',

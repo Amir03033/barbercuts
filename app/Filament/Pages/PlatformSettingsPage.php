@@ -9,8 +9,16 @@ use App\Support\Features;
 use App\Support\PlatformSettings;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\EmbeddedSchema;
+use Filament\Schemas\Components\Form;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 
@@ -19,8 +27,6 @@ use UnitEnum;
  */
 class PlatformSettingsPage extends Page
 {
-    protected string $view = 'filament.pages.platform-settings';
-
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
 
     protected static string|UnitEnum|null $navigationGroup = 'Platform';
@@ -40,6 +46,68 @@ class PlatformSettingsPage extends Page
     public bool $whatsapp = false;
 
     public string $extraSlugs = '';
+
+    /**
+     * De pagina bestaat uit twee kaarten: de status van facturering en een formulier met de functies.
+     */
+    public function content(Schema $schema): Schema
+    {
+        $plan = Plan::current();
+
+        return $schema->components([
+            Section::make('Facturering')
+                ->icon(Heroicon::OutlinedCreditCard)
+                ->description(fn (): string => $this->billingEnabled()
+                    ? 'Zaken betalen na hun proefperiode via Mollie.'
+                    : 'Het platform is gratis (gratis start). Zaken zien nergens betaalschermen. Zet facturering aan met de knop rechtsboven.')
+                ->schema([
+                    Text::make(fn (): string => $this->billingEnabled() ? 'Staat aan' : 'Staat uit')
+                        ->badge()
+                        ->color(fn (): string => $this->billingEnabled() ? 'success' : 'gray'),
+                    Text::make($plan !== null
+                        ? 'Plan "'.$plan->name.'": '.money($plan->price_cents).' per maand, '.$plan->trial_days.' dagen proef. Aanpassen kan bij Plannen.'
+                        : 'Er is nog geen actief plan. Maak er een aan bij Plannen.')
+                        ->color('gray'),
+                ]),
+            Form::make([EmbeddedSchema::make('form')])
+                ->id('form')
+                ->livewireSubmitHandler('save')
+                ->footer([
+                    Actions::make([
+                        Action::make('save')->label('Opslaan')->submit('save')->keyBindings(['mod+s']),
+                    ]),
+                ]),
+        ]);
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Functies')
+                ->icon(Heroicon::OutlinedSparkles)
+                ->description('Wat hier staat overschrijft de standaard uit .env.')
+                ->schema([
+                    Toggle::make('deposits')
+                        ->label('Aanbetalingen')
+                        ->helperText('Nog niet klaar voor gebruik. Laat dit uit tot een volgende update.'),
+                    Toggle::make('sms')
+                        ->label('SMS-berichten')
+                        ->helperText('Herinneringen per sms. Zet dit alleen aan als de sms-provider is ingesteld.'),
+                    Toggle::make('whatsapp')
+                        ->label('WhatsApp-berichten')
+                        ->helperText('Herinneringen per WhatsApp. Zet dit alleen aan als de templates zijn goedgekeurd.'),
+                ]),
+            Section::make('Gereserveerde slugs')
+                ->icon(Heroicon::OutlinedLockClosed)
+                ->description('Namen die geen zaak als boekingslink mag kiezen, naast de vaste lijst.')
+                ->schema([
+                    Textarea::make('extraSlugs')
+                        ->label('Extra gereserveerde namen')
+                        ->helperText('Eén per regel, of gescheiden door een komma.')
+                        ->rows(5),
+                ]),
+        ]);
+    }
 
     public function mount(): void
     {

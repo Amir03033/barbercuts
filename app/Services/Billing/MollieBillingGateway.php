@@ -46,6 +46,8 @@ class MollieBillingGateway implements BillingGateway
             mandateId: $payment->mandateId,
             sequenceType: $this->value($payment->sequenceType ?? 'oneoff'),
             paidAt: $payment->paidAt !== null ? CarbonImmutable::parse($payment->paidAt) : null,
+            amountRefundedCents: isset($payment->amountRefunded->value) ? (int) round(((float) $payment->amountRefunded->value) * 100) : 0,
+            amountChargedBackCents: isset($payment->amountChargedBack->value) ? (int) round(((float) $payment->amountChargedBack->value) * 100) : 0,
         );
     }
 

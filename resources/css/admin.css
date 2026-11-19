@@ -346,3 +346,66 @@ body.fi-body,
         transition-duration: 0.01ms !important;
     }
 }
+
+
+/* ---------- Opgeruimde zijbalk: geen stippellijnen, rustige items ---------- */
+.fi-sidebar-item-grouped-border,
+.fi-sidebar-item-grouped-border-part,
+.fi-sidebar-item-grouped-border-part-not-first,
+.fi-sidebar-item-grouped-border-part-not-last {
+    display: none;
+}
+
+.fi-sidebar-group-items {
+    gap: 0.125rem;
+}
+
+.fi-sidebar-item-btn {
+    padding: 0.5rem 0.75rem;
+}
+
+.fi-sidebar-item-icon {
+    color: var(--bc-muted);
+    transition: color 180ms var(--bc-ease), transform 180ms var(--bc-ease);
+}
+
+.fi-sidebar-item-btn:hover .fi-sidebar-item-icon {
+    color: var(--bc-ink);
+    transform: scale(1.08);
+}
+
+.fi-sidebar-item-label {
+    font-size: 0.9375rem;
+    font-weight: 500;
+}
+
+.fi-sidebar-group {
+    margin-top: 0.5rem;
+}
+
+/* ---------- Formulierkaarten: genoeg lucht, toggles met uitleg eronder ---------- */
+.fi-sc-section .fi-section-content-ctn,
+.fi-section .fi-section-content-ctn {
+    padding: 1.5rem;
+}
+
+.fi-sc-section .fi-section-header,
+.fi-section .fi-section-header {
+    padding: 1.25rem 1.5rem;
+}
+
+.fi-fo-toggle {
+    transition: background-color 200ms var(--bc-ease);
+}
+
+.fi-fo-field-wrp-hint,
+.fi-fo-field-content-slot .fi-fo-field-wrp-helper-text,
+.fi-fo-field-wrp-helper-text {
+    color: var(--bc-muted);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+.fi-sc-text {
+    font-size: 0.9375rem;
+}

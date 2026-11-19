@@ -5,6 +5,7 @@ namespace Tests\Fakes;
 use App\Services\Billing\BillingGateway;
 use App\Services\Billing\BillingPayment;
 use Carbon\CarbonImmutable;
+use Mollie\Api\Exceptions\ApiException;
 
 /**
  * Betaalprovider in het geheugen voor tests: er gaat niets naar Mollie.
@@ -29,6 +30,9 @@ class FakeBillingGateway implements BillingGateway
     /** @var list<string> */
     public array $fetched = [];
 
+    /** @var list<string> Klanten die bij Mollie niet (meer) bestaan, bijvoorbeeld uit de testperiode. */
+    public array $unknownCustomers = [];
+
     public function createCustomer(string $name, string $email, array $metadata = []): string
     {
         $id = 'cst_'.(count($this->customers) + 1);
@@ -39,6 +43,10 @@ class FakeBillingGateway implements BillingGateway
 
     public function createFirstPayment(string $customerId, int $amountCents, string $description, string $redirectUrl, ?string $webhookUrl, array $metadata = []): array
     {
+        if (in_array($customerId, $this->unknownCustomers, true)) {
+            throw new \RuntimeException("Klant {$customerId} bestaat niet");
+        }
+
         $id = 'tr_first'.(count($this->payments) + 1);
         $this->payments[$id] = new BillingPayment($id, 'open', $amountCents, $customerId, null, null, 'first');
 
@@ -48,6 +56,14 @@ class FakeBillingGateway implements BillingGateway
     public function getPayment(string $paymentId): BillingPayment
     {
         $this->fetched[] = $paymentId;
+
+        if (str_starts_with($paymentId, 'tr_onbekend')) {
+            // Zo antwoordt Mollie op een betaling die het niet kent.
+            $exception = (new \ReflectionClass(ApiException::class))->newInstanceWithoutConstructor();
+            (new \ReflectionProperty(\Exception::class, 'code'))->setValue($exception, 404);
+
+            throw $exception;
+        }
 
         return $this->payments[$paymentId] ?? throw new \RuntimeException("Onbekende betaling {$paymentId}");
     }
@@ -73,11 +89,13 @@ class FakeBillingGateway implements BillingGateway
     /**
      * Wat Mollie nu van een betaling zegt: zo laten we een betaling slagen, mislukken of binnenkomen.
      */
-    public function set(string $id, string $status, string $sequenceType = 'first', ?string $customerId = null, ?string $subscriptionId = null, int $cents = 1000, ?string $mandateId = null): BillingPayment
+    public function set(string $id, string $status, string $sequenceType = 'first', ?string $customerId = null, ?string $subscriptionId = null, int $cents = 1000, ?string $mandateId = null, int $refundedCents = 0, int $chargedBackCents = 0): BillingPayment
     {
         return $this->payments[$id] = new BillingPayment(
             $id, $status, $cents, $customerId, $subscriptionId, $mandateId, $sequenceType,
             $status === 'paid' ? CarbonImmutable::now() : null,
+            $refundedCents,
+            $chargedBackCents,
         );
     }
 }

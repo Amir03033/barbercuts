@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Middleware\TrustConfiguredProxies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -14,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Mollie roept de webhook aan zonder CSRF-token; de echte status wordt zelf bij Mollie opgehaald.
         $middleware->validateCsrfTokens(except: ['webhooks/*']);
+
+        // De vertrouwde proxy's komen uit de config en worden pas per verzoek gelezen (zie TrustConfiguredProxies).
+        $middleware->replace(TrustProxies::class, TrustConfiguredProxies::class);
         $middleware->redirectGuestsTo(fn (): string => route('login'));
         $middleware->redirectUsersTo(fn (Request $request): string => $request->user()?->homeRoute() ?? route('home'));
     })

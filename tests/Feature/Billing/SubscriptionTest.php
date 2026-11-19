@@ -336,3 +336,50 @@ it('warns clearly when the trial is almost over and when it has ended', function
     actingInShop($expiredOwner, $expired);
     Livewire::test(SubscriptionPage::class)->assertSee('Je proefperiode is voorbij')->assertSee('Abonnement starten');
 });
+
+it('stops a failed subscription at Mollie before starting a new one, so nobody pays twice', function () {
+    $this->shop->forceFill(['mollie_customer_id' => 'cst_old'])->save();
+    subscriptionFor($this->shop->fresh(), 'past_due', ['mollie_subscription_id' => 'sub_old', 'past_due_at' => now()->subDays(2)]);
+
+    $this->service->startCheckout($this->shop->fresh(), $this->owner);
+
+    expect($this->gateway->cancelled)->toBe([['customer' => 'cst_old', 'id' => 'sub_old']])
+        ->and(Subscription::query()->orderBy('id')->pluck('status')->map->value->all())->toBe(['cancelled', 'pending']);
+});
+
+it('creates a new Mollie customer when the stored one is unknown, for example after switching from test to live', function () {
+    $this->shop->forceFill(['mollie_customer_id' => 'cst_test', 'mollie_mandate_id' => 'mdt_test'])->save();
+    $this->gateway->unknownCustomers = ['cst_test'];
+
+    $url = $this->service->startCheckout($this->shop->fresh(), $this->owner);
+
+    expect($url)->toContain('mollie.com/checkout')
+        ->and($this->shop->fresh()->mollie_customer_id)->toBe('cst_1')
+        ->and($this->shop->fresh()->mollie_mandate_id)->toBeNull();
+});
+
+it('does not hide a real payment error for a customer that was just created', function () {
+    $this->gateway->unknownCustomers = ['cst_1'];
+
+    expect(fn () => $this->service->startCheckout($this->shop, $this->owner))->toThrow(RuntimeException::class);
+});
+
+it('answers 200 for payments Mollie does not know instead of letting Mollie retry forever', function () {
+    $this->gateway->payments = [];
+
+    $this->post('/webhooks/mollie', ['id' => 'tr_onbekend123'])->assertOk();
+});
+
+it('records a refund on the payment and shows it to the owner', function () {
+    subscriptionFor($this->shop, 'active', ['mollie_subscription_id' => 'sub_x']);
+    $this->gateway->set('tr_rec9', 'paid', 'recurring', 'cst_1', 'sub_x', 1000, null, 400);
+
+    ($this->webhook)('tr_rec9');
+
+    $payment = Payment::query()->where('mollie_payment_id', 'tr_rec9')->firstOrFail();
+
+    expect($payment->metadata['refunded_cents'])->toBe(400)->and($payment->refunded_at)->not->toBeNull();
+
+    actingInShop($this->owner, $this->shop);
+    Livewire::test(SubscriptionPage::class)->assertSee('Deels terugbetaald');
+});
