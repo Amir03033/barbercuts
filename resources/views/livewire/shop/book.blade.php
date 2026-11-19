@@ -9,6 +9,8 @@
         <x-ui.page-header :title="$titles[$step]" :subtitle="$shop->name" back-action="back" />
     @endif
 
+    <x-shop.booking-steps :step="$step" />
+
     <div class="px-4 py-4">
         {{-- Samenvatting van wat al gekozen is --}}
         @if ($service && $step !== 'service')
@@ -31,14 +33,19 @@
             @if ($services->isEmpty())
                 <x-ui.empty-state icon="scissors" title="Online boeken kan nog niet" text="Deze zaak heeft nog geen diensten. Bel de zaak voor een afspraak." />
             @else
-                <x-ui.card :padding="false" flat class="divide-y divide-border overflow-hidden">
+                <div class="stagger space-y-2.5">
                     @foreach ($services as $option)
-                        <x-ui.list-item wire:click="chooseService({{ $option->id }})" wire:key="service-{{ $option->id }}"
-                            :title="$option->name" :subtitle="duration_label($option->duration).($option->description ? ' · '.$option->description : '')">
-                            <x-slot:trailing><span class="font-semibold tabular-nums">{{ money($option->price_cents) }}</span></x-slot:trailing>
-                        </x-ui.list-item>
+                        <button type="button" wire:click="chooseService({{ $option->id }})" wire:key="service-{{ $option->id }}"
+                            class="bc-lift group flex w-full items-center gap-3 rounded-card border border-border/70 bg-card p-4 text-left shadow-soft transition-transform duration-150 active:scale-[0.985]">
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-base font-semibold">{{ $option->name }}</span>
+                                <span class="mt-0.5 block text-sm text-muted">{{ duration_label($option->duration) }}@if ($option->description) · {{ $option->description }}@endif</span>
+                            </span>
+                            <span class="shrink-0 rounded-pill bg-surface px-3 py-1.5 text-sm font-semibold tabular-nums">{{ money($option->price_cents) }}</span>
+                            <x-ui.icon name="chevron-right" size="20" class="shrink-0 text-border-strong transition-transform duration-200 group-hover:translate-x-0.5" />
+                        </button>
                     @endforeach
-                </x-ui.card>
+                </div>
             @endif
         @endif
 

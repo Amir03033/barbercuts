@@ -487,31 +487,6 @@ html.reveal-on [data-reveal].is-visible {
     animation: shine 9s linear infinite;
 }
 
-/* De draaiende kapperspaal: rood, wit en blauw */
-@keyframes pole {
-    to {
-        background-position: 0 -56.57px;
-    }
-}
-
-.barber-pole {
-    background-image: repeating-linear-gradient(135deg, #ff3b30 0 10px, #ffffff 10px 20px, #0071e3 20px 30px, #ffffff 30px 40px);
-    background-size: 100% 56.57px;
-    animation: pole 1.6s linear infinite;
-    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08), inset 6px 0 8px -4px rgb(0 0 0 / 0.18), inset -6px 0 8px -4px rgb(0 0 0 / 0.18);
-}
-
-/* Lopende band met diensten */
-@keyframes marquee {
-    to {
-        transform: translateX(-50%);
-    }
-}
-
-.marquee {
-    animation: marquee 32s linear infinite;
-}
-
 /* De uitsparing bovenin de telefoon klapt af en toe open met een melding */
 @keyframes island {
     0%,
@@ -649,4 +624,96 @@ html.reveal-on [data-reveal].is-visible {
     animation:
         notif-in 720ms var(--ease-out-soft) var(--notif-delay, 0ms) backwards,
         float 6s var(--ease-in-out-soft) calc(var(--notif-delay, 0ms) + 720ms) infinite;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Formulieren: velden komen na elkaar binnen, het label kleurt mee bij focus, een fout schudt even en een
+| melding schuift zacht uit. Alles valt weg bij prefers-reduced-motion (zie hierboven).
+|--------------------------------------------------------------------------
+*/
+@keyframes field-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+}
+
+@keyframes shake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-5px);
+    }
+
+    40% {
+        transform: translateX(4px);
+    }
+
+    60% {
+        transform: translateX(-3px);
+    }
+
+    80% {
+        transform: translateX(2px);
+    }
+}
+
+@keyframes error-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+        max-height: 0;
+    }
+
+    to {
+        max-height: 4rem;
+    }
+}
+
+@keyframes ring-pulse {
+    from {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--focus) 35%, transparent);
+    }
+}
+
+/* Alle velden in een formulier schuiven na elkaar binnen */
+form:not([data-no-anim]) > * {
+    animation: field-in 480ms var(--ease-out-soft) backwards;
+}
+
+form:not([data-no-anim]) > *:nth-child(2) { animation-delay: 50ms; }
+form:not([data-no-anim]) > *:nth-child(3) { animation-delay: 100ms; }
+form:not([data-no-anim]) > *:nth-child(4) { animation-delay: 150ms; }
+form:not([data-no-anim]) > *:nth-child(5) { animation-delay: 200ms; }
+form:not([data-no-anim]) > *:nth-child(6) { animation-delay: 250ms; }
+form:not([data-no-anim]) > *:nth-child(7) { animation-delay: 300ms; }
+form:not([data-no-anim]) > *:nth-child(n + 8) { animation-delay: 350ms; }
+
+@layer components {
+    .bc-input:focus {
+        animation: ring-pulse 420ms var(--ease-out-soft);
+    }
+
+    .bc-input[aria-invalid='true'] {
+        animation: shake 380ms var(--ease-out-soft);
+    }
+
+    /* Een veld met een label: het label kleurt mee wanneer je erin typt */
+    .bc-field > label {
+        transition: color 180ms var(--ease-out-soft);
+    }
+
+    .bc-field:focus-within > label {
+        color: var(--focus);
+    }
+
+    .bc-field-error {
+        overflow: hidden;
+        animation: error-in 260ms var(--ease-out-soft);
+    }
 }

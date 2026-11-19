@@ -26,8 +26,9 @@
         <div class="space-y-6 px-4 py-4">
             @if ($justBooked && $appointment->isScheduled())
                 <div class="text-center">
-                    <span class="mx-auto flex size-14 items-center justify-center rounded-full bg-completed/10 text-completed">
-                        <x-ui.icon name="check" />
+                    <span class="relative mx-auto flex size-16 items-center justify-center rounded-full bg-completed text-white">
+                        <span class="absolute inset-0 animate-ping rounded-full bg-completed/30 [animation-iteration-count:2]" aria-hidden="true"></span>
+                        <span class="pop-check relative"><x-ui.icon name="check" size="32" /></span>
                     </span>
                     <h1 class="mt-3 text-lg font-bold">Je afspraak staat vast</h1>
                     <p class="mt-1 text-sm text-muted">

@@ -71,3 +71,7 @@ it('does not promise self-service account deletion that the app does not offer',
 it('shows the next opening days in the booking demo instead of fixed dates', function () {
     $this->get('/')->assertOk()->assertSee('Kies een dag')->assertSee('Boek ');
 });
+
+it('has no scrolling word band on the landing page', function () {
+    $this->get('/')->assertOk()->assertDontSee('marquee')->assertDontSee('barber-pole');
+});

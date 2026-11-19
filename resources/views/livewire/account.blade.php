@@ -1,4 +1,4 @@
-<div class="mx-auto max-w-2xl space-y-8 px-4 py-6">
+<div class="stagger mx-auto max-w-2xl space-y-8 px-4 py-6">
     <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
             <h1 class="text-[1.75rem] leading-9 font-bold tracking-tight">Mijn afspraken</h1>
@@ -6,6 +6,17 @@
         </div>
         <x-ui.button variant="secondary" size="sm" class="shrink-0 !rounded-pill" x-data x-on:click="$dispatch('open-sheet', 'account-switch')">Wissel</x-ui.button>
     </div>
+
+    @if ($upcoming->isNotEmpty())
+        @php($next = $upcoming->first())
+        <a href="{{ $next->manageUrl() }}" wire:navigate.remove class="bc-lift group relative block overflow-hidden rounded-[1.75rem] bg-[#1d1d1f] p-6 text-white shadow-pop">
+            <span class="pointer-events-none absolute inset-0 bg-[radial-gradient(22rem_12rem_at_90%_0%,rgb(10_132_255/0.4),transparent_70%)]" aria-hidden="true"></span>
+            <span class="relative flex items-center gap-2 text-xs font-semibold text-white/70"><span class="size-1.5 animate-pulse-dot rounded-full bg-[#30d158]"></span>Volgende afspraak</span>
+            <span class="relative mt-2 block text-2xl leading-8 font-bold tracking-tight">{{ ucfirst($next->whenLabel()) }}</span>
+            <span class="relative mt-1 block text-sm text-white/70">{{ $next->service_name }} · {{ $next->barbershop->name }} · {{ $next->staffMember->name }}</span>
+            <span class="relative mt-4 inline-flex items-center gap-1.5 text-sm font-semibold">Bekijken of verplaatsen <x-ui.icon name="arrow-right" size="16" class="transition-transform duration-200 group-hover:translate-x-1" /></span>
+        </a>
+    @endif
 
     <x-ui.section title="Komende afspraken">
         @if ($upcoming->isEmpty())

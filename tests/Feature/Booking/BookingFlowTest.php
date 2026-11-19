@@ -43,7 +43,8 @@ it('shows the booking page with the services of the shop', function () {
 
     $this->get('/jf-cuts/boeken')->assertOk()
         ->assertSee('Kies een dienst')->assertSee('Knippen')->assertSee('€ 25,00')
-        ->assertDontSee('Oude dienst');
+        ->assertDontSee('Oude dienst')
+        ->assertSee('Voortgang van je afspraak');
 
     $this->get('/jf-cuts')->assertSee('Afspraak maken');
 });

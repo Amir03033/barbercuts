@@ -313,3 +313,26 @@ it('shows a gift of the admin as free period on the screen', function () {
 
     Livewire::test(SubscriptionPage::class)->assertSee('Gratis')->assertSee('Je gebruikt BarberCuts gratis tot');
 });
+
+it('shows how many days of the trial are left, and what happens after', function () {
+    [$shop, $owner] = shopInState('trial');
+    $shop->forceFill(['trial_ends_at' => now()->addDays(9)])->save();
+    actingInShop($owner, $shop->fresh());
+
+    Livewire::test(SubscriptionPage::class)
+        ->assertSee('Je proeft gratis')
+        ->assertSee('dagen over')
+        ->assertSee('Daarna start je een abonnement om door te gaan')
+        ->assertSee('Alvast een abonnement starten');
+});
+
+it('warns clearly when the trial is almost over and when it has ended', function () {
+    [$shop, $owner] = shopInState('trial');
+    $shop->forceFill(['trial_ends_at' => now()->addDays(2)])->save();
+    actingInShop($owner, $shop->fresh());
+    Livewire::test(SubscriptionPage::class)->assertSee('Je proefperiode is bijna voorbij');
+
+    [$expired, $expiredOwner] = shopInState('expired');
+    actingInShop($expiredOwner, $expired);
+    Livewire::test(SubscriptionPage::class)->assertSee('Je proefperiode is voorbij')->assertSee('Abonnement starten');
+});

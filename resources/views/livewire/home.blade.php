@@ -120,21 +120,6 @@
         </div>
     </section>
 
-    {{-- Lopende band met diensten, tussen twee draaiende kapperspalen --}}
-    <div class="relative mt-10 flex items-center gap-4 border-y border-border/70 bg-card py-4" aria-hidden="true">
-        <span class="barber-pole ml-4 h-10 w-3.5 shrink-0 rounded-full"></span>
-        <div class="min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_12%,black_88%,transparent)]">
-            <div class="marquee flex w-max gap-8 text-2xl font-bold tracking-tight whitespace-nowrap text-text/25 md:text-4xl">
-                @foreach (range(1, 2) as $copy)
-                    @foreach (['Knippen', 'Skin fade', 'Baard', 'Contouren', 'Tondeuse', 'Kinderen', 'Wassen', 'Stylen', 'Hot towel'] as $word)
-                        <span>{{ $word }}</span><span class="text-accent/60">✂</span>
-                    @endforeach
-                @endforeach
-            </div>
-        </div>
-        <span class="barber-pole mr-4 h-10 w-3.5 shrink-0 rounded-full"></span>
-    </div>
-
     {{-- Alles in één app --}}
     <section class="mx-auto max-w-5xl px-4 py-16 md:py-24">
         <p class="text-sm font-semibold text-link" data-reveal>Zo ziet het eruit</p>

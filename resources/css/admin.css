@@ -1,0 +1,348 @@
+/*
+|--------------------------------------------------------------------------
+| Adminpanel (/admin): dezelfde lichte Apple-stijl als de rest van BarberCuts
+|--------------------------------------------------------------------------
+| Filament levert zijn eigen CSS in lagen; deze regels staan buiten die lagen en winnen dus altijd.
+| Alleen kleuren, vormen en beweging; de structuur van Filament blijft zoals die is.
+*/
+:root {
+    --bc-bg: #f5f5f7;
+    --bc-card: #ffffff;
+    --bc-line: rgb(0 0 0 / 0.08);
+    --bc-ink: #1d1d1f;
+    --bc-muted: #6e6e73;
+    --bc-blue: #0071e3;
+    --bc-radius: 1.25rem;
+    --bc-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px -6px rgb(0 0 0 / 0.08);
+    --bc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@keyframes bc-rise {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+}
+
+@keyframes bc-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.97) translateY(8px);
+    }
+}
+
+@keyframes bc-glow {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate3d(2%, -3%, 0) scale(1.06);
+    }
+}
+
+body.fi-body,
+.fi-body {
+    background: var(--bc-bg);
+    color: var(--bc-ink);
+    font-family: var(--font-family);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Zijbalk en bovenbalk ---------- */
+.fi-sidebar,
+.fi-main-sidebar {
+    background: rgb(255 255 255 / 0.78);
+    backdrop-filter: saturate(180%) blur(24px);
+    border-right: 1px solid var(--bc-line);
+}
+
+.fi-sidebar-header,
+.fi-sidebar-header-ctn {
+    background: transparent;
+    box-shadow: none;
+    border-bottom: 1px solid var(--bc-line);
+}
+
+.fi-topbar,
+.fi-topbar-ctn {
+    background: rgb(245 245 247 / 0.8);
+    backdrop-filter: saturate(180%) blur(24px);
+    box-shadow: none;
+    border-bottom: 1px solid var(--bc-line);
+}
+
+.fi-sidebar-group-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bc-muted);
+}
+
+.fi-sidebar-item-btn {
+    border-radius: 0.75rem;
+    transition:
+        background-color 180ms var(--bc-ease),
+        transform 180ms var(--bc-ease);
+}
+
+.fi-sidebar-item-btn:hover {
+    background: rgb(0 0 0 / 0.04);
+    transform: translateX(2px);
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    background: rgb(0 113 227 / 0.1);
+}
+
+.fi-sidebar-item.fi-active .fi-sidebar-item-label,
+.fi-sidebar-item.fi-active .fi-sidebar-item-icon {
+    color: var(--bc-blue);
+    font-weight: 600;
+}
+
+/* ---------- Pagina's ---------- */
+.fi-header-heading {
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--bc-ink);
+}
+
+.fi-page-header-main-ctn,
+.fi-header-subheading {
+    color: var(--bc-muted);
+}
+
+.fi-breadcrumbs-item-label {
+    font-size: 0.8125rem;
+    color: var(--bc-muted);
+}
+
+.fi-main {
+    animation: bc-rise 500ms var(--bc-ease) backwards;
+}
+
+/* Widgets en secties komen na elkaar binnen */
+.fi-wi-widget,
+.fi-sc-section,
+.fi-section,
+.fi-ta-ctn {
+    animation: bc-rise 560ms var(--bc-ease) backwards;
+}
+
+.fi-wi-widget:nth-child(2) { animation-delay: 60ms; }
+.fi-wi-widget:nth-child(3) { animation-delay: 120ms; }
+.fi-wi-widget:nth-child(4) { animation-delay: 180ms; }
+.fi-wi-widget:nth-child(n + 5) { animation-delay: 240ms; }
+
+/* ---------- Kaarten ---------- */
+.fi-section,
+.fi-sc-section,
+.fi-ta-ctn,
+.fi-wi-chart,
+.fi-wi-table,
+.fi-fo-wizard,
+.fi-sc-wizard {
+    background: var(--bc-card);
+    border-radius: var(--bc-radius);
+    border: 1px solid var(--bc-line);
+    box-shadow: var(--bc-shadow);
+    --tw-ring-shadow: 0 0 #0000;
+}
+
+.fi-section-header-heading,
+.fi-sc-section-label {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+/* ---------- Statistiek-tegels ---------- */
+.fi-wi-stats-overview-stat {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--bc-radius);
+    border: 1px solid var(--bc-line);
+    background: var(--bc-card);
+    box-shadow: var(--bc-shadow);
+    transition:
+        transform 260ms var(--bc-ease),
+        box-shadow 260ms var(--bc-ease);
+}
+
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 2px 4px rgb(0 0 0 / 0.04), 0 18px 32px -14px rgb(0 0 0 / 0.18);
+}
+
+.fi-wi-stats-overview-stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+}
+
+.fi-wi-stats-overview-stat-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--bc-muted);
+}
+
+.fi-wi-stats-overview-stats-ctn,
+.fi-wi-stats-overview {
+    gap: 1rem;
+}
+
+/* ---------- Tabellen ---------- */
+.fi-ta-ctn {
+    overflow: hidden;
+}
+
+.fi-ta-header-cell {
+    background: #fafafc;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--bc-muted);
+}
+
+.fi-ta-row {
+    transition: background-color 160ms var(--bc-ease);
+}
+
+.fi-ta-row:hover {
+    background: rgb(0 113 227 / 0.04);
+}
+
+.fi-ta-cell,
+.fi-ta-cell-content {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Formulieren ---------- */
+.fi-input-wrp {
+    border-radius: 0.75rem;
+    background: var(--bc-card);
+    box-shadow: none;
+    border: 1px solid rgb(0 0 0 / 0.12);
+    transition:
+        border-color 160ms var(--bc-ease),
+        box-shadow 160ms var(--bc-ease);
+}
+
+.fi-input-wrp:hover {
+    border-color: rgb(0 0 0 / 0.25);
+}
+
+.fi-input-wrp:focus-within {
+    border-color: var(--bc-blue);
+    box-shadow: 0 0 0 4px rgb(0 113 227 / 0.16);
+}
+
+.fi-fo-field-label-content {
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.fi-fo-field-wrp-error-message {
+    animation: bc-rise 240ms var(--bc-ease);
+}
+
+/* ---------- Knoppen ---------- */
+.fi-btn {
+    border-radius: 0.75rem;
+    font-weight: 600;
+    transition:
+        transform 150ms var(--bc-ease),
+        filter 150ms var(--bc-ease),
+        background-color 150ms var(--bc-ease);
+}
+
+.fi-btn:hover {
+    filter: brightness(1.06);
+}
+
+.fi-btn:active {
+    transform: scale(0.97);
+}
+
+.fi-icon-btn {
+    transition: transform 150ms var(--bc-ease), background-color 150ms var(--bc-ease);
+}
+
+.fi-icon-btn:active {
+    transform: scale(0.92);
+}
+
+.fi-badge {
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+/* ---------- Vensters en menu's ---------- */
+.fi-modal-window {
+    border-radius: 1.5rem;
+    border: 1px solid var(--bc-line);
+    box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.35);
+    animation: bc-pop 280ms var(--bc-ease);
+}
+
+.fi-dropdown-panel {
+    border-radius: 1rem;
+    border: 1px solid var(--bc-line);
+    box-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.25);
+    animation: bc-pop 200ms var(--bc-ease);
+}
+
+.fi-pagination-item-btn {
+    border-radius: 0.625rem;
+}
+
+/* ---------- Inloggen en andere eenvoudige pagina's ---------- */
+.fi-simple-layout {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(38rem 26rem at 50% 8%, rgb(0 113 227 / 0.18), transparent 62%),
+        radial-gradient(26rem 20rem at 82% 70%, rgb(175 82 222 / 0.13), transparent 60%),
+        radial-gradient(24rem 18rem at 12% 78%, rgb(52 199 89 / 0.1), transparent 60%),
+        var(--bc-bg);
+}
+
+.fi-simple-layout::before {
+    content: '';
+    position: absolute;
+    inset: -10%;
+    background: radial-gradient(30rem 20rem at 70% 10%, rgb(255 159 10 / 0.1), transparent 65%);
+    animation: bc-glow 14s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.fi-simple-main {
+    position: relative;
+    border-radius: 1.75rem;
+    border: 1px solid var(--bc-line);
+    background: rgb(255 255 255 / 0.92);
+    backdrop-filter: blur(24px);
+    box-shadow: 0 30px 70px -28px rgb(0 0 0 / 0.3);
+    animation: bc-pop 600ms var(--bc-ease) backwards;
+}
+
+.fi-simple-header-heading {
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}

@@ -2,6 +2,7 @@
 
 use App\Enums\AccessState;
 use App\Filament\Widgets\AppointmentsChartWidget;
+use App\Filament\Widgets\AttentionWidget;
 use App\Filament\Widgets\MessagesOverviewWidget;
 use App\Filament\Widgets\MoneyOverviewWidget;
 use App\Filament\Widgets\ShopsOverviewWidget;
@@ -269,4 +270,22 @@ it('gives a free period that beats everything, and logs who did it', function ()
 
     $this->travelTo(now()->addMonths(7));
     expect($shop->fresh()->accessState())->toBe(AccessState::Expired);
+});
+
+it('shows what needs attention at the top of the dashboard', function () {
+    billingOn();
+    [$soon] = shopInState('trial');
+    $soon->forceFill(['trial_ends_at' => now()->addDays(2)])->save();
+    shopInState('expired');
+    shopInState('past_due');
+
+    Livewire::actingAs($this->admin)->test(AttentionWidget::class)
+        ->assertSee('Aandacht nodig')
+        ->assertSee('Proef loopt binnen 3 dagen af')
+        ->assertSee('Betaling mislukt')
+        ->assertSee('Verlopen (alleen-lezen)');
+});
+
+it('explains on the attention widget that billing is off', function () {
+    Livewire::actingAs($this->admin)->test(AttentionWidget::class)->assertSee('Facturering staat uit');
 });
