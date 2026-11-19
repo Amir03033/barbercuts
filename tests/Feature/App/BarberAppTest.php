@@ -383,7 +383,7 @@ it('lists and searches the customers of the shop', function () {
 
     Livewire::test(CustomerIndex::class)
         ->assertSee('2 klanten')
-        ->assertSeeInOrder(['Daan de Vries', 'Nog niet geweest', 'Yusuf Kaya', 'Laatste bezoek gisteren'])
+        ->assertSeeInOrder(['Daan de Vries', 'Nog niet geweest', 'Yusuf Kaya', 'Laatst geweest: gisteren'])
         ->assertDontSee('Klant van de Buren')
         ->set('search', 'yus')->assertSee('Yusuf Kaya')->assertDontSee('Daan de Vries')
         ->set('search', '0687')->assertSee('Yusuf Kaya')->assertDontSee('Daan de Vries')
@@ -397,7 +397,7 @@ it('shows the customer with history and lets a barber save notes and details', f
 
     Livewire::test(CustomerShow::class, ['customer' => $this->daan->id])
         ->assertSee('Daan de Vries')->assertSee('+31612345678')
-        ->assertSeeInOrder(['Bezoeken', 'di 10 nov 2026', 'Voltooid', 'di 3 nov 2026', 'No-show'])
+        ->assertSeeInOrder(['Bezoeken', 'di 10 nov', 'Voltooid', 'di 3 nov', 'No-show'])
         ->set('notes', 'Fade 1,5 aan de zijkant')
         ->call('saveNotes')
         ->set('name', 'Daan J. de Vries')->set('phone', '06 11112222')->set('email', 'Daan@Example.com')

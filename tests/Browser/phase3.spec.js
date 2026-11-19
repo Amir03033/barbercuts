@@ -99,7 +99,7 @@ test('de kapper boekt telefonisch, neemt een inloop aan en rekent af op een tele
     await page.goto('/app/omzet');
     await expect(page.getByText('Omzet van de zaak')).toBeVisible();
     await expect(page.getByText('€ 25,00').first()).toBeVisible();
-    await expect(page.getByRole('link', { name: /Exporteer CSV/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Exporteer .*(CSV)/ })).toBeVisible();
     await check(page, testInfo, 'omzet');
 });
 

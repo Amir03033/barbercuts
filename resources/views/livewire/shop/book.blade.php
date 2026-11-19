@@ -38,7 +38,7 @@
                         <button type="button" wire:click="chooseService({{ $option->id }})" wire:key="service-{{ $option->id }}"
                             class="bc-lift group flex w-full items-center gap-3 rounded-card border border-border/70 bg-card p-4 text-left shadow-soft transition-transform duration-150 active:scale-[0.985]">
                             <span class="min-w-0 flex-1">
-                                <span class="block truncate text-base font-semibold">{{ $option->name }}</span>
+                                <span class="block text-base leading-snug font-semibold [overflow-wrap:anywhere]">{{ $option->name }}</span>
                                 <span class="mt-0.5 block text-sm text-muted">{{ duration_label($option->duration) }}@if ($option->description) · {{ $option->description }}@endif</span>
                             </span>
                             <span class="shrink-0 rounded-pill bg-surface px-3 py-1.5 text-sm font-semibold tabular-nums">{{ money($option->price_cents) }}</span>
@@ -130,7 +130,7 @@
                 <x-ui.card flat class="mb-5">
                     <p class="text-base font-semibold">Sneller boeken met een account</p>
                     <p class="mt-1 text-sm text-muted">Al je afspraken op één plek · verplaatsen met één tik · je gegevens hoef je niet opnieuw in te vullen.</p>
-                    <div class="mt-3 grid grid-cols-2 gap-2">
+                    <div class="mt-3 grid grid-cols-2 gap-2 [&>*]:px-2 [&>*]:whitespace-nowrap">
                         <x-ui.button variant="secondary" size="sm" wire:click="continueWithAccount('login')">Inloggen</x-ui.button>
                         <x-ui.button variant="secondary" size="sm" wire:click="continueWithAccount('register')">Account maken</x-ui.button>
                     </div>

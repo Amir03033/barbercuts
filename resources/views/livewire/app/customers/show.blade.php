@@ -54,7 +54,7 @@
                 <x-ui.card :padding="false" flat class="divide-y divide-border overflow-hidden">
                     @foreach ($appointments as $appointment)
                         <x-ui.list-item wire:key="visit-{{ $appointment->id }}" :chevron="false" :title="$appointment->service_name"
-                            :subtitle="nl_date($appointment->localStart(), 'dd D MMM YYYY').' '.$appointment->localStart()->format('H:i').' · '.$appointment->staffMember->name">
+                            :subtitle="nl_date($appointment->localStart(), $appointment->localStart()->year === now()->year ? 'dd D MMM' : 'dd D MMM YYYY').' · '.$appointment->localStart()->format('H:i').' · '.$appointment->staffMember->name">
                             <x-slot:trailing><x-ui.badge :status="$appointment->status->value" /></x-slot:trailing>
                         </x-ui.list-item>
                     @endforeach

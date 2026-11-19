@@ -3,10 +3,10 @@
 
     <div class="space-y-6 px-4 py-4">
         <x-ui.section title="Afgelopen 90 dagen">
-            <div class="grid grid-cols-3 gap-3">
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <x-ui.stat label="Verstuurd" :value="$results['sent']" />
                 <x-ui.stat label="Teruggekomen" :value="$results['returned']" />
-                <x-ui.stat label="Omzet" :value="money($results['revenue_cents'])" />
+                <x-ui.stat label="Omzet" class="col-span-2 sm:col-span-1" :value="money($results['revenue_cents'])" />
             </div>
             <p class="text-xs text-muted">Teruggekomen = een afspraak gemaakt binnen {{ \App\Services\WinbackService::ATTRIBUTION_DAYS }} dagen na het bericht.</p>
         </x-ui.section>

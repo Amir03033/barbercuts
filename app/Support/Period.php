@@ -81,7 +81,10 @@ final readonly class Period
     {
         return match ($this->type) {
             'day' => ucfirst(human_date($this->from, $this->from->timezoneName)),
-            'week' => 'Week '.$this->from->isoWeek.' · '.nl_date($this->from, 'D MMM').' – '.nl_date($this->to->subDay(), 'D MMM'),
+            // Kort, zodat het op een smalle telefoon op één regel past: "Week 47 · 16–22 nov".
+            'week' => 'Week '.$this->from->isoWeek.' · '.($this->from->month === $this->to->subDay()->month
+                ? $this->from->day.'–'.nl_date($this->to->subDay(), 'D MMM')
+                : nl_date($this->from, 'D MMM').' – '.nl_date($this->to->subDay(), 'D MMM')),
             'month' => ucfirst(nl_date($this->from, 'MMMM YYYY')),
             'year' => (string) $this->from->year,
             default => nl_date($this->from, 'D MMM').' – '.nl_date($this->to->subDay(), 'D MMM YYYY'),

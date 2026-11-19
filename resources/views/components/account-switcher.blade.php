@@ -62,5 +62,10 @@
             <input type="hidden" name="switch" value="1" />
             <x-ui.button type="submit" variant="secondary" icon="user" full>Inloggen met een ander account</x-ui.button>
         </form>
+
+        <form method="POST" action="{{ route('logout') }}" class="mt-2">
+            @csrf
+            <x-ui.button type="submit" variant="ghost" icon="log-out" full>Uitloggen</x-ui.button>
+        </form>
     </x-ui.bottom-sheet>
 @endauth

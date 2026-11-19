@@ -36,13 +36,15 @@
         .scan p { margin-top: 1.5mm; font-size: 9.5pt; color: #6e6e73; }
         .scan .url { margin-top: 2mm; font-family: 'SF Mono', Menlo, monospace; font-size: 7.6pt; color: #1d1d1f; word-break: break-all; }
         .who { margin-top: 5mm; padding-top: 3.5mm; border-top: 1px solid #e5e5ea; font-size: 9pt; color: #6e6e73; display: flex; justify-content: space-between; gap: 6px; }
+        .bar a { white-space: nowrap; }
+        @media (max-width: 520px) { .bar .hint { display: none; } }
         @media print { body { background: #fff; } .bar { display: none; } .sheet { margin: 0; box-shadow: none; } }
     </style>
 </head>
 <body>
     <div class="bar">
         <a href="{{ route('pitcher.overview') }}">← Terug</a>
-        <span style="color:#6e6e73">A5 · kies bij afdrukken “Bewaar als PDF” of print hem</span>
+        <span class="hint" style="color:#6e6e73">A5 · kies bij afdrukken “Bewaar als PDF” of print hem</span>
         <button type="button" onclick="window.print()">Afdrukken</button>
     </div>
 
@@ -81,5 +83,20 @@
             <span>hallo@barbercuts.nl</span>
         </div>
     </div>
+    <script>
+        // Op een telefoon is A5 breder dan het scherm: verklein de flyer zodat hij helemaal te zien is (afdrukken blijft A5).
+        (() => {
+            const fit = () => document.querySelectorAll('.sheet').forEach((sheet) => {
+                sheet.style.zoom = '';
+                const screenWidth = Math.min(window.innerWidth, window.screen.width || window.innerWidth);
+                const scale = Math.min(1, (screenWidth - 16) / sheet.offsetWidth);
+                sheet.style.zoom = scale < 1 ? String(scale) : '';
+            });
+            fit();
+            window.addEventListener('resize', fit);
+            window.addEventListener('beforeprint', () => document.querySelectorAll('.sheet').forEach((sheet) => sheet.style.zoom = ''));
+            window.addEventListener('afterprint', fit);
+        })();
+    </script>
 </body>
 </html>

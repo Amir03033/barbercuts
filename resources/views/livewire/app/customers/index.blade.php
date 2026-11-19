@@ -16,7 +16,7 @@
             <x-ui.card :padding="false" flat class="stagger divide-y divide-border overflow-hidden lg:hidden">
                 @foreach ($customers as $customer)
                     <x-ui.list-item :href="route('app.customers.show', $customer)" wire:key="customer-{{ $customer->id }}" :title="$customer->name"
-                        :subtitle="$customer->last_visit_at ? 'Laatste bezoek '.mb_strtolower(human_date($customer->last_visit_at, $shop->timezone)) : 'Nog niet geweest'">
+                        :subtitle="$customer->last_visit_at ? 'Laatst geweest: '.mb_strtolower(human_date($customer->last_visit_at, $shop->timezone)) : 'Nog niet geweest'">
                         <x-slot:leading><x-ui.avatar :name="$customer->name" /></x-slot:leading>
                     </x-ui.list-item>
                 @endforeach

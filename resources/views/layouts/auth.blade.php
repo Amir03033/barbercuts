@@ -5,7 +5,7 @@
     @include('layouts.partials.head')
 </head>
 <body class="min-h-dvh bg-bg font-sans text-text">
-    <div class="grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+    <div class="grid min-h-dvh grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         {{-- Merkpaneel --}}
         <aside class="relative hidden overflow-hidden border-r border-border bg-card lg:flex lg:flex-col lg:justify-between lg:p-12">
             <x-brand :href="route('home')" class="relative" />
@@ -23,13 +23,13 @@
         </aside>
 
         {{-- Formulier --}}
-        <div class="flex flex-col">
+        <div class="flex min-w-0 flex-col">
             <header class="flex items-center justify-between px-4 pt-safe lg:hidden">
                 <x-brand :href="route('home')" />
                 <x-ui.button :href="route('pricing')" variant="ghost" size="sm" wire:navigate>Prijzen</x-ui.button>
             </header>
             <main class="flex flex-1 items-center justify-center px-4 py-8 lg:px-12">
-                <div class="w-full max-w-sm">{{ $slot }}</div>
+                <div class="w-full min-w-0 max-w-sm">{{ $slot }}</div>
             </main>
             <footer class="px-4 pb-6 text-center text-xs text-muted pb-safe">
                 <a href="{{ route('privacy') }}" class="inline-flex min-h-11 items-center px-2">Privacy</a>

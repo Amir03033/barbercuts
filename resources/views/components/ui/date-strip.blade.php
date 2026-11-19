@@ -11,7 +11,7 @@
 @endphp
 
 <div role="radiogroup" aria-label="Kies een dag"
-    {{ $attributes->whereDoesntStartWith('wire:model')->class('no-scrollbar -mx-4 flex snap-x gap-2 overflow-x-auto px-4 py-1') }}>
+    {{ $attributes->whereDoesntStartWith('wire:model')->class('no-scrollbar -mx-4 flex snap-x scroll-px-4 gap-2 overflow-x-auto px-4 py-1') }}>
     @foreach ($days as $day)
         @php
             $date = \Carbon\CarbonImmutable::parse($day['date'])->locale('nl');
@@ -22,7 +22,7 @@
                 @checked($selected === $day['date']) @disabled($disabled) {{ $model }} />
             <span class="flex {{ $compact ? 'h-14 w-full' : 'h-[4.5rem] w-14' }} flex-col items-center justify-center rounded-card border border-transparent bg-surface text-text transition-[background-color,border-color,color,transform] duration-150 ease-out-soft hover:bg-border active:scale-[0.97] peer-checked:border-accent peer-checked:bg-accent peer-checked:text-on-accent peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--focus)] peer-focus-visible:ring-offset-2 peer-disabled:bg-transparent peer-disabled:text-muted peer-disabled:opacity-50">
                 <span class="text-xs font-medium opacity-70">{{ $day['date'] === $today && ! $compact ? 'nu' : rtrim($date->isoFormat('dd'), '.') }}</span>
-                <span class="text-lg font-bold leading-6 tabular-nums">{{ $date->day }}</span>
+                <span class="{{ $compact ? 'text-[0.9375rem] tracking-tight min-[400px]:text-lg' : 'text-lg' }} font-bold leading-6 tabular-nums">{{ $date->day }}</span>
                 @unless ($compact)
                     <span class="text-xs opacity-70">{{ rtrim($date->isoFormat('MMM'), '.') }}</span>
                 @endunless

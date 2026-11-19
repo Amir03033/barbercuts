@@ -97,8 +97,8 @@
             </x-ui.section>
         @endif
 
-        <x-ui.button variant="secondary" full :href="route('app.revenue.export', ['maand' => $exportMonth])" download>
-            Exporteer CSV · {{ nl_date($period->from, 'MMMM YYYY') }}
+        <x-ui.button variant="secondary" icon="download" full :href="route('app.revenue.export', ['maand' => $exportMonth])" download>
+            Exporteer {{ nl_date($period->from, 'MMMM') }} (CSV)
         </x-ui.button>
     </div>
 </div>

@@ -9,7 +9,8 @@
 <x-ui.card flat {{ $attributes }}>
     <div class="flex items-baseline justify-between gap-3">
         <p class="text-base font-semibold">{{ $card->name }}@if ($shopName) <span class="font-normal text-muted">· {{ $shopName }}</span>@endif</p>
-        <p class="shrink-0 text-sm text-muted tabular-nums">{{ $stamps }} / {{ $card->stamps_required }}</p>
+        {{-- Meer stempels dan nodig (ze schuiven door na verzilveren): toon de volle kaart plus wat er extra is, niet "12 / 10". --}}
+        <p class="shrink-0 text-sm text-muted tabular-nums">{{ $shown }} / {{ $card->stamps_required }}@if ($stamps > $card->stamps_required) <span class="font-semibold text-text">+{{ $stamps - $card->stamps_required }}</span>@endif</p>
     </div>
     <div class="mt-3 flex flex-wrap gap-1.5" role="img" aria-label="{{ $stamps }} van {{ $card->stamps_required }} stempels">
         @foreach (range(1, $card->stamps_required) as $position)

@@ -13,7 +13,8 @@
                 <x-ui.button :href="route('pricing')" variant="ghost" size="sm" wire:navigate class="max-sm:hidden!">Prijzen</x-ui.button>
                 @auth
                     <x-ui.button variant="ghost" size="sm" x-data x-on:click="$dispatch('open-sheet', 'account-switch')">Account</x-ui.button>
-                    <form method="POST" action="{{ route('logout') }}">
+                    {{-- Op de telefoon staat uitloggen in het accountmenu: twee knoppen passen niet naast het logo --}}
+                    <form method="POST" action="{{ route('logout') }}" class="max-sm:hidden">
                         @csrf
                         <x-ui.button type="submit" variant="ghost" size="sm">Uitloggen</x-ui.button>
                     </form>
