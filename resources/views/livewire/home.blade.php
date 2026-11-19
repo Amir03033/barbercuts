@@ -7,6 +7,15 @@
     // Fictieve afspraken voor de voorbeeldschermen
     $day = [['10:00', 'Daan de Vries', 'Knippen', '#0071e3'], ['10:30', 'Yusuf Kaya', 'Knippen + baard', '#34c759'], ['11:15', 'Sem Bakker', 'Skin fade', '#0071e3'], ['12:00', 'Lars Visser', 'Baard', '#ff9f0a']];
 
+    // De eerstvolgende vijf openingsdagen (zondag en maandag dicht), altijd vanaf morgen, zodat de demo nooit verouderd is.
+    $demoDays = collect(range(1, 10))
+        ->map(fn (int $offset) => now('Europe/Amsterdam')->addDays($offset))
+        ->reject(fn ($date) => in_array($date->dayOfWeekIso, [1, 7], true))
+        ->take(5)
+        ->map(fn ($date): array => ['label' => $date->locale('nl')->isoFormat('dd'), 'number' => $date->day, 'full' => $date->locale('nl')->isoFormat('dd D MMM')])
+        ->values()
+        ->all();
+
     $faq = [
         ['Wat kost BarberCuts?', $billing
             ? "De eerste {$trial} dagen zijn gratis. Daarna {$price} per maand, zonder opstartkosten en zonder kosten per kapper of per afspraak. Opzeggen kan altijd."
@@ -132,34 +141,58 @@
         <h2 class="mt-1 max-w-2xl text-[2rem] leading-10 font-bold tracking-tight md:text-5xl md:leading-[1.1]" data-reveal>Alles wat je zaak nodig heeft. Niets wat in de weg zit.</h2>
 
         <div class="mt-8 grid gap-4 md:grid-cols-6">
-            {{-- Zelf proberen: kies een dag en tijd en boek (er wordt niets opgeslagen) --}}
+            {{-- Zelf proberen: kies een dag en tijd en boek (er wordt niets opgeslagen). Dagen zijn altijd de eerstvolgende openingsdagen. --}}
             <div class="relative overflow-hidden rounded-[1.75rem] bg-card p-6 shadow-soft ring-1 ring-border/70 md:col-span-4" data-reveal
-                x-data="{ day: 14, time: '14:30', booked: false, book() { this.booked = true; setTimeout(() => this.booked = false, 2600); } }">
+                x-data="{
+                    days: @js($demoDays),
+                    taken: { 0: ['13:30', '15:00'], 1: ['13:00', '14:30', '16:00'], 2: ['14:00'], 3: ['13:00', '13:30', '15:30', '16:30'], 4: ['15:00', '16:00'] },
+                    day: 0, time: '14:30', booked: false, timer: null,
+                    isTaken(time) { return (this.taken[this.day] || []).includes(time); },
+                    pickDay(index) {
+                        this.day = index;
+                        if (this.isTaken(this.time)) { this.time = this.times.find((t) => !this.isTaken(t)) || ''; }
+                    },
+                    times: ['13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'],
+                    book() {
+                        if (!this.time) { return; }
+                        this.booked = true;
+                        clearTimeout(this.timer);
+                        this.timer = setTimeout(() => this.booked = false, 3200);
+                    },
+                }" x-init="time = times.find((t) => !isTaken(t))">
                 <div class="flex items-start justify-between gap-3">
                     <h3 class="text-xl font-bold tracking-tight">Klanten boeken zelf</h3>
                     <span class="shrink-0 rounded-pill bg-gold-soft px-2.5 py-1 text-xs font-semibold text-gold-ink">Probeer het</span>
                 </div>
                 <p class="mt-1 max-w-md text-base text-muted">Een eigen link voor je zaak. Klanten kiezen dienst, kapper en tijd in een halve minuut, ook zonder account.</p>
-                <div class="mt-6 flex gap-2">
-                    @foreach (['wo' => 12, 'do' => 13, 'vr' => 14, 'za' => 15, 'di' => 18] as $name => $number)
-                        <button type="button" x-on:click="day = {{ $number }}" :class="day === {{ $number }} ? 'bg-accent text-on-accent' : 'bg-surface hover:bg-border'" aria-label="{{ $name }} {{ $number }}"
-                            class="flex h-16 flex-1 flex-col items-center justify-center rounded-2xl text-xs font-medium transition-[background-color,color,transform] duration-200 ease-out-soft active:scale-95 {{ $number === 14 ? 'bg-accent text-on-accent' : 'bg-surface' }}"><span class="opacity-70">{{ $name }}</span><span class="text-lg font-bold">{{ $number }}</span></button>
-                    @endforeach
+
+                <div class="mt-6 grid grid-cols-5 gap-2" role="radiogroup" aria-label="Kies een dag">
+                    <template x-for="(d, index) in days" :key="index">
+                        <button type="button" role="radio" :aria-checked="day === index" x-on:click="pickDay(index)" :aria-label="d.full"
+                            :class="day === index ? 'bg-accent text-on-accent shadow-soft' : 'bg-surface text-text hover:bg-border'"
+                            class="flex h-16 flex-col items-center justify-center rounded-2xl text-xs font-medium transition-[background-color,color,transform,box-shadow] duration-200 ease-out-soft active:scale-95">
+                            <span class="opacity-70" x-text="d.label"></span><span class="text-lg font-bold" x-text="d.number"></span>
+                        </button>
+                    </template>
                 </div>
-                <div class="mt-2 grid grid-cols-4 gap-2">
-                    @foreach (['13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'] as $time)
-                        <button type="button" x-on:click="time = '{{ $time }}'" :class="time === '{{ $time }}' ? 'bg-accent text-on-accent' : 'bg-surface hover:bg-border'"
-                            class="flex h-11 items-center justify-center rounded-xl text-sm font-medium tabular-nums transition-[background-color,color,transform] duration-200 ease-out-soft active:scale-95 {{ $time === '14:30' ? 'bg-accent text-on-accent' : 'bg-surface' }}">{{ $time }}</button>
-                    @endforeach
+
+                <div class="mt-2 grid grid-cols-4 gap-2" role="radiogroup" aria-label="Kies een tijd">
+                    <template x-for="slot in times" :key="slot">
+                        <button type="button" role="radio" :aria-checked="time === slot && !isTaken(slot)" :disabled="isTaken(slot)" x-on:click="time = slot"
+                            :class="isTaken(slot) ? 'cursor-not-allowed bg-surface text-muted/50 line-through' : (time === slot ? 'bg-accent text-on-accent shadow-soft' : 'bg-surface text-text hover:bg-border')"
+                            class="flex h-11 items-center justify-center rounded-xl text-sm font-medium tabular-nums transition-[background-color,color,transform,box-shadow] duration-200 ease-out-soft enabled:active:scale-95" x-text="slot"></button>
+                    </template>
                 </div>
-                <button type="button" x-on:click="book()" class="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-accent text-base font-semibold text-on-accent transition-transform duration-150 ease-out-soft active:scale-[0.98]">
-                    Boek <span class="ml-1 tabular-nums" x-text="time">14:30</span>
+
+                <button type="button" x-on:click="book()" :disabled="!time"
+                    class="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-accent text-base font-semibold text-on-accent transition-[transform,opacity] duration-150 ease-out-soft active:scale-[0.98] disabled:opacity-50">
+                    <span x-text="time ? 'Boek ' + days[day].label + ' ' + days[day].number + ' om ' + time : 'Geen tijd meer vrij'">Boek</span>
                 </button>
 
-                <div x-show="booked" x-cloak x-transition.opacity.duration.200ms class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-card/95 backdrop-blur" role="status">
+                <div x-show="booked" x-cloak x-transition.opacity.duration.250ms x-on:click="booked = false" class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-card/95 px-6 text-center backdrop-blur" role="status">
                     <span class="pop-check flex size-16 items-center justify-center rounded-full bg-completed text-white"><x-ui.icon name="check" size="32" /></span>
                     <p class="text-xl font-bold tracking-tight">Je afspraak staat vast</p>
-                    <p class="text-sm text-muted">Zo snel gaat het voor je klant.</p>
+                    <p class="text-sm text-muted"><span x-text="days[day].full"></span> om <span x-text="time"></span>. Zo snel gaat het voor je klant.</p>
                 </div>
             </div>
 
@@ -221,16 +254,20 @@
         </div>
     </section>
 
-    {{-- Je dag nu, of met BarberCuts: een schakelaar die de twee werelden naast elkaar zet --}}
+    {{-- Je dag nu, of met BarberCuts: een schakelaar met een glijdende knop die de twee werelden naast elkaar zet --}}
     <section class="mx-auto max-w-5xl px-4 pb-16 md:pb-24" x-data="{ after: false }">
         <div class="text-center" data-reveal>
             <p class="text-sm font-semibold text-link">Het verschil</p>
             <h2 class="mt-1 text-[2rem] leading-10 font-bold tracking-tight md:text-5xl md:leading-[1.1]">Een dag in je zaak</h2>
         </div>
-        <div class="mx-auto mt-6 flex w-fit rounded-pill bg-surface p-1 text-sm font-semibold" role="tablist" data-reveal>
-            <button type="button" role="tab" :aria-selected="!after" x-on:click="after = false" :class="after ? 'text-muted' : 'bg-card text-text shadow-soft'" class="min-h-11 rounded-pill px-5 transition-[background-color,color,box-shadow] duration-200 ease-out-soft">Nu</button>
-            <button type="button" role="tab" :aria-selected="after" x-on:click="after = true" :class="after ? 'bg-accent text-on-accent shadow-soft' : 'text-muted'" class="min-h-11 rounded-pill px-5 transition-[background-color,color,box-shadow] duration-200 ease-out-soft">Met BarberCuts</button>
+
+        <div class="relative mx-auto mt-6 grid w-72 grid-cols-2 rounded-pill bg-surface p-1 text-sm font-semibold" role="tablist" aria-label="Nu of met BarberCuts" data-reveal>
+            <span class="absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-pill shadow-soft transition-[transform,background-color] duration-500 ease-out-soft motion-reduce:transition-none"
+                :class="after ? 'translate-x-full bg-accent' : 'translate-x-0 bg-card'" aria-hidden="true"></span>
+            <button type="button" role="tab" :aria-selected="!after" x-on:click="after = false" :class="after ? 'text-muted' : 'text-text'" class="relative z-10 min-h-11 rounded-pill transition-colors duration-300">Nu</button>
+            <button type="button" role="tab" :aria-selected="after" x-on:click="after = true" :class="after ? 'text-on-accent' : 'text-muted'" class="relative z-10 min-h-11 rounded-pill transition-colors duration-300">Met BarberCuts</button>
         </div>
+
         <div class="mt-6 grid gap-3 md:grid-cols-2" data-reveal>
             @foreach ([
                 ['phone', 'Je telefoon gaat tijdens het knippen', 'Klanten boeken zelf, dag en nacht. Jij knipt door.'],
@@ -238,11 +275,16 @@
                 ['bell', 'Klanten vergeten hun afspraak', 'Een herinnering gaat vanzelf weg. Verplaatsen doet de klant met één tik.'],
                 ['euro', 'Einde van de maand: wat heb ik verdiend?', 'Omzet per dag, week en maand. Direct, zonder rekenen.'],
             ] as [$icon, $before, $afterText])
-                <div class="relative flex min-h-24 items-start gap-4 overflow-hidden rounded-[1.5rem] bg-card p-5 shadow-soft ring-1 ring-border/70 transition-colors duration-300"
-                    :class="after ? 'ring-completed/40' : ''">
-                    <span class="flex size-11 shrink-0 items-center justify-center rounded-2xl transition-colors duration-300" :class="after ? 'bg-completed/15 text-completed' : 'bg-surface text-muted'"><x-ui.icon :name="$icon" /></span>
-                    <p class="text-base font-semibold" x-show="!after" x-transition.opacity.duration.200ms>{{ $before }}</p>
-                    <p class="text-base font-semibold" x-show="after" x-cloak x-transition.opacity.duration.200ms>{{ $afterText }}</p>
+                {{-- Beide teksten staan op dezelfde plek over elkaar; alleen de zichtbaarheid wisselt. Daardoor springt er niets. --}}
+                <div class="flex min-h-28 items-start gap-4 rounded-[1.5rem] bg-card p-5 shadow-soft ring-1 transition-[box-shadow,transform] duration-500 ease-out-soft motion-reduce:transition-none"
+                    :class="after ? 'ring-completed/40' : 'ring-border/70'" style="transition-delay: {{ $loop->index * 60 }}ms">
+                    <span class="flex size-11 shrink-0 items-center justify-center rounded-2xl transition-colors duration-500" style="transition-delay: {{ $loop->index * 60 }}ms" :class="after ? 'bg-completed/15 text-completed' : 'bg-surface text-muted'"><x-ui.icon :name="$icon" /></span>
+                    <div class="grid min-w-0 flex-1 items-center self-center">
+                        <p class="col-start-1 row-start-1 text-base font-semibold text-muted transition-[opacity,transform] duration-500 ease-out-soft motion-reduce:transition-none" style="transition-delay: {{ $loop->index * 60 }}ms"
+                            :class="after ? '-translate-y-2 opacity-0' : 'translate-y-0 opacity-100'" :aria-hidden="after">{{ $before }}</p>
+                        <p class="col-start-1 row-start-1 text-base font-semibold transition-[opacity,transform] duration-500 ease-out-soft motion-reduce:transition-none" style="transition-delay: {{ $loop->index * 60 }}ms"
+                            :class="after ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'" :aria-hidden="!after">{{ $afterText }}</p>
+                    </div>
                 </div>
             @endforeach
         </div>
@@ -278,28 +320,91 @@
         </div>
     </section>
 
-    {{-- Jouw pagina, jouw stijl: kies een kleur, thema en naam en zie de boekingspagina meteen veranderen --}}
+    {{-- Jouw pagina, jouw stijl: eigen banner, logo, kleur en actie uitproberen. Alles blijft in de browser; er wordt niets geüpload of opgeslagen. --}}
     <section class="bg-card"
         x-data="{
             accent: '#ff9f0a', dark: true, name: 'Studio Fade',
             colors: ['#ff9f0a', '#0a84ff', '#30d158', '#ff375f', '#bf5af2', '#1d1d1f'],
+            cover: 'gradient', coverUrl: null, logoUrl: null,
+            showPromo: true, promo: 'Deze maand: 10% korting voor studenten',
+            message: '',
             get onAccent() {
                 const [r, g, b] = [1, 3, 5].map((i) => parseInt(this.accent.slice(i, i + 2), 16));
                 return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#1d1d1f' : '#ffffff';
             },
             get initial() { return (this.name.trim()[0] || 'S').toUpperCase(); },
+            get coverStyle() {
+                return this.cover === 'photo' && this.coverUrl
+                    ? `background: url('${this.coverUrl}') center / cover no-repeat`
+                    : `background: linear-gradient(135deg, ${this.accent}, color-mix(in srgb, ${this.accent} 55%, #ff375f))`;
+            },
+            read(event, key) {
+                const file = event.target.files[0];
+                event.target.value = '';
+                this.message = '';
+                if (!file) { return; }
+                if (!file.type.startsWith('image/')) { this.message = 'Kies een afbeelding (jpg, png of webp).'; return; }
+                if (file.size > 12 * 1024 * 1024) { this.message = 'Deze foto is te groot (maximaal 12 MB).'; return; }
+                if (this[key]) { URL.revokeObjectURL(this[key]); }
+                this[key] = URL.createObjectURL(file);
+                if (key === 'coverUrl') { this.cover = 'photo'; }
+            },
+            clear(key) {
+                if (this[key]) { URL.revokeObjectURL(this[key]); }
+                this[key] = null;
+                if (key === 'coverUrl') { this.cover = 'gradient'; }
+            },
         }">
-        <div class="mx-auto grid max-w-5xl items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
+        <div class="mx-auto grid max-w-5xl items-start gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
             <div data-reveal>
                 <p class="text-sm font-semibold text-link">Jouw pagina</p>
-                <h2 class="mt-1 text-[2rem] leading-10 font-bold tracking-tight md:text-5xl md:leading-[1.1]">Jouw zaak. Jouw kleuren.</h2>
-                <p class="mt-4 text-base text-muted md:text-lg">Elke zaak krijgt een eigen boekingspagina op barbercuts.nl/jouwzaak. Probeer het zelf: kies een kleur en zie je pagina veranderen.</p>
+                <h2 class="mt-1 text-[2rem] leading-10 font-bold tracking-tight md:text-5xl md:leading-[1.1]">Jouw zaak. Jouw eigen look.</h2>
+                <p class="mt-4 text-base text-muted md:text-lg">Elke zaak krijgt een eigen boekingspagina op barbercuts.nl/jouwzaak, met je eigen banner, logo en kleuren. Probeer het zelf en zie je pagina meteen veranderen.</p>
 
-                <div class="mt-6 space-y-5 rounded-[1.5rem] bg-surface p-5">
+                <div class="mt-6 space-y-6 rounded-[1.5rem] bg-surface p-5">
                     <label class="block">
                         <span class="text-sm font-medium">Naam van je zaak</span>
                         <input type="text" x-model="name" maxlength="22" autocomplete="off" class="mt-1.5 h-12 w-full rounded-xl border border-border bg-card px-4 text-base outline-none focus:border-border-strong" />
                     </label>
+
+                    {{-- Banner: eigen foto of een kleurverloop --}}
+                    <div>
+                        <p class="text-sm font-medium">Banner</p>
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <button type="button" x-on:click="cover = 'gradient'" :aria-pressed="cover === 'gradient'"
+                                :class="cover === 'gradient' ? 'border-text' : 'border-transparent hover:border-border-strong'"
+                                class="overflow-hidden rounded-xl border-2 bg-card p-1 text-left text-xs font-medium transition-colors duration-200">
+                                <span class="block h-12 rounded-lg" :style="`background: linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 55%, #ff375f))`"></span>
+                                <span class="mt-1 block px-1 pb-0.5">Kleurverloop</span>
+                            </button>
+                            <label :class="cover === 'photo' && coverUrl ? 'border-text' : 'border-transparent hover:border-border-strong'"
+                                class="flex cursor-pointer flex-col overflow-hidden rounded-xl border-2 bg-card p-1 text-left text-xs font-medium transition-colors duration-200 focus-within:ring-2 focus-within:ring-[var(--focus)]">
+                                <span class="flex h-12 items-center justify-center rounded-lg bg-surface bg-cover bg-center text-muted" :style="coverUrl ? `background-image: url('${coverUrl}')` : ''">
+                                    <x-ui.icon name="image" size="22" x-show="!coverUrl" />
+                                </span>
+                                <span class="mt-1 block px-1 pb-0.5" x-text="coverUrl ? 'Je eigen foto' : 'Eigen foto uploaden'">Eigen foto uploaden</span>
+                                <input type="file" accept="image/*" class="sr-only" x-on:change="read($event, 'coverUrl')" />
+                            </label>
+                        </div>
+                        <button type="button" x-show="coverUrl" x-cloak x-on:click="clear('coverUrl')" class="mt-2 inline-flex min-h-9 items-center text-xs font-medium text-muted underline">Foto weghalen</button>
+                    </div>
+
+                    {{-- Logo --}}
+                    <div>
+                        <p class="text-sm font-medium">Logo</p>
+                        <div class="mt-2 flex items-center gap-3">
+                            <span class="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-accent text-lg font-bold text-on-accent" :style="`--accent: ${accent}; --on-accent: ${onAccent}`">
+                                <img x-show="logoUrl" x-cloak :src="logoUrl" alt="" class="size-full object-cover" />
+                                <span x-show="!logoUrl" x-text="initial">S</span>
+                            </span>
+                            <label class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-card px-4 text-sm font-medium ring-1 ring-border transition-colors hover:bg-border/50 focus-within:ring-2 focus-within:ring-[var(--focus)]">
+                                <x-ui.icon name="image" size="18" /><span x-text="logoUrl ? 'Ander logo' : 'Logo uploaden'">Logo uploaden</span>
+                                <input type="file" accept="image/*" class="sr-only" x-on:change="read($event, 'logoUrl')" />
+                            </label>
+                            <button type="button" x-show="logoUrl" x-cloak x-on:click="clear('logoUrl')" class="inline-flex min-h-9 items-center text-xs font-medium text-muted underline">Weghalen</button>
+                        </div>
+                    </div>
+
                     <div>
                         <p class="text-sm font-medium">Accentkleur</p>
                         <div class="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Accentkleur">
@@ -311,6 +416,7 @@
                             </template>
                         </div>
                     </div>
+
                     <div>
                         <p class="text-sm font-medium">Thema</p>
                         <div class="mt-2 flex w-fit rounded-pill bg-card p-1 text-sm font-semibold ring-1 ring-border" role="radiogroup" aria-label="Thema">
@@ -318,32 +424,52 @@
                             <button type="button" role="radio" :aria-checked="dark" x-on:click="dark = true" :class="dark ? 'bg-accent text-on-accent' : 'text-muted'" class="min-h-10 rounded-pill px-5 transition-colors duration-200">Donker</button>
                         </div>
                     </div>
+
+                    {{-- Actiebanner --}}
+                    <div>
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-sm font-medium">Actiebanner</span>
+                            <button type="button" role="switch" :aria-checked="showPromo" x-on:click="showPromo = !showPromo" aria-label="Actiebanner tonen"
+                                class="relative h-8 w-14 shrink-0 rounded-full transition-colors duration-200" :class="showPromo ? 'bg-switch' : 'bg-border-strong'">
+                                <span class="absolute top-1 left-1 size-6 rounded-full bg-white shadow transition-transform duration-200 ease-out-soft" :class="showPromo ? 'translate-x-6' : ''"></span>
+                            </button>
+                        </div>
+                        <input type="text" x-model="promo" maxlength="50" x-show="showPromo" x-transition.opacity placeholder="Bijvoorbeeld: Vandaag nog plek na 17:00" autocomplete="off"
+                            class="mt-2 h-12 w-full rounded-xl border border-border bg-card px-4 text-base outline-none focus:border-border-strong" />
+                    </div>
+
+                    <p class="flex items-start gap-2 text-xs text-muted" role="status"><x-ui.icon name="shield-check" size="16" class="mt-0.5 shrink-0" /><span x-text="message || 'Je foto en logo blijven op je eigen apparaat. Er wordt niets geüpload of opgeslagen.'">Je foto en logo blijven op je eigen apparaat. Er wordt niets geüpload of opgeslagen.</span></p>
                 </div>
 
                 <ul class="mt-6 space-y-3 text-base">
-                    @foreach (['Omslagfoto, logo en een fotogalerij van je werk', 'Banner voor een actie of mededeling', 'Link voor in je Instagram-bio en een QR-code voor in de zaak'] as $line)
+                    @foreach (['Een fotogalerij van je werk', 'Link voor in je Instagram-bio en een QR-code voor in de zaak', 'Wijzig alles later in een paar tikken, ook op je telefoon'] as $line)
                         <li class="flex gap-3"><x-ui.icon name="check" size="20" class="mt-0.5 shrink-0 text-completed" /><span>{{ $line }}</span></li>
                     @endforeach
                 </ul>
             </div>
 
-            <x-platform.phone label="De boekingspagina van een zaak, met de kleur en het thema die je kiest" data-reveal style="--reveal-delay: 120ms">
-                <div :data-theme="dark ? 'dark' : 'light'" :style="`--accent: ${accent}; --on-accent: ${onAccent}`" class="-mt-11 h-full bg-bg pt-11 text-left text-text transition-colors duration-300">
-                    <div class="h-28 transition-[background] duration-300" :style="`background: linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 55%, #ff375f))`"></div>
-                    <div class="px-4">
-                        <span class="-mt-7 flex size-14 items-center justify-center rounded-2xl border-4 border-bg bg-accent text-lg font-bold text-on-accent transition-colors duration-300" x-text="initial">S</span>
-                        <p class="mt-2 truncate text-xl font-bold tracking-tight" x-text="name.trim() || 'Jouw zaak'">Studio Fade</p>
-                        <p class="flex items-center gap-1.5 text-[0.6875rem] text-muted"><x-ui.stars :rating="5" size="11" /> 4,9 · 128 reviews</p>
-                        <p class="mt-3 rounded-2xl bg-accent px-3 py-2 text-xs font-semibold text-on-accent transition-colors duration-300">Deze maand: 10% korting voor studenten</p>
-                        <div class="mt-3 divide-y divide-border overflow-hidden rounded-2xl bg-card text-xs">
-                            @foreach ([['Knippen', '30 min', '€ 25,00'], ['Knippen + baard', '45 min', '€ 35,00'], ['Skin fade', '45 min', '€ 32,00']] as [$name, $duration, $amount])
-                                <p class="flex items-center justify-between px-3 py-2.5"><span><span class="block font-semibold">{{ $name }}</span><span class="text-[0.625rem] text-muted">{{ $duration }}</span></span><span class="font-semibold tabular-nums">{{ $amount }}</span></p>
-                            @endforeach
+            <div class="md:sticky md:top-24">
+                <x-platform.phone label="De boekingspagina van een zaak, met de banner, het logo en de kleur die je kiest" data-reveal style="--reveal-delay: 120ms">
+                    <div :data-theme="dark ? 'dark' : 'light'" :style="`--accent: ${accent}; --on-accent: ${onAccent}`" class="-mt-11 h-full bg-bg pt-11 text-left text-text transition-colors duration-300">
+                        <div class="h-28 transition-[background] duration-300" :style="coverStyle"></div>
+                        <div class="px-4">
+                            <span class="-mt-7 flex size-14 items-center justify-center overflow-hidden rounded-2xl border-4 border-bg bg-accent text-lg font-bold text-on-accent transition-colors duration-300">
+                                <img x-show="logoUrl" x-cloak :src="logoUrl" alt="" class="size-full object-cover" />
+                                <span x-show="!logoUrl" x-text="initial">S</span>
+                            </span>
+                            <p class="mt-2 truncate text-xl font-bold tracking-tight" x-text="name.trim() || 'Jouw zaak'">Studio Fade</p>
+                            <p class="flex items-center gap-1.5 text-[0.6875rem] text-muted"><x-ui.stars :rating="5" size="11" /> 4,9 · 128 reviews</p>
+                            <p x-show="showPromo && promo.trim()" x-transition.opacity class="mt-3 rounded-2xl bg-accent px-3 py-2 text-xs font-semibold text-on-accent transition-colors duration-300" x-text="promo">Deze maand: 10% korting voor studenten</p>
+                            <div class="mt-3 divide-y divide-border overflow-hidden rounded-2xl bg-card text-xs">
+                                @foreach ([['Knippen', '30 min', '€ 25,00'], ['Knippen + baard', '45 min', '€ 35,00'], ['Skin fade', '45 min', '€ 32,00']] as [$serviceName, $duration, $amount])
+                                    <p class="flex items-center justify-between px-3 py-2.5"><span><span class="block font-semibold">{{ $serviceName }}</span><span class="text-[0.625rem] text-muted">{{ $duration }}</span></span><span class="font-semibold tabular-nums">{{ $amount }}</span></p>
+                                @endforeach
+                            </div>
+                            <p class="mt-4 flex h-11 items-center justify-center rounded-xl bg-accent text-sm font-semibold text-on-accent transition-colors duration-300">Afspraak maken</p>
                         </div>
-                        <p class="mt-4 flex h-11 items-center justify-center rounded-xl bg-accent text-sm font-semibold text-on-accent transition-colors duration-300">Afspraak maken</p>
                     </div>
-                </div>
-            </x-platform.phone>
+                </x-platform.phone>
+            </div>
         </div>
     </section>
 

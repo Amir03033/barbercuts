@@ -1,5 +1,5 @@
 {{-- Basis voor de juridische pagina's: titel, datum, wie de aanbieder is en leesbare tekst zonder losse styling per pagina. --}}
-@props(['title', 'updated' => '13 november 2026'])
+@props(['title', 'updated' => '19 november 2026'])
 
 <x-layouts::platform :title="$title">
     <article class="mx-auto max-w-2xl px-4 py-10 md:py-16">

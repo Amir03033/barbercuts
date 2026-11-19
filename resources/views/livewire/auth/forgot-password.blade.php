@@ -1,5 +1,5 @@
 <div class="mx-auto max-w-sm px-4 py-8">
-    <h1 class="text-lg font-bold text-text">Wachtwoord vergeten</h1>
+    <h1 class="text-[1.75rem] leading-9 font-bold tracking-tight text-text md:text-3xl">Wachtwoord vergeten</h1>
 
     @if ($sent)
         <x-ui.empty-state icon="mail" title="Kijk in je mailbox" class="!px-0"
@@ -7,7 +7,7 @@
             <x-ui.button :href="route('login')" variant="secondary" wire:navigate>Terug naar inloggen</x-ui.button>
         </x-ui.empty-state>
     @else
-        <p class="mt-1 text-sm text-muted">Vul je e-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.</p>
+        <p class="mt-1 text-base text-muted">Vul je e-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.</p>
 
         <form wire:submit="sendResetLink" class="mt-6 space-y-4" novalidate>
             <x-ui.input label="E-mailadres" type="email" wire:model="email" autocomplete="email" inputmode="email" required autofocus />

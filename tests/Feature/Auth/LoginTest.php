@@ -86,3 +86,12 @@ it('locks out an email address after fifteen failed attempts from different IP a
 
     $this->assertGuest();
 });
+
+it('points new visitors to a customer account or a shop sign up from the login page', function () {
+    $this->get('/inloggen')
+        ->assertOk()
+        ->assertSee('Welkom terug')
+        ->assertSee('Toon wachtwoord')
+        ->assertSee(route('register'), false)
+        ->assertSee(route('onboarding'), false);
+});

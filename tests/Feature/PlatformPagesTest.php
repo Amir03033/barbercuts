@@ -63,3 +63,11 @@ it('lets visitors try the page colours on the landing page and shows the contact
     $this->get('/')->assertOk()->assertSee('Accentkleur')->assertSee('Een dag in je zaak');
     $this->get('/contact')->assertOk()->assertSee('We helpen je graag')->assertSee(config('barbercuts.company.email'));
 });
+
+it('does not promise self-service account deletion that the app does not offer', function () {
+    $this->get('/privacy')->assertOk()->assertDontSee('klantaccount kun je zelf verwijderen')->assertSee('19 november 2026');
+});
+
+it('shows the next opening days in the booking demo instead of fixed dates', function () {
+    $this->get('/')->assertOk()->assertSee('Kies een dag')->assertSee('Boek ');
+});

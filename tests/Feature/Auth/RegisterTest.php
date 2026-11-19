@@ -74,3 +74,11 @@ it('limits how many accounts one IP address can create per hour', function () {
 
     expect(User::where('email', 'te-veel@example.com')->exists())->toBeFalse();
 });
+
+it('shows a password field with a visibility toggle and strength meter on the sign up page', function () {
+    $this->get('/registreren')
+        ->assertOk()
+        ->assertSee('Toon wachtwoord')
+        ->assertSee('Meld je zaak aan')
+        ->assertSee('privacyverklaring');
+});

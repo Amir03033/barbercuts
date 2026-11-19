@@ -18,7 +18,7 @@
             @if (! $loggedIn)
                 <x-ui.input label="E-mailadres" type="email" name="email-readonly" :value="$email" disabled />
                 <x-ui.input label="Je naam" wire:model="name" autocomplete="name" required />
-                <x-ui.input label="Kies een wachtwoord" type="password" wire:model="password" autocomplete="new-password" hint="Minimaal 8 tekens." required />
+                <x-ui.password-input label="Kies een wachtwoord" wire:model="password" autocomplete="new-password" hint="Minimaal 8 tekens." meter required />
             @endif
             <x-ui.button type="submit" loading="accept" full>Uitnodiging accepteren</x-ui.button>
         </form>

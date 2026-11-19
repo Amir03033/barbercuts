@@ -12,13 +12,14 @@
     @if ($step === 1)
         <form wire:submit="saveAccount" class="mt-6 space-y-4" novalidate>
             <div>
-                <h1 class="text-lg font-bold">Meld je zaak aan</h1>
-                <p class="mt-1 text-sm text-muted">Eerst je account. Binnen drie minuten staat je boekingspagina online.</p>
+                <h1 class="text-[1.75rem] leading-9 font-bold tracking-tight md:text-3xl">Meld je zaak aan</h1>
+                <p class="mt-1 text-base text-muted">Eerst je account. Binnen drie minuten staat je boekingspagina online, gratis en zonder creditcard.</p>
             </div>
             <x-ui.input label="Je naam" wire:model="name" autocomplete="name" required autofocus />
             <x-ui.input label="E-mailadres" type="email" wire:model="email" autocomplete="email" inputmode="email" required />
-            <x-ui.input label="Wachtwoord" type="password" wire:model="password" autocomplete="new-password" hint="Minimaal 8 tekens." required />
+            <x-ui.password-input label="Wachtwoord" wire:model="password" autocomplete="new-password" hint="Minimaal 8 tekens." meter required />
             <x-ui.button type="submit" loading="saveAccount" full>Verder</x-ui.button>
+            <p class=" text-center text-xs text-muted">Door door te gaan ga je akkoord met de <a href="{{ route('terms') }}" class="font-medium underline" target="_blank" rel="noopener">voorwaarden</a> en de <a href="{{ route('privacy') }}" class="font-medium underline" target="_blank" rel="noopener">privacyverklaring</a>.</p>
             <div class="flex justify-center">
                 <x-ui.button :href="route('login')" variant="ghost" size="sm" wire:navigate>Al een account? Inloggen</x-ui.button>
             </div>

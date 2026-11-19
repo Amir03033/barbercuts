@@ -58,7 +58,7 @@
     <p>Verbindingen zijn versleuteld, wachtwoorden worden niet leesbaar opgeslagen en elke zaak ziet uitsluitend de eigen gegevens. Toegang van onze beheerders is beveiligd met twee-staps-verificatie en wordt gelogd.</p>
 
     <h2>Jouw rechten</h2>
-    <p>Je hebt het recht op inzage, correctie, verwijdering, beperking, bezwaar en overdracht van je gegevens. Een klantaccount kun je zelf verwijderen. Stuur een verzoek naar <a href="mailto:{{ config('barbercuts.company.email') }}">{{ config('barbercuts.company.email') }}</a>; we reageren binnen een maand. Je kunt ook een klacht indienen bij de Autoriteit Persoonsgegevens.</p>
+    <p>Je hebt het recht op inzage, correctie, verwijdering, beperking, bezwaar en overdracht van je gegevens. Wil je je klantaccount of je gegevens laten verwijderen? Stuur dan een verzoek naar <a href="mailto:{{ config('barbercuts.company.email') }}">{{ config('barbercuts.company.email') }}</a>; we reageren binnen een maand. Je kunt ook een klacht indienen bij de Autoriteit Persoonsgegevens.</p>
 
     <h2>Contact</h2>
     <p>{{ config('barbercuts.company.name') }} · <a href="mailto:{{ config('barbercuts.company.email') }}">{{ config('barbercuts.company.email') }}</a></p>
