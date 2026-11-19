@@ -19,7 +19,7 @@ it('serves every static page with a title and the footer links', function (strin
     $this->get($path)->assertOk()->assertSee($title)
         ->assertSee('Verwerkersovereenkomst')->assertSee('Privacy')->assertSee('Voorwaarden');
 })->with([
-    ['/prijzen', 'Eén prijs, alles erbij'],
+    ['/prijzen', 'Alles erbij'],
     ['/privacy', 'Privacyverklaring'],
     ['/voorwaarden', 'Algemene voorwaarden'],
     ['/verwerkersovereenkomst', 'Verwerkersovereenkomst'],
@@ -47,3 +47,19 @@ it('keeps private areas out of search engines', function () {
 it('reserves the new platform paths as slugs', function (string $slug) {
     expect(Features::reservedSlugs())->toContain($slug);
 })->with(['prijzen', 'privacy', 'voorwaarden', 'verwerkersovereenkomst', 'contact', 'admin', 'webhooks', 'impersonate']);
+
+it('shows the frequently asked questions with structured data on the landing and pricing pages', function (string $path) {
+    $response = $this->get($path)
+        ->assertOk()
+        ->assertSee('Veelgestelde vragen')
+        ->assertSee('"@type":"FAQPage"', false);
+
+    preg_match('/<script type="application\/ld\+json">(\{"@context".*?)<\/script>/s', $response->getContent(), $match);
+
+    expect(json_decode($match[1] ?? '', true))->toBeArray()->toHaveKey('mainEntity');
+})->with(['/', '/prijzen']);
+
+it('lets visitors try the page colours on the landing page and shows the contact options', function () {
+    $this->get('/')->assertOk()->assertSee('Accentkleur')->assertSee('Een dag in je zaak');
+    $this->get('/contact')->assertOk()->assertSee('We helpen je graag')->assertSee(config('barbercuts.company.email'));
+});

@@ -6,9 +6,22 @@
 
     // Fictieve afspraken voor de voorbeeldschermen
     $day = [['10:00', 'Daan de Vries', 'Knippen', '#0071e3'], ['10:30', 'Yusuf Kaya', 'Knippen + baard', '#34c759'], ['11:15', 'Sem Bakker', 'Skin fade', '#0071e3'], ['12:00', 'Lars Visser', 'Baard', '#ff9f0a']];
+
+    $faq = [
+        ['Wat kost BarberCuts?', $billing
+            ? "De eerste {$trial} dagen zijn gratis. Daarna {$price} per maand, zonder opstartkosten en zonder kosten per kapper of per afspraak. Opzeggen kan altijd."
+            : 'Tijdens de lancering is BarberCuts gratis, zonder creditcard. Je hoort het ruim van tevoren voordat daar verandering in komt.'],
+        ['Moeten mijn klanten een account maken?', 'Nee. Klanten boeken met alleen hun naam en telefoonnummer. Een account is optioneel en geeft ze een overzicht van hun afspraken bij alle zaken.'],
+        ['Kan ik meerdere kappers toevoegen?', 'Ja, onbeperkt. Elke kapper heeft een eigen agenda met eigen werktijden, pauzes en vrije dagen. Klanten kiezen een kapper of laten het aan jou over.'],
+        ['Werkt het op mijn telefoon?', 'Ja, BarberCuts is gemaakt voor je telefoon. Je zet het op je beginscherm als een app, zonder iets uit een winkel te installeren.'],
+        ['Wie ziet mijn omzet?', 'Jij als eigenaar ziet het totaal en de uitsplitsing per kapper. Een kapper ziet alleen zijn eigen omzet, nooit die van een collega.'],
+        ['Hoe komen herinneringen bij mijn klanten?', 'Per e-mail en, als de klant dat aanzet, als pushmelding. Standaard 24 uur voor de afspraak; je kunt die tijd aanpassen en een tweede herinnering instellen.'],
+        ['Wat gebeurt er met mijn gegevens als ik stop?', 'We verwijderen niets zomaar. Wil je dat je gegevens worden verwijderd, laat het ons weten via de contactpagina.'],
+    ];
 @endphp
 
-<div class="overflow-x-clip">
+<div class="overflow-x-clip" x-data="{ past: false, end: false }"
+    x-on:scroll.window.passive="past = window.scrollY > 640; end = window.innerHeight + window.scrollY > document.documentElement.scrollHeight - 520">
     {{-- Kop --}}
     <section class="relative">
         <div class="hero-glow pointer-events-none absolute inset-0" aria-hidden="true"></div>
@@ -36,6 +49,12 @@
                     Tijdens de lancering gratis · geen creditcard nodig
                 @endif
             </p>
+
+            <ul class="rise-in mx-auto mt-6 flex flex-wrap justify-center gap-2 text-xs font-medium text-muted" style="--rise-delay: 520ms">
+                @foreach ([['shield-check', 'Geen creditcard nodig'], ['clock', 'Klaar in drie minuten'], ['users', 'Klanten boeken zonder account']] as [$icon, $label])
+                    <li class="inline-flex items-center gap-1.5 rounded-pill bg-card/80 px-3 py-1.5 ring-1 ring-border backdrop-blur"><x-ui.icon :name="$icon" size="14" class="text-completed" />{{ $label }}</li>
+                @endforeach
+            </ul>
 
             {{-- De app: het overzicht van vandaag, met wat er op een dag binnenkomt --}}
             <div class="phone-in relative mx-auto mt-12 w-fit pb-4 md:mt-16">
@@ -202,6 +221,33 @@
         </div>
     </section>
 
+    {{-- Je dag nu, of met BarberCuts: een schakelaar die de twee werelden naast elkaar zet --}}
+    <section class="mx-auto max-w-5xl px-4 pb-16 md:pb-24" x-data="{ after: false }">
+        <div class="text-center" data-reveal>
+            <p class="text-sm font-semibold text-link">Het verschil</p>
+            <h2 class="mt-1 text-[2rem] leading-10 font-bold tracking-tight md:text-5xl md:leading-[1.1]">Een dag in je zaak</h2>
+        </div>
+        <div class="mx-auto mt-6 flex w-fit rounded-pill bg-surface p-1 text-sm font-semibold" role="tablist" data-reveal>
+            <button type="button" role="tab" :aria-selected="!after" x-on:click="after = false" :class="after ? 'text-muted' : 'bg-card text-text shadow-soft'" class="min-h-11 rounded-pill px-5 transition-[background-color,color,box-shadow] duration-200 ease-out-soft">Nu</button>
+            <button type="button" role="tab" :aria-selected="after" x-on:click="after = true" :class="after ? 'bg-accent text-on-accent shadow-soft' : 'text-muted'" class="min-h-11 rounded-pill px-5 transition-[background-color,color,box-shadow] duration-200 ease-out-soft">Met BarberCuts</button>
+        </div>
+        <div class="mt-6 grid gap-3 md:grid-cols-2" data-reveal>
+            @foreach ([
+                ['phone', 'Je telefoon gaat tijdens het knippen', 'Klanten boeken zelf, dag en nacht. Jij knipt door.'],
+                ['message-circle', 'Afspraken verdwijnen in WhatsApp', 'Elke afspraak staat in je agenda, per kapper, met de klant erbij.'],
+                ['bell', 'Klanten vergeten hun afspraak', 'Een herinnering gaat vanzelf weg. Verplaatsen doet de klant met één tik.'],
+                ['euro', 'Einde van de maand: wat heb ik verdiend?', 'Omzet per dag, week en maand. Direct, zonder rekenen.'],
+            ] as [$icon, $before, $afterText])
+                <div class="relative flex min-h-24 items-start gap-4 overflow-hidden rounded-[1.5rem] bg-card p-5 shadow-soft ring-1 ring-border/70 transition-colors duration-300"
+                    :class="after ? 'ring-completed/40' : ''">
+                    <span class="flex size-11 shrink-0 items-center justify-center rounded-2xl transition-colors duration-300" :class="after ? 'bg-completed/15 text-completed' : 'bg-surface text-muted'"><x-ui.icon :name="$icon" /></span>
+                    <p class="text-base font-semibold" x-show="!after" x-transition.opacity.duration.200ms>{{ $before }}</p>
+                    <p class="text-base font-semibold" x-show="after" x-cloak x-transition.opacity.duration.200ms>{{ $afterText }}</p>
+                </div>
+            @endforeach
+        </div>
+    </section>
+
     {{-- Rekenhulp: wat kosten lege stoelen? Rekent alleen met wat de bezoeker zelf instelt. --}}
     <section class="mx-auto max-w-5xl px-4 pb-16 md:pb-24">
         <div class="overflow-hidden rounded-[2rem] bg-card p-6 shadow-soft ring-1 ring-border/70 md:p-10" data-reveal
@@ -232,34 +278,69 @@
         </div>
     </section>
 
-    {{-- Jouw pagina, jouw stijl --}}
-    <section class="bg-card">
+    {{-- Jouw pagina, jouw stijl: kies een kleur, thema en naam en zie de boekingspagina meteen veranderen --}}
+    <section class="bg-card"
+        x-data="{
+            accent: '#ff9f0a', dark: true, name: 'Studio Fade',
+            colors: ['#ff9f0a', '#0a84ff', '#30d158', '#ff375f', '#bf5af2', '#1d1d1f'],
+            get onAccent() {
+                const [r, g, b] = [1, 3, 5].map((i) => parseInt(this.accent.slice(i, i + 2), 16));
+                return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#1d1d1f' : '#ffffff';
+            },
+            get initial() { return (this.name.trim()[0] || 'S').toUpperCase(); },
+        }">
         <div class="mx-auto grid max-w-5xl items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
             <div data-reveal>
                 <p class="text-sm font-semibold text-link">Jouw pagina</p>
                 <h2 class="mt-1 text-[2rem] leading-10 font-bold tracking-tight md:text-5xl md:leading-[1.1]">Jouw zaak. Jouw kleuren.</h2>
-                <p class="mt-4 text-base text-muted md:text-lg">Elke zaak krijgt een eigen boekingspagina op barbercuts.nl/jouwzaak. Met je logo, je foto's, je eigen kleur en een banner voor acties.</p>
+                <p class="mt-4 text-base text-muted md:text-lg">Elke zaak krijgt een eigen boekingspagina op barbercuts.nl/jouwzaak. Probeer het zelf: kies een kleur en zie je pagina veranderen.</p>
+
+                <div class="mt-6 space-y-5 rounded-[1.5rem] bg-surface p-5">
+                    <label class="block">
+                        <span class="text-sm font-medium">Naam van je zaak</span>
+                        <input type="text" x-model="name" maxlength="22" autocomplete="off" class="mt-1.5 h-12 w-full rounded-xl border border-border bg-card px-4 text-base outline-none focus:border-border-strong" />
+                    </label>
+                    <div>
+                        <p class="text-sm font-medium">Accentkleur</p>
+                        <div class="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Accentkleur">
+                            <template x-for="color in colors" :key="color">
+                                <button type="button" role="radio" :aria-checked="accent === color" :aria-label="color" x-on:click="accent = color"
+                                    class="flex size-11 items-center justify-center rounded-full border-2 transition-transform duration-150 ease-out-soft active:scale-90" :class="accent === color ? 'border-text' : 'border-transparent'">
+                                    <span class="size-8 rounded-full" :style="`background-color: ${color}`"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium">Thema</p>
+                        <div class="mt-2 flex w-fit rounded-pill bg-card p-1 text-sm font-semibold ring-1 ring-border" role="radiogroup" aria-label="Thema">
+                            <button type="button" role="radio" :aria-checked="!dark" x-on:click="dark = false" :class="dark ? 'text-muted' : 'bg-accent text-on-accent'" class="min-h-10 rounded-pill px-5 transition-colors duration-200">Licht</button>
+                            <button type="button" role="radio" :aria-checked="dark" x-on:click="dark = true" :class="dark ? 'bg-accent text-on-accent' : 'text-muted'" class="min-h-10 rounded-pill px-5 transition-colors duration-200">Donker</button>
+                        </div>
+                    </div>
+                </div>
+
                 <ul class="mt-6 space-y-3 text-base">
-                    @foreach (['Licht of donker thema en je eigen accentkleur', 'Omslagfoto, logo en een fotogalerij van je werk', 'Banner voor een actie of mededeling', 'Link voor in je Instagram-bio en een QR-code voor in de zaak'] as $line)
+                    @foreach (['Omslagfoto, logo en een fotogalerij van je werk', 'Banner voor een actie of mededeling', 'Link voor in je Instagram-bio en een QR-code voor in de zaak'] as $line)
                         <li class="flex gap-3"><x-ui.icon name="check" size="20" class="mt-0.5 shrink-0 text-completed" /><span>{{ $line }}</span></li>
                     @endforeach
                 </ul>
             </div>
 
-            <x-platform.phone label="De boekingspagina van een zaak" data-reveal style="--reveal-delay: 120ms">
-                <div data-theme="dark" style="--accent: #ff9f0a; --on-accent: #1d1d1f" class="-mt-11 h-full bg-bg pt-11 text-left text-text">
-                    <div class="h-28 bg-gradient-to-br from-[#ff9f0a] to-[#ff375f]"></div>
+            <x-platform.phone label="De boekingspagina van een zaak, met de kleur en het thema die je kiest" data-reveal style="--reveal-delay: 120ms">
+                <div :data-theme="dark ? 'dark' : 'light'" :style="`--accent: ${accent}; --on-accent: ${onAccent}`" class="-mt-11 h-full bg-bg pt-11 text-left text-text transition-colors duration-300">
+                    <div class="h-28 transition-[background] duration-300" :style="`background: linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 55%, #ff375f))`"></div>
                     <div class="px-4">
-                        <span class="-mt-7 flex size-14 items-center justify-center rounded-2xl border-4 border-bg bg-accent text-lg font-bold text-on-accent">S</span>
-                        <p class="mt-2 text-xl font-bold tracking-tight">Studio Fade</p>
+                        <span class="-mt-7 flex size-14 items-center justify-center rounded-2xl border-4 border-bg bg-accent text-lg font-bold text-on-accent transition-colors duration-300" x-text="initial">S</span>
+                        <p class="mt-2 truncate text-xl font-bold tracking-tight" x-text="name.trim() || 'Jouw zaak'">Studio Fade</p>
                         <p class="flex items-center gap-1.5 text-[0.6875rem] text-muted"><x-ui.stars :rating="5" size="11" /> 4,9 · 128 reviews</p>
-                        <p class="mt-3 rounded-2xl bg-accent px-3 py-2 text-xs font-semibold text-on-accent">Deze maand: 10% korting voor studenten</p>
+                        <p class="mt-3 rounded-2xl bg-accent px-3 py-2 text-xs font-semibold text-on-accent transition-colors duration-300">Deze maand: 10% korting voor studenten</p>
                         <div class="mt-3 divide-y divide-border overflow-hidden rounded-2xl bg-card text-xs">
                             @foreach ([['Knippen', '30 min', '€ 25,00'], ['Knippen + baard', '45 min', '€ 35,00'], ['Skin fade', '45 min', '€ 32,00']] as [$name, $duration, $amount])
                                 <p class="flex items-center justify-between px-3 py-2.5"><span><span class="block font-semibold">{{ $name }}</span><span class="text-[0.625rem] text-muted">{{ $duration }}</span></span><span class="font-semibold tabular-nums">{{ $amount }}</span></p>
                             @endforeach
                         </div>
-                        <p class="mt-4 flex h-11 items-center justify-center rounded-xl bg-accent text-sm font-semibold text-on-accent">Afspraak maken</p>
+                        <p class="mt-4 flex h-11 items-center justify-center rounded-xl bg-accent text-sm font-semibold text-on-accent transition-colors duration-300">Afspraak maken</p>
                     </div>
                 </div>
             </x-platform.phone>
@@ -278,6 +359,13 @@
                 </div>
             @endforeach
         </div>
+    </section>
+
+    {{-- Veelgestelde vragen --}}
+    <section class="mx-auto max-w-3xl px-4 pb-16 md:pb-24">
+        <h2 class="text-center text-[2rem] leading-10 font-bold tracking-tight md:text-5xl" data-reveal>Veelgestelde vragen</h2>
+        <x-platform.faq :items="$faq" class="mt-8" data-reveal />
+        <p class="mt-5 text-center text-sm text-muted">Staat je vraag er niet bij? <a href="{{ route('contact') }}" wire:navigate class="font-medium text-link underline">Stuur ons een bericht</a>.</p>
     </section>
 
     {{-- Voor klanten: best beoordeelde kappers (fase 7) --}}
@@ -319,4 +407,13 @@
             </div>
         </div>
     </section>
+
+    {{-- Vaste knop op mobiel: verschijnt na de kop en verdwijnt bij de afsluiter --}}
+    <div class="pointer-events-none fixed inset-x-0 bottom-0 z-20 px-4 pb-safe md:hidden" x-cloak x-show="past && !end"
+        x-transition:enter="transition duration-300 ease-out" x-transition:enter-start="translate-y-6 opacity-0" x-transition:enter-end="translate-y-0 opacity-100"
+        x-transition:leave="transition duration-200 ease-in" x-transition:leave-start="translate-y-0 opacity-100" x-transition:leave-end="translate-y-6 opacity-0">
+        <a href="{{ route('onboarding') }}" wire:navigate class="pointer-events-auto mb-3 flex min-h-[3.125rem] items-center justify-center gap-2 rounded-pill bg-accent px-6 text-base font-semibold text-on-accent shadow-pop active:scale-[0.98]">
+            Start gratis <x-ui.icon name="arrow-right" size="18" />
+        </a>
+    </div>
 </div>
