@@ -15,7 +15,19 @@
 | Mail | Postvak `hallo@barbercuts.nl` in Plesk; `.env`: `MAIL_URL="smtp://hallo%40barbercuts.nl:WACHTWOORD@localhost:25?verify_peer=0"` (wachtwoord met alleen letters en cijfers). DNS bij STRATO: MX, SPF, DKIM (`default._domainkey`) en DMARC |
 | SSL | Plesk → SSL/TLS Certificates (Let\'s Encrypt), met 301 van http naar https en voorkeursdomein zonder `www` |
 
-**Bijwerken na een wijziging op GitHub:** Plesk → Websites & Domains → barbercuts.nl → Git → *Pull updates*. Laat daarna
+**Bijwerken (aanbevolen):** op de server, als sitegebruiker in `httpdocs`:
+
+```bash
+PHP=/opt/plesk/php/8.4/bin/php ./deploy.sh
+```
+
+Het script haalt `main` op, draait composer (met dat PHP), bouwt de frontend met Node 24, zet de site tijdens de migraties
+in onderhoudsmodus (bezoekers zien de 503-pagina) en ververst de caches. Met `NO_PULL=1` haalt het geen code op.
+
+**Als de server zelf niet reageert** (502/503/504): Plesk → Websites & Domains → barbercuts.nl → Apache & nginx Settings →
+Error Documents, en wijs die codes naar `public/storing.html`, een losse pagina zonder PHP.
+
+**Bijwerken na een wijziging op GitHub (via Plesk Git):** Plesk → Websites & Domains → barbercuts.nl → Git → *Pull updates*. Laat daarna
 het update-script draaien (composer, npm, migraties, caches). Zet het in Plesk bij *Additional deployment actions*:
 
 ```bash
