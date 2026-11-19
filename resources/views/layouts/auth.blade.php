@@ -26,7 +26,11 @@
         <div class="flex min-w-0 flex-col">
             <header class="flex items-center justify-between px-4 pt-safe lg:hidden">
                 <x-brand :href="route('home')" />
-                <x-ui.button :href="route('pricing')" variant="ghost" size="sm" wire:navigate>Prijzen</x-ui.button>
+                @auth
+                    <x-ui.button variant="ghost" size="sm" x-data x-on:click="$dispatch('open-sheet', 'account-switch')">Account</x-ui.button>
+                @else
+                    <x-ui.button :href="route('pricing')" variant="ghost" size="sm" wire:navigate>Prijzen</x-ui.button>
+                @endauth
             </header>
             <main class="flex flex-1 items-center justify-center px-4 py-8 lg:px-12">
                 <div class="w-full min-w-0 max-w-sm">{{ $slot }}</div>
@@ -40,6 +44,7 @@
         </div>
     </div>
 
+    <x-account-switcher />
     <x-ui.toast />
     @livewireScripts
 </body>

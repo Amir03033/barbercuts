@@ -4,16 +4,20 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
 use App\Http\Middleware\DisableShopScope;
+use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -23,6 +27,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /**
@@ -43,7 +48,7 @@ class AdminPanelProvider extends PanelProvider
             ->colors(['primary' => Color::hex('#0071e3'), 'gray' => Color::Zinc])
             ->brandLogo(fn () => view('filament.brand'))
             ->brandLogoHeight('2.25rem')
-            ->favicon('/favicon.svg')
+            ->favicon('/favicon.svg?v=4')
             ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth(Width::Full)
             // Lokale Inter en het eigen thema; geen verbinding met externe lettertype-diensten.
@@ -61,7 +66,18 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Platform'),
                 NavigationGroup::make('Betalingen'),
                 NavigationGroup::make('Support'),
+                NavigationGroup::make('Wissel naar')->collapsible(false),
             ])
+            // Terug naar de rest van BarberCuts: dezelfde keuzes als "Wissel van account" in de app.
+            ->navigationItems(self::switchItems())
+            ->userMenuItems(array_map(
+                fn (NavigationItem $item): Action => Action::make('switch-'.Str::slug((string) $item->getLabel()))
+                    ->label($item->getLabel())
+                    ->icon($item->getIcon())
+                    ->url($item->getUrl())
+                    ->visible(fn (): bool => $item->isVisible()),
+                self::switchItems(),
+            ))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -77,5 +93,27 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    /**
+     * Links van het beheer naar de andere rollen van de ingelogde admin: zijn zaak, zijn afspraken, de demo en het
+     * pitcherdashboard (alleen als hij die rol heeft), en de website.
+     *
+     * @return list<NavigationItem>
+     */
+    private static function switchItems(): array
+    {
+        $user = fn (): ?User => ($user = auth()->user()) instanceof User ? $user : null;
+
+        return [
+            NavigationItem::make('Mijn zaak')->url('/app')->icon(Heroicon::OutlinedScissors)->group('Wissel naar')->sort(1)
+                ->visible(fn (): bool => $user()?->shops()->whereNull('onboarding_step')->where('is_demo', false)->exists() === true),
+            NavigationItem::make('Pitcherdashboard')->url('/pitcher')->icon(Heroicon::OutlinedChartBar)->group('Wissel naar')->sort(2)
+                ->visible(fn (): bool => $user()?->is_pitcher === true),
+            NavigationItem::make('Demo')->url('/demo')->icon(Heroicon::OutlinedEye)->group('Wissel naar')->sort(3)
+                ->visible(fn (): bool => $user()?->is_pitcher === true),
+            NavigationItem::make('Mijn afspraken')->url('/account')->icon(Heroicon::OutlinedCalendarDays)->group('Wissel naar')->sort(4),
+            NavigationItem::make('Naar de website')->url('/')->icon(Heroicon::OutlinedGlobeAlt)->group('Wissel naar')->sort(5),
+        ];
     }
 }

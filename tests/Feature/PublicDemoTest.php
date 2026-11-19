@@ -214,3 +214,19 @@ it('shows the demo link with share buttons to pitchers', function () {
 it('reserves the probeer slug', function () {
     expect(config('barbercuts.reserved_slugs'))->toContain('probeer');
 });
+
+it('offers the pitcher dashboard in the account switcher, only to pitchers', function () {
+    $pitcher = demoPitcher();
+
+    $this->actingAs($pitcher)->get('/pitcher')->assertOk()->assertSee('Pitcherdashboard')->assertSee(route('pitcher.overview'), false);
+    $this->actingAs($pitcher)->get('/demo')->assertOk()->assertSee('Pitcherdashboard')->assertSee('Wissel van account');
+
+    [, $owner] = shopWithOwner();
+    $this->actingAs($owner)->get('/app/meer')->assertOk()->assertSee('Wissel van account')->assertDontSee('Pitcherdashboard');
+});
+
+it('busts cached icons with a version in the url', function () {
+    $this->get('/')->assertSee('/icons/apple-touch-icon.png?v=', false)->assertSee('/manifest.webmanifest?v=', false);
+
+    expect((string) file_get_contents(public_path('sw.js')))->toContain('barbercuts-static-v4');
+});

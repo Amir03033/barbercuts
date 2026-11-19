@@ -43,8 +43,17 @@
             </x-ui.list-item>
 
             @if ($user->is_pitcher)
+                <x-ui.list-item :href="route('pitcher.overview')" title="Pitcherdashboard" subtitle="Aanmeldingen en demolink" :chevron="false">
+                    <x-slot:leading><x-ui.icon-tile name="trending-up" color="#ff9f0a" /></x-slot:leading>
+                    @if (request()->routeIs('pitcher.*'))
+                        <x-slot:trailing><x-ui.icon name="check" size="20" class="text-link" /></x-slot:trailing>
+                    @endif
+                </x-ui.list-item>
                 <x-ui.list-item :href="route('demo')" title="Demo" subtitle="Voor pitchers" :chevron="false">
                     <x-slot:leading><x-ui.icon-tile name="eye" color="#5e5ce6" /></x-slot:leading>
+                    @if (request()->routeIs('demo'))
+                        <x-slot:trailing><x-ui.icon name="check" size="20" class="text-link" /></x-slot:trailing>
+                    @endif
                 </x-ui.list-item>
             @endif
 

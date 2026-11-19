@@ -476,7 +476,7 @@ it('ships a manifest, icons and a service worker that never caches pages', funct
         ->and(collect($manifest['icons'])->pluck('sizes')->all())->toContain('192x192')->toContain('512x512');
 
     foreach ($manifest['icons'] as $icon) {
-        [$width, $height] = getimagesize(public_path($icon['src']));
+        [$width, $height] = getimagesize(public_path(strtok($icon['src'], '?')));
         expect("{$width}x{$height}")->toBe($icon['sizes']);
     }
 

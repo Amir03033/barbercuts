@@ -483,3 +483,31 @@ function PlatformSettings_forget(): void
 {
     PlatformSettings::forget();
 }
+
+// ── Wisselen naar de rest van BarberCuts ──────────────────────────────────────────────────────────────────
+
+it('links from the admin panel back to the other roles of the admin', function () {
+    $visible = fn (): array => collect(Filament::getPanel('admin')->getNavigationItems())
+        ->filter(fn ($item) => $item->getGroup() === 'Wissel naar' && $item->isVisible())
+        ->mapWithKeys(fn ($item) => [(string) $item->getLabel() => $item->getUrl()])
+        ->all();
+
+    $this->actingAs($this->admin);
+
+    expect($visible())->toBe(['Mijn afspraken' => '/account', 'Naar de website' => '/']);
+
+    Barbershop::factory()->ownedBy($this->admin)->create();
+    $this->admin->forceFill(['is_pitcher' => true])->save();
+
+    expect($visible())->toBe([
+        'Mijn zaak' => '/app',
+        'Pitcherdashboard' => '/pitcher',
+        'Demo' => '/demo',
+        'Mijn afspraken' => '/account',
+        'Naar de website' => '/',
+    ]);
+
+    $menu = collect(Filament::getPanel('admin')->getUserMenuItems())->filter(fn ($item) => str_starts_with($item->getName(), 'switch-'));
+
+    expect($menu->filter->isVisible()->map->getUrl()->values()->all())->toBe(['/app', '/pitcher', '/demo', '/account', '/']);
+});

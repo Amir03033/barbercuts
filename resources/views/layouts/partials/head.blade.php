@@ -26,11 +26,12 @@
 <meta name="twitter:title" content="{{ $og['title'] }}">
 <meta name="twitter:description" content="{{ $og['description'] }}">
 <meta name="twitter:image" content="{{ $og['image'] }}">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+{{-- ?v= ophogen als het beeldmerk verandert: telefoons en browsers bewaren iconen anders lang (zie ook public/sw.js) --}}
+<link rel="manifest" href="/manifest.webmanifest?v=4">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=4">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=4">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png?v=4">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="BarberCuts">
