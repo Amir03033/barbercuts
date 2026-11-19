@@ -15,6 +15,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use UnitEnum;
@@ -48,6 +49,8 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            // Tijdelijke accounts van de openbare demolink horen niet in de lijst; ze worden met hun demozaak gewist.
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('is_demo_visitor', false))
             ->columns([
                 TextColumn::make('name')->label('Naam')->searchable()->sortable(),
                 TextColumn::make('email')->label('E-mail')->searchable()->sortable()->copyable(),

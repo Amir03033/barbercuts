@@ -18,6 +18,9 @@
         </div>
     </section>
 
+    {{-- De eigen demolink --}}
+    <x-pitcher.demo-link :url="$demoLink" :starts="$pitcher->demo_link_starts" class="mt-4" />
+
     {{-- Aantallen --}}
     <div class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4" data-reveal>
         <x-ui.stat label="Aangemeld" :value="$totals['signedUp']" icon="user-plus" />

@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use App\Support\Referral;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cookie;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -22,8 +21,7 @@ class CaptureReferral
             $pitcher = Referral::pitcherFor($code);
 
             if ($pitcher !== null) {
-                $request->session()->put(Referral::SESSION, $pitcher->referral_code);
-                Cookie::queue(Referral::COOKIE, (string) $pitcher->referral_code, Referral::DAYS * 24 * 60);
+                Referral::remember($request, $pitcher);
             }
         }
 

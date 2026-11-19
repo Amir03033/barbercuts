@@ -20,7 +20,9 @@ use App\Services\Messaging\TwilioWhatsAppProvider;
 use App\Services\Messaging\WhatsAppProvider;
 use App\Services\WaitlistService;
 use App\Support\CurrentShop;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -55,6 +57,15 @@ class AppServiceProvider extends ServiceProvider
 
             app(WaitlistService::class)->advance($appointment->barbershop_id, $appointment->starts_at->copy()->setTimezone($timezone)->toDateString());
         });
+
+        // De bevestigingsmail in het Nederlands, met wat je moet doen als de knop niet werkt.
+        VerifyEmail::toMailUsing(fn (object $notifiable, string $url): MailMessage => (new MailMessage)
+            ->subject('Bevestig je e-mailadres')
+            ->greeting('Hoi '.explode(' ', trim((string) $notifiable->name))[0].',')
+            ->line('Tik op de knop om je e-mailadres te bevestigen. Daarna ga je in de app vanzelf verder; je hoeft niets te verversen.')
+            ->action('E-mailadres bevestigen', $url)
+            ->line('De link is '.intdiv((int) config('auth.verification.expire', 60), 60).' uur geldig en werkt op elk apparaat.')
+            ->line('Heb je geen account bij BarberCuts gemaakt? Dan kun je deze mail negeren.'));
 
         // De layouts (platform, app, shop) ook als Blade-component te gebruiken: <x-layouts::platform>.
         Blade::anonymousComponentPath(resource_path('views/layouts'), 'layouts');

@@ -25,6 +25,8 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
 /**
  * @property array<string, bool>|null $notification_preferences
  * @property string|null $referral_code
+ * @property bool $is_demo_visitor
+ * @property int $demo_link_starts
  */
 #[Fillable(['name', 'email', 'phone', 'password', 'notification_preferences'])]
 #[Hidden(['password', 'remember_token', 'app_authentication_secret', 'app_authentication_recovery_codes'])]
@@ -47,6 +49,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'is_pitcher' => 'boolean',
+            'is_demo_visitor' => 'boolean',
             'last_demo_at' => 'datetime',
             'notification_preferences' => 'array',
             'app_authentication_secret' => 'encrypted',
@@ -127,7 +130,20 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             return route('demo', absolute: false);
         }
 
+        // Tijdelijk account van de openbare demolink: de demozaak, of opnieuw beginnen als die op is.
+        if ($this->is_demo_visitor) {
+            return $this->shops()->exists() ? route('app.today', absolute: false) : route('demo.try', absolute: false);
+        }
+
         return $this->shops()->exists() ? route('app.today', absolute: false) : route('account', absolute: false);
+    }
+
+    /**
+     * De openbare demolink van een pitcher: wie hem opent, start zonder account een eigen demozaak (barbercuts.nl/probeer/sam).
+     */
+    public function demoLink(): string
+    {
+        return route('demo.try', ['code' => $this->referralCode()]);
     }
 
     /**

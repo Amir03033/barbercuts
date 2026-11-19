@@ -39,6 +39,9 @@
         window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
     }
 </script>
+@if (session('email_verified'))
+    <x-email-verified-signal />
+@endif
 @fonts
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @livewireStyles

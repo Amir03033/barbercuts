@@ -10,11 +10,12 @@
 
     <div class="space-y-6 px-4 py-4 lg:space-y-8 lg:py-6">
         @unless ($emailVerified)
-            <x-ui.alert type="warning" title="Bevestig je e-mailadres">
-                <p>We hebben een link gestuurd naar <strong>{{ auth()->user()->email }}</strong>. Niets ontvangen? Kijk ook bij ongewenste mail.</p>
-                <x-ui.button variant="ghost" size="sm" class="-ml-3" wire:click="resendVerification" loading="resendVerification">Stuur de link opnieuw</x-ui.button>
-            </x-ui.alert>
+            <livewire:verify-email-banner />
         @endunless
+
+        @if ($shop->is_demo && auth()->user()->is_demo_visitor)
+            <x-app.demo-tour :shop="$shop" />
+        @endif
 
         {{-- Kerncijfers --}}
         <div class="stagger grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4 xl:grid-cols-5">

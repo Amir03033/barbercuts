@@ -32,6 +32,18 @@ class Login extends Component
 
     public bool $remember = true;
 
+    /**
+     * Komt de bezoeker van de bevestigingslink, dan staat het e-mailadres alvast ingevuld (?email=...).
+     */
+    public function mount(): void
+    {
+        $email = request()->query('email');
+
+        if (is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL) !== false) {
+            $this->email = strtolower($email);
+        }
+    }
+
     public function login(): void
     {
         $this->validate();

@@ -95,6 +95,7 @@ class PitcherResource extends Resource
                 TextColumn::make('trial_count')->label('In proef')->sortable()->alignEnd()->toggleable(),
                 TextColumn::make('paying_count')->label('Betalend')->sortable()->alignEnd()->color('success'),
                 TextColumn::make('demo_count')->label('Demo\'s gestart')->sortable()->toggleable(),
+                TextColumn::make('demo_link_starts')->label('Via demolink')->tooltip('Zo vaak startte iemand een demo via de openbare demolink van deze pitcher')->sortable()->toggleable(),
                 TextColumn::make('last_demo_at')->label('Laatste demo')->since()->sortable()->placeholder('Nog niet'),
                 IconColumn::make('running')->label('Demo loopt')->boolean()
                     ->state(fn (User $record): bool => app(DemoShopService::class)->current($record) !== null),

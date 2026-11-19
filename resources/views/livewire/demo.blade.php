@@ -20,6 +20,8 @@
         @endif
     </form>
 
+    <x-pitcher.demo-link :url="$pitcher->demoLink()" :starts="$pitcher->demo_link_starts" compact class="mt-6" />
+
     <a href="{{ route('pitcher.overview') }}" wire:navigate class="mt-4 flex items-center justify-between gap-3 rounded-card border border-border/70 bg-card p-4 shadow-soft transition-transform duration-150 active:scale-[0.99]">
         <span class="min-w-0">
             <span class="block text-sm font-semibold text-text">Mijn aanmeldingen</span>

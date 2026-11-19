@@ -7,6 +7,10 @@
         <x-ui.button variant="secondary" size="sm" class="shrink-0 !rounded-pill" x-data x-on:click="$dispatch('open-sheet', 'account-switch')">Wissel</x-ui.button>
     </div>
 
+    @unless ($user->hasVerifiedEmail())
+        <livewire:verify-email-banner />
+    @endunless
+
     @if ($upcoming->isNotEmpty())
         @php($next = $upcoming->first())
         <a href="{{ $next->manageUrl() }}" wire:navigate.remove class="bc-lift group relative block overflow-hidden rounded-[1.75rem] bg-[#1d1d1f] p-6 text-white shadow-pop">

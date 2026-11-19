@@ -3,8 +3,11 @@
 use App\Enums\ShopRole;
 use App\Http\Controllers\MollieWebhookController;
 use App\Http\Controllers\PitcherToolsController;
+use App\Http\Controllers\PublicDemoController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\VerifyEmailController;
+use App\Http\Middleware\EndDemoVisit;
 use App\Http\Middleware\EnsurePitcher;
 use App\Http\Middleware\ResolveShopFromApp;
 use App\Http\Middleware\ResolveShopFromSlug;
@@ -60,7 +63,6 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
-use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
@@ -93,7 +95,7 @@ Route::livewire('/kappers', Directory::class)->name('directory');
 Route::livewire('/kappers/{city}', Directory::class)->where('city', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('directory.city');
 
 // Zaak aanmelden (§8) en uitnodiging voor kappers
-Route::livewire('/aanmelden', Onboarding::class)->name('onboarding');
+Route::livewire('/aanmelden', Onboarding::class)->middleware(EndDemoVisit::class)->name('onboarding');
 Route::livewire('/uitnodiging/{staffMember}', AcceptInvitation::class)
     ->whereNumber('staffMember')
     ->middleware('signed')
@@ -165,30 +167,19 @@ Route::post('/webhooks/mollie', MollieWebhookController::class)->name('webhooks.
 | Auth
 |--------------------------------------------------------------------------
 */
-Route::middleware('guest')->group(function (): void {
+Route::middleware([EndDemoVisit::class, 'guest'])->group(function (): void {
     Route::livewire('/inloggen', Login::class)->name('login');
     Route::livewire('/registreren', Register::class)->name('register');
     Route::livewire('/wachtwoord-vergeten', ForgotPassword::class)->name('password.request');
     Route::livewire('/wachtwoord-herstellen/{token}', ResetPassword::class)->name('password.reset');
 });
 
-// E-mailadres bevestigen via de link uit de mail. De gesigneerde link wijst zelf het account aan, dus dit werkt ook
-// als de mail in een andere browser of app opent dan waar je bent ingelogd (bijvoorbeeld de app op je beginscherm).
-Route::get('/e-mail-bevestigen/{id}/{hash}', function (Request $request, int $id, string $hash): RedirectResponse {
-    $user = User::query()->findOrFail($id);
-
-    abort_unless(hash_equals(sha1($user->getEmailForVerification()), $hash), 403);
-
-    if (! $user->hasVerifiedEmail() && $user->markEmailAsVerified()) {
-        event(new Verified($user));
-    }
-
-    if ($request->user()?->is($user)) {
-        return redirect()->to($user->homeRoute())->with('toast', 'Je e-mailadres is bevestigd.');
-    }
-
-    return redirect()->route($request->user() === null ? 'login' : 'home')->with('toast', 'Je e-mailadres is bevestigd.');
-})->whereNumber('id')->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+// E-mailadres bevestigen via de link uit de mail: werkt ook in een andere browser of app dan waar je bent ingelogd.
+// De handtekening wordt in de controller gecontroleerd, zodat een verlopen link een uitleg geeft in plaats van een kale 403.
+Route::get('/e-mail-bevestigen/{id}/{hash}', VerifyEmailController::class)
+    ->whereNumber('id')
+    ->middleware('throttle:6,1')
+    ->name('verification.verify');
 
 Route::middleware('auth')->group(function (): void {
     Route::livewire('/e-mail-bevestigen', VerifyEmail::class)->name('verification.notice');
@@ -279,6 +270,15 @@ Route::get('/demo/welkom/{user}', function (User $user): RedirectResponse {
 
     return redirect()->route('password.reset', ['token' => $token, 'email' => $user->email]);
 })->whereNumber('user')->middleware(['signed', 'guest', 'throttle:6,1'])->name('demo.welcome');
+
+/*
+|--------------------------------------------------------------------------
+| Openbare demolink: /probeer en /probeer/{code van een pitcher}. Voor iedereen, zonder account.
+|--------------------------------------------------------------------------
+*/
+Route::get('/probeer/{code?}', [PublicDemoController::class, 'show'])->where('code', '[A-Za-z0-9-]{1,40}')->name('demo.try');
+Route::post('/probeer', [PublicDemoController::class, 'start'])->middleware('throttle:10,1')->name('demo.try.start');
+Route::post('/probeer/opnieuw', [PublicDemoController::class, 'restart'])->middleware(['auth', 'throttle:10,1'])->name('demo.try.restart');
 
 /*
 |--------------------------------------------------------------------------

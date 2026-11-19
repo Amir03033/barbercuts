@@ -154,6 +154,7 @@ class PitcherOverview extends Component
             'openExtensions' => $requests->where('type', PitcherRequestType::TrialExtension)->where('status', PitcherRequestStatus::Open)->pluck('barbershop_id')->all(),
             'pitcher' => $pitcher,
             'link' => $link,
+            'demoLink' => $pitcher->demoLink(),
             'qr' => (new Writer(new ImageRenderer(new RendererStyle(220, 1), new SvgImageBackEnd)))->writeString($link),
             'billing' => $billing,
             'rows' => $rows,

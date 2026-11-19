@@ -29,6 +29,11 @@ class ResolveShopFromApp
         $hadDemo = $shops->contains(fn (Barbershop $candidate): bool => $candidate->isExpiredDemo());
         $shops = $shops->reject(fn (Barbershop $candidate): bool => $candidate->isExpiredDemo())->values();
 
+        // Tijdelijk account van de openbare demolink waarvan de demo op is: opnieuw beginnen kan op /probeer.
+        if ($shops->isEmpty() && $user->is_demo_visitor) {
+            return redirect()->route('demo.try')->with('toast', 'Je demo is verlopen. Start gerust een nieuwe.');
+        }
+
         if ($shops->isEmpty() && ($hadDemo || $user->is_pitcher)) {
             return redirect()->route('demo');
         }

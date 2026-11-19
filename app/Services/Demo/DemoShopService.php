@@ -25,6 +25,9 @@ use Illuminate\Support\Str;
  */
 class DemoShopService
 {
+    /** Tijdelijke demo-accounts krijgen een adres op een domein dat nooit mail ontvangt (RFC 2606). */
+    public const string VISITOR_EMAIL_DOMAIN = 'demo.invalid';
+
     private const array STAFF = [
         ['name' => 'Sam', 'days' => [2, 3, 4, 5, 6], 'from' => 9, 'to' => 18],
         ['name' => 'Mo', 'days' => [2, 3, 4, 5, 6], 'from' => 9, 'to' => 18],
@@ -70,7 +73,7 @@ class DemoShopService
             $this->delete($previous);
         }
 
-        $shop = DB::transaction(fn (): Barbershop => $this->build($pitcher));
+        $shop = DB::transaction(fn (): Barbershop => $this->build($pitcher, pitcher: $pitcher));
 
         $pitcher->forceFill(['last_demo_at' => now(), 'demo_count' => $pitcher->demo_count + 1])->save();
         $pitcher->forgetShopRoles();
@@ -78,6 +81,69 @@ class DemoShopService
         ActivityLog::record('demo.started', null, $pitcher);
 
         return $shop;
+    }
+
+    /**
+     * Openbare demolink: maak een tijdelijk demo-account met een eigen demozaak, voor iemand zonder account.
+     * De pitcher van de link (als die er is) krijgt de demo op zijn naam, zodat hij ziet hoe vaak zijn link werkt.
+     *
+     * @return array{0: User, 1: Barbershop}
+     */
+    public function startForVisitor(?User $referrer): array
+    {
+        [$visitor, $shop] = DB::transaction(function () use ($referrer): array {
+            $visitor = new User;
+            $visitor->forceFill([
+                'name' => 'Demo',
+                'email' => 'demo-'.Str::lower(Str::random(16)).'@'.self::VISITOR_EMAIL_DOMAIN,
+                'password' => Str::random(40),
+                'email_verified_at' => now(),
+                'is_demo_visitor' => true,
+            ])->save();
+
+            return [$visitor, $this->build($visitor, referrer: $referrer)];
+        });
+
+        if ($referrer !== null) {
+            $referrer->increment('demo_link_starts');
+        }
+
+        ActivityLog::record('demo.visitor_started', null, $referrer, ['visitor_id' => $visitor->id]);
+
+        return [$visitor, $shop];
+    }
+
+    /**
+     * Opnieuw beginnen vanuit de openbare demo: dezelfde bezoeker krijgt een verse demozaak, met dezelfde pitcher.
+     */
+    public function restartForVisitor(User $visitor): Barbershop
+    {
+        abort_unless($visitor->is_demo_visitor, 403);
+
+        $previous = Barbershop::query()->where('is_demo', true)->whereHas('users', fn ($query) => $query->whereKey($visitor->id))->get();
+        $referrer = $previous->first()?->demo_referrer_id !== null ? User::query()->find($previous->first()->demo_referrer_id) : null;
+
+        foreach ($previous as $shop) {
+            $this->delete($shop, keepVisitors: true);
+        }
+
+        $shop = DB::transaction(fn (): Barbershop => $this->build($visitor, referrer: $referrer));
+        $visitor->forgetShopRoles();
+
+        return $shop;
+    }
+
+    /**
+     * De bezoeker is klaar met de demo (bijvoorbeeld omdat hij zijn eigen zaak gaat aanmelden): wis alles meteen.
+     */
+    public function endVisit(User $visitor): void
+    {
+        abort_unless($visitor->is_demo_visitor, 403);
+
+        Barbershop::query()->where('is_demo', true)->whereHas('users', fn ($query) => $query->whereKey($visitor->id))
+            ->get()->each(fn (Barbershop $shop) => $this->delete($shop));
+
+        $visitor->delete();
     }
 
     /**
@@ -96,14 +162,23 @@ class DemoShopService
     /**
      * Wis een demozaak met alles erin. De enige plek waar een zaak echt verwijderd wordt (§7.7 geldt voor echte zaken).
      */
-    public function delete(Barbershop $shop): void
+    public function delete(Barbershop $shop, bool $keepVisitors = false): void
     {
         abort_unless($shop->is_demo, 403);
 
-        DB::transaction(function () use ($shop): void {
+        DB::transaction(function () use ($shop, $keepVisitors): void {
+            // Het tijdelijke account van een bezoeker van de openbare demolink hoort bij de zaak en gaat mee.
+            $visitorIds = $keepVisitors ? [] : DB::table('shop_user')->join('users', 'users.id', '=', 'shop_user.user_id')
+                ->where('shop_user.barbershop_id', $shop->id)->where('users.is_demo_visitor', true)->pluck('users.id')->all();
+
             // Afspraken eerst: die houden klanten, kappers en diensten vast (restrict).
             DB::table('appointments')->where('barbershop_id', $shop->id)->delete();
             DB::table('barbershops')->where('id', $shop->id)->where('is_demo', true)->delete();
+
+            if ($visitorIds !== []) {
+                DB::table('sessions')->whereIn('user_id', $visitorIds)->delete();
+                User::query()->whereIn('id', $visitorIds)->where('is_demo_visitor', true)->delete();
+            }
         });
 
         Storage::disk(ImageStore::disk())->deleteDirectory('shops/'.$shop->id);
@@ -121,10 +196,19 @@ class DemoShopService
 
         $expired->each(fn (Barbershop $shop) => $this->delete($shop));
 
+        // Demo-accounts die (door een fout of een half afgebroken start) geen zaak meer hebben.
+        User::query()->where('is_demo_visitor', true)->where('created_at', '<=', now()->subHours((int) config('barbercuts.demo.hours')))
+            ->whereDoesntHave('shops')->delete();
+
         return $expired->count();
     }
 
-    private function build(User $pitcher): Barbershop
+    /**
+     * @param  User  $owner  wie de zaak beheert: de pitcher zelf, of het tijdelijke account van een bezoeker
+     * @param  User|null  $pitcher  de pitcher van wie dit zijn eigen demo is
+     * @param  User|null  $referrer  de pitcher van de openbare demolink
+     */
+    private function build(User $owner, ?User $pitcher = null, ?User $referrer = null): Barbershop
     {
         $now = now();
 
@@ -133,7 +217,7 @@ class DemoShopService
             'name' => 'Studio Fade',
             'description' => 'Barbershop in hartje Utrecht. Strakke fades, verzorgde baarden en altijd goede koffie.',
             'phone' => '+31301234567',
-            'email' => $pitcher->email,
+            'email' => $pitcher !== null ? $pitcher->email : 'info@studio-fade.'.self::VISITOR_EMAIL_DOMAIN,
             'address' => 'Voorbeeldstraat 12',
             'postal_code' => '3511 AB',
             'city' => 'Utrecht',
@@ -142,10 +226,11 @@ class DemoShopService
         $shop->is_public = true;
         $shop->is_demo = true;
         $shop->demo_expires_at = $now->copy()->addHours((int) config('barbercuts.demo.hours'));
-        $shop->demo_pitcher_id = $pitcher->id;
+        $shop->demo_pitcher_id = $pitcher?->id;
+        $shop->demo_referrer_id = $referrer?->id;
         $shop->save();
 
-        $shop->users()->attach($pitcher->id, ['role' => ShopRole::Owner->value]);
+        $shop->users()->attach($owner->id, ['role' => ShopRole::Owner->value]);
 
         $settings = new ShopSetting;
         $settings->barbershop_id = $shop->id;
@@ -158,10 +243,10 @@ class DemoShopService
         $staff = [];
 
         foreach (self::STAFF as $index => $member) {
-            // De pitcher is zelf de eerste kapper, zodat "eigen agenda" en "eigen omzet" te laten zien zijn.
+            // De eigenaar is zelf de eerste kapper, zodat "eigen agenda" en "eigen omzet" te laten zien zijn.
             $id = DB::table('staff_members')->insertGetId([
                 'barbershop_id' => $shop->id,
-                'user_id' => $index === 0 ? $pitcher->id : null,
+                'user_id' => $index === 0 ? $owner->id : null,
                 'name' => $member['name'],
                 'color' => Color::STAFF_COLORS[$index % count(Color::STAFF_COLORS)],
                 'sort_order' => $index,

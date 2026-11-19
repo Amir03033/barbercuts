@@ -28,6 +28,7 @@ use Illuminate\Support\Str;
  *
  * @property ThemeMode $theme_mode
  * @property int|null $referred_by_user_id
+ * @property int|null $demo_referrer_id
  * @property Carbon|null $trial_ends_at
  * @property Carbon|null $free_until
  * @property Carbon|null $suspended_at

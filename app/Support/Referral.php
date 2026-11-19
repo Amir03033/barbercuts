@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 
 /**
  * Een pitcher brengt een zaak aan via een link met ?ref=code. We onthouden die code een maand (cookie) en in de sessie,
@@ -29,6 +30,20 @@ class Referral
         }
 
         return User::query()->where('is_pitcher', true)->where('referral_code', $code)->first();
+    }
+
+    /**
+     * Onthoud deze pitcher voor de bezoeker (sessie en een cookie van een maand), tenzij er al een geldige pitcher is:
+     * de eerste pitcher telt.
+     */
+    public static function remember(Request $request, User $pitcher): void
+    {
+        if (self::current($request) !== null || ! $pitcher->is_pitcher) {
+            return;
+        }
+
+        $request->session()->put(self::SESSION, $pitcher->referralCode());
+        Cookie::queue(self::COOKIE, $pitcher->referralCode(), self::DAYS * 24 * 60);
     }
 
     /**

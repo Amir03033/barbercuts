@@ -114,4 +114,18 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | E-mailadres bevestigen
+    |--------------------------------------------------------------------------
+    |
+    | Hoe lang de link in de bevestigingsmail geldig is, in minuten. Een dag, zodat een mail die je 's avonds pas
+    | opent nog werkt (de standaard van Laravel is een uur).
+    |
+    */
+
+    'verification' => [
+        'expire' => (int) env('AUTH_VERIFICATION_EXPIRE', 1440),
+    ],
+
 ];
