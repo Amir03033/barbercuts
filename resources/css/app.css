@@ -493,14 +493,14 @@ html.reveal-on [data-reveal].is-visible {
     18%,
     72%,
     100% {
-        width: 6rem;
-        height: 1.5rem;
+        width: 5rem;
+        height: 1.6rem;
     }
 
     26%,
     64% {
-        width: 13.5rem;
-        height: 2.25rem;
+        width: 8.5rem;
+        height: 1.9rem;
     }
 }
 
@@ -715,5 +715,27 @@ form:not([data-no-anim]) > *:nth-child(n + 8) { animation-delay: 350ms; }
     .bc-field-error {
         overflow: hidden;
         animation: error-in 260ms var(--ease-out-soft);
+    }
+}
+
+/* Promovideo: de knop "Tik voor geluid" trekt zacht de aandacht zolang het geluid uit staat */
+@keyframes sound-hint {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgb(255 255 255 / 0.45);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgb(255 255 255 / 0);
+    }
+}
+
+.sound-hint {
+    animation: sound-hint 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sound-hint {
+        animation: none;
     }
 }

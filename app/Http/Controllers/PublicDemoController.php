@@ -41,6 +41,11 @@ class PublicDemoController extends Controller
             Referral::remember($request, $pitcher);
         }
 
+        // Geopend: niet door linkvoorbeelden (WhatsApp, Instagram, iMessage) en niet door de pitcher zelf.
+        if ($demoInvite !== null && ! self::isBot($request) && $request->user()?->id !== $demoInvite->user_id) {
+            $demoInvite->forceFill(['views' => $demoInvite->views + 1, 'last_viewed_at' => now()])->save();
+        }
+
         $plan = Plan::current();
 
         $response = response()->view('demo.try', [
@@ -65,6 +70,15 @@ class PublicDemoController extends Controller
         }
 
         return $response;
+    }
+
+    /**
+     * Linkvoorbeelden en zoekmachines: die openen een link zonder dat er een mens kijkt.
+     */
+    public static function isBot(Request $request): bool
+    {
+        return preg_match('/bot|crawl|spider|preview|facebookexternalhit|facebot|whatsapp|telegram|slack|discord|skype|linkedin|embedly|vkshare|pinterest|google-|bing|headless/i', (string) $request->userAgent()) === 1
+            || (string) $request->userAgent() === '';
     }
 
     /**

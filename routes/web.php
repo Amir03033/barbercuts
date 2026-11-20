@@ -11,6 +11,7 @@ use App\Http\Middleware\EndDemoVisit;
 use App\Http\Middleware\EnsurePitcher;
 use App\Http\Middleware\ResolveShopFromApp;
 use App\Http\Middleware\ResolveShopFromSlug;
+use App\Http\Middleware\TrackDemoActivity;
 use App\Livewire\AcceptInvitation;
 use App\Livewire\Account;
 use App\Livewire\App\Appearance;
@@ -289,7 +290,7 @@ Route::post('/probeer/opnieuw', [PublicDemoController::class, 'restart'])->middl
 | Kapper-app (/app)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', ResolveShopFromApp::class])->prefix('app')->name('app.')->group(function (): void {
+Route::middleware(['auth', ResolveShopFromApp::class, TrackDemoActivity::class])->prefix('app')->name('app.')->group(function (): void {
     Route::livewire('/', Today::class)->name('today');
     Route::livewire('/meer', More::class)->name('more');
     Route::livewire('/profiel', Profile::class)->name('profile');
@@ -374,7 +375,7 @@ if (app()->environment('local')) {
 | Publieke pagina's van een zaak: /{slug} — altijd als LAATSTE registreren (§4)
 |--------------------------------------------------------------------------
 */
-Route::middleware(ResolveShopFromSlug::class)->group(function (): void {
+Route::middleware([ResolveShopFromSlug::class, TrackDemoActivity::class])->group(function (): void {
     Route::livewire('/{slug}', ShopShow::class)->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('shop.show');
     // De afbeelding die verschijnt als iemand de link van de zaak deelt (WhatsApp, Instagram, iMessage).
     Route::get('/{slug}/deel.png', fn (CurrentShop $currentShop, ShareImage $share) => response()->file(

@@ -9,7 +9,10 @@ use App\Http\Middleware\ResolveShopFromSlug;
 use App\Listeners\LogSentMessage;
 use App\Listeners\NotifyStaffOfCustomerChange;
 use App\Listeners\ScheduleAppointmentNotifications;
+use App\Models\Appointment;
 use App\Models\Barbershop;
+use App\Models\DemoVisit;
+use App\Models\User;
 use App\Services\Billing\BillingGateway;
 use App\Services\Billing\MollieBillingGateway;
 use App\Services\Messaging\LogSmsProvider;
@@ -56,6 +59,19 @@ class AppServiceProvider extends ServiceProvider
             $timezone = (string) Barbershop::query()->whereKey($appointment->barbershop_id)->value('timezone');
 
             app(WaitlistService::class)->advance($appointment->barbershop_id, $appointment->starts_at->copy()->setTimezone($timezone)->toDateString());
+        });
+
+        // Een afspraak die een bezoeker van de openbare demolink zelf maakt, telt mee in de voortgang voor de pitcher.
+        Appointment::created(function (Appointment $appointment): void {
+            if ($appointment->created_by_user_id === null) {
+                return;
+            }
+
+            $visitor = User::query()->whereKey($appointment->created_by_user_id)->where('is_demo_visitor', true)->value('id');
+
+            if ($visitor !== null) {
+                DemoVisit::query()->where('visitor_id', $visitor)->latest('id')->limit(1)->increment('appointments_made');
+            }
         });
 
         // De bevestigingsmail in het Nederlands, met wat je moet doen als de knop niet werkt.

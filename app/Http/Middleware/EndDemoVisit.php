@@ -28,7 +28,13 @@ class EndDemoVisit
 
             // Wat de bezoeker in de demo instelde, gaat mee naar het aanmelden (naam, kleur, diensten, openingstijden).
             $shop = $user->shops()->where('barbershops.is_demo', true)->where('barbershops.demo_expires_at', '>', now())->latest('barbershops.id')->first();
-            $carryover = $shop !== null ? DemoCarryover::fromShop($shop, $this->demos->visitFor($user)) : null;
+            $visit = $this->demos->visitFor($user);
+            $carryover = $shop !== null ? DemoCarryover::fromShop($shop, $visit) : null;
+
+            // De pitcher ziet dat de kapper aan het aanmelden begon.
+            if ($visit !== null && $request->routeIs('onboarding')) {
+                $visit->forceFill(['signup_started_at' => now()])->save();
+            }
 
             Auth::guard('web')->logout();
             $request->session()->invalidate();

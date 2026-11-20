@@ -255,3 +255,85 @@ it('never simulates bookings in a real shop', function () {
     Livewire::test(DemoLiveBookings::class)->call('tick')->assertNotDispatched('demo-booking');
     expect(fn () => app(DemoShopService::class)->simulateOnlineBooking($shop))->toThrow(HttpException::class);
 });
+
+// ── Voortgang van persoonlijke demo's voor de pitcher ────────────────────────────────────────────────────
+
+it('counts opening the personal link, but not link previews or the pitcher himself', function () {
+    $invite = DemoInvite::factory()->create();
+    $url = '/probeer/'.$invite->pitcher->referralCode().'/'.$invite->token;
+
+    $this->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Safari/604.1')->get($url)->assertOk();
+    $this->withHeader('User-Agent', 'WhatsApp/2.24.1 A')->get($url)->assertOk();
+    $this->withHeader('User-Agent', 'facebookexternalhit/1.1')->get($url)->assertOk();
+    $this->actingAs($invite->pitcher)->withHeader('User-Agent', 'Mozilla/5.0 Safari')->get($url)->assertOk();
+
+    expect($invite->fresh()->views)->toBe(1)->and($invite->fresh()->last_viewed_at)->not->toBeNull();
+});
+
+it('keeps track of what the visitor looks at in the demo', function () {
+    $invite = DemoInvite::factory()->create(['shop_name' => 'Fadez Barbershop']);
+    $this->post('/probeer', ['code' => $invite->pitcher->referralCode(), 'invite' => $invite->token]);
+    $shop = Barbershop::query()->where('is_demo', true)->sole();
+
+    $this->travel(5)->minutes();
+    $this->get('/app')->assertOk();
+    $this->get('/app/agenda')->assertOk();
+    $this->get('/app/omzet')->assertOk();
+    $this->get('/app/omzet')->assertOk();
+    $this->get('/'.$shop->slug)->assertOk();
+
+    $visit = DemoVisit::query()->sole();
+
+    expect($visit->page_views)->toBe(5)
+        ->and($visit->explored)->toBe(['Overzicht', 'Agenda', 'Omzet', 'Klantpagina'])
+        ->and($visit->minutesSpent())->toBe(5);
+
+    // Zelf een afspraak maken telt mee
+    Appointment::factory()->for($shop)->create(['created_by_user_id' => auth()->id()]);
+    expect($visit->fresh()->appointments_made)->toBe(1);
+
+    // Naar aanmelden: het begin van het aanmelden is zichtbaar
+    $this->get('/aanmelden')->assertOk();
+    expect($visit->fresh()->signup_started_at)->not->toBeNull();
+});
+
+it('never tracks real accounts', function () {
+    [$shop, $owner] = shopWithOwner();
+    DemoVisit::query()->create(['visitor_id' => null]);
+
+    $this->actingAs($owner)->get('/app')->assertOk();
+    $this->actingAs($owner)->get('/app/agenda')->assertOk();
+
+    expect(DemoVisit::query()->sole()->page_views)->toBe(0);
+});
+
+it('shows the progress of each personal demo to the pitcher', function () {
+    $invite = DemoInvite::factory()->create(['shop_name' => 'Fadez Barbershop']);
+    $invite->forceFill(['views' => 3, 'starts' => 1, 'last_started_at' => now()])->save();
+
+    $visit = new DemoVisit(['pitcher_id' => $invite->user_id, 'demo_invite_id' => $invite->id]);
+    $visit->forceFill(['page_views' => 12, 'explored' => ['Overzicht', 'Agenda', 'Nieuwe afspraak', 'Omzet'], 'appointments_made' => 2])->save();
+    $visit->forceFill(['created_at' => now()->subMinutes(14), 'last_active_at' => now()])->save();
+
+    $stats = PitcherOverview::inviteStats($invite->fresh()->load('visits'));
+
+    expect($stats)->toMatchArray(['views' => 3, 'starts' => 1, 'minutes' => 14, 'appointments' => 2, 'key_explored' => 3, 'step' => 3, 'signed_up' => false])
+        ->and($stats['explored'])->toBe(['Overzicht', 'Agenda', 'Nieuwe afspraak', 'Omzet']);
+
+    Livewire::actingAs($invite->pitcher)->test(PitcherOverview::class)
+        ->assertSee('Bekeken')->assertSee('14 min')->assertSee('Een mooi moment om te bellen')->assertSee('Nieuwe afspraak')
+        ->assertSee("Al je demo's, laatste 30 dagen", false);
+});
+
+it('moves the progress on when the shop starts and finishes signing up', function () {
+    $invite = DemoInvite::factory()->create();
+    $visit = new DemoVisit(['pitcher_id' => $invite->user_id, 'demo_invite_id' => $invite->id]);
+    $visit->forceFill(['signup_started_at' => now()])->save();
+
+    expect(PitcherOverview::inviteStats($invite->fresh()->load('visits'))['step'])->toBe(4);
+
+    [$shop] = shopWithOwner();
+    $visit->forceFill(['signed_up_barbershop_id' => $shop->id])->save();
+
+    expect(PitcherOverview::inviteStats($invite->fresh()->load('visits'))['step'])->toBe(5);
+});

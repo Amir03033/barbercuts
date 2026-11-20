@@ -26,6 +26,18 @@
         <h2 class="text-lg font-bold tracking-tight">Demo klaarzetten voor een zaak</h2>
         <p class="mt-1 text-sm text-muted">Vul de naam van de zaak in. De kapper opent dan een demo met zijn eigen naam erin: "Zo ziet Fadez eruit in BarberCuts".</p>
 
+        @if ($demoTotals['starts'] > 0 || $demoTotals['views'] > 0)
+            <div class="mt-4">
+                <p class="text-xs font-medium text-muted">Al je demo's, laatste 30 dagen</p>
+                <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <x-ui.stat label="Geopend" :value="$demoTotals['views']" icon="eye" />
+                    <x-ui.stat label="Gestart" :value="$demoTotals['starts']" icon="calendar" />
+                    <x-ui.stat label="Gem. kijktijd" :value="$demoTotals['minutes'].' min'" icon="clock" />
+                    <x-ui.stat label="Aangemeld" :value="$demoTotals['signed_up']" icon="user-plus" />
+                </div>
+            </div>
+        @endif
+
         <form wire:submit="createInvite" class="mt-4 space-y-3" novalidate>
             <x-ui.input label="Naam van de zaak" wire:model="inviteShopName" placeholder="Bijv. Fadez Barbershop" autocomplete="off" maxlength="60" />
             <x-ui.input label="Plaats" wire:model="inviteCity" placeholder="Bijv. Zwolle" autocomplete="off" optional maxlength="60" />
@@ -49,21 +61,12 @@
                                 <span class="size-3 shrink-0 rounded-full ring-2 ring-white" style="background-color: {{ $invite->accent_color ?? '#1f3a5f' }}"></span>
                                 <div class="min-w-0">
                                     <p class="truncate text-base font-semibold">{{ $invite->shop_name }}</p>
-                                    <p class="text-xs text-muted">
-                                        {{ $invite->city ? $invite->city.' · ' : '' }}
-                                        @if ($invite->starts > 0)
-                                            {{ $invite->starts }}× geopend, laatst {{ $invite->last_started_at?->diffForHumans() }}
-                                        @else
-                                            Nog niet geopend
-                                        @endif
-                                        @if ($invite->signed_up_count > 0)
-                                            · <span class="font-semibold text-completed">aangemeld</span>
-                                        @endif
-                                    </p>
+                                    <p class="text-xs text-muted">{{ $invite->city ? $invite->city.' · ' : '' }}klaargezet {{ $invite->created_at->diffForHumans() }}</p>
                                 </div>
                             </div>
                             <x-ui.icon-button icon="trash" label="Verwijderen" wire:click="deleteInvite({{ $invite->id }})" wire:confirm="Deze demolink verwijderen? De link werkt daarna als gewone demo." class="-mt-2 -mr-2" />
                         </div>
+                        <x-pitcher.demo-progress :stats="$inviteStats[$invite->id]" class="mt-3" />
                         <x-ui.copy-link :url="$inviteUrl" :label="preg_replace('#^https?://#', '', $inviteUrl)" class="mt-3 bg-card" />
                         <x-ui.button variant="secondary" size="sm" icon="message-circle" full class="mt-2" target="_blank" rel="noopener"
                             :href="'https://wa.me/?text='.rawurlencode($inviteMessage)">Stuur via WhatsApp</x-ui.button>
@@ -125,10 +128,16 @@
                     <li class="flex items-center justify-between gap-3 py-3" wire:key="visit-{{ $visit->id }}">
                         <div class="min-w-0">
                             <p class="truncate text-sm font-semibold">{{ $visit->invite?->shop_name ?? 'Via je demolink' }}</p>
-                            <p class="text-xs text-muted">{{ ucfirst($visit->created_at->diffForHumans()) }}</p>
+                            <p class="text-xs text-muted">
+                                {{ ucfirst($visit->created_at->diffForHumans()) }}
+                                @if ($visit->minutesSpent() > 0) · {{ $visit->minutesSpent() }} min @endif
+                                @if (count($visit->explored ?? []) > 0) · {{ count($visit->explored) }} {{ count($visit->explored) === 1 ? 'onderdeel' : 'onderdelen' }} bekeken @endif
+                            </p>
                         </div>
                         @if ($visit->signedUpShop)
                             <x-ui.badge status="completed">Aangemeld</x-ui.badge>
+                        @elseif ($visit->signup_started_at)
+                            <x-ui.badge status="gold">Aanmelden begonnen</x-ui.badge>
                         @else
                             <span class="shrink-0 text-xs text-muted">Nog niet aangemeld</span>
                         @endif

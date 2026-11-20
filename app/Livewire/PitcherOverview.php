@@ -20,6 +20,7 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
@@ -213,13 +214,20 @@ class PitcherOverview extends Component
 
         $requests = PitcherRequest::query()->where('user_id', $pitcher->id)->with('barbershop')->latest('id')->limit(8)->get();
 
-        $invites = DemoInvite::query()->where('user_id', $pitcher->id)->latest('id')->limit(12)
-            ->withCount(['visits as signed_up_count' => fn ($query) => $query->whereNotNull('signed_up_barbershop_id')])->get();
+        $invites = DemoInvite::query()->where('user_id', $pitcher->id)->latest('id')->limit(12)->with('visits')->get();
 
         $visits = DemoVisit::query()->where('pitcher_id', $pitcher->id)->with(['invite', 'signedUpShop'])->latest('id')->limit(8)->get();
+        $allVisits = DemoVisit::query()->where('pitcher_id', $pitcher->id)->where('created_at', '>', now()->subDays(30))->get();
 
         return view('livewire.pitcher-overview', [
             'invites' => $invites,
+            'inviteStats' => $invites->mapWithKeys(fn (DemoInvite $invite): array => [$invite->id => self::inviteStats($invite)]),
+            'demoTotals' => [
+                'views' => (int) DemoInvite::query()->where('user_id', $pitcher->id)->where('last_viewed_at', '>', now()->subDays(30))->sum('views'),
+                'starts' => $allVisits->count(),
+                'minutes' => $allVisits->isEmpty() ? 0 : (int) round($allVisits->avg(fn (DemoVisit $visit): int => $visit->minutesSpent())),
+                'signed_up' => $allVisits->whereNotNull('signed_up_barbershop_id')->count(),
+            ],
             'videos' => PromoVideo::query()->shown('for_pitchers')->get(),
             'visits' => $visits,
             'colors' => Color::PRESETS,
@@ -233,6 +241,43 @@ class PitcherOverview extends Component
             'rows' => $rows,
             'totals' => $this->totals($rows),
         ]);
+    }
+
+    /**
+     * Wat de kapper met een persoonlijke demo deed, over alle keren dat hij hem startte.
+     *
+     * @return array{views: int, starts: int, minutes: int, explored: list<string>, key_explored: int, appointments: int, last_active: Carbon|null, signup_started: bool, signed_up: bool, step: int}
+     */
+    public static function inviteStats(DemoInvite $invite): array
+    {
+        $visits = $invite->visits;
+        $explored = array_values(array_unique(array_merge(...array_map(fn (DemoVisit $visit): array => $visit->explored ?? [], $visits->all()) ?: [[]])));
+        $keyExplored = count(array_intersect(DemoVisit::KEY_SECTIONS, $explored));
+        $signupStarted = $visits->contains(fn (DemoVisit $visit): bool => $visit->signup_started_at !== null);
+        $signedUp = $visits->contains(fn (DemoVisit $visit): bool => $visit->signed_up_barbershop_id !== null);
+
+        // Voortgang: 0 = nog niets, 1 = geopend, 2 = gestart, 3 = rondgekeken, 4 = aanmelden begonnen, 5 = aangemeld
+        $step = match (true) {
+            $signedUp => 5,
+            $signupStarted => 4,
+            $keyExplored >= 3 => 3,
+            $invite->starts > 0 => 2,
+            $invite->views > 0 => 1,
+            default => 0,
+        };
+
+        return [
+            'views' => max($invite->views, $invite->starts),
+            'starts' => $invite->starts,
+            'minutes' => (int) $visits->sum(fn (DemoVisit $visit): int => $visit->minutesSpent()),
+            'explored' => array_values(array_filter(array_keys(array_flip(array_values(DemoVisit::SECTIONS))), fn (string $section): bool => in_array($section, $explored, true))),
+            'key_explored' => $keyExplored,
+            'appointments' => (int) $visits->sum('appointments_made'),
+            'last_active' => $visits->max('last_active_at'),
+            'signup_started' => $signupStarted,
+            'signed_up' => $signedUp,
+            'step' => $step,
+        ];
     }
 
     /**

@@ -21,6 +21,8 @@ use Illuminate\Support\Str;
  * @property string|null $city
  * @property string|null $accent_color
  * @property int $starts
+ * @property int $views
+ * @property Carbon|null $last_viewed_at
  * @property Carbon|null $last_started_at
  */
 class DemoInvite extends Model
@@ -42,7 +44,7 @@ class DemoInvite extends Model
      */
     protected function casts(): array
     {
-        return ['last_started_at' => 'datetime'];
+        return ['last_started_at' => 'datetime', 'last_viewed_at' => 'datetime'];
     }
 
     public static function freshToken(): string

@@ -67,19 +67,19 @@
 
             {{-- De app: het overzicht van vandaag, met wat er op een dag binnenkomt --}}
             <div class="phone-in relative mx-auto mt-12 w-fit pb-4 md:mt-16">
-                <x-platform.phone label="Het overzicht van vandaag in de app" island="Nieuwe boeking · 14:30">
+                <x-platform.phone label="Het overzicht van vandaag in de app" island="Nieuwe boeking" class="md:w-[19.5rem]">
                     <div class="px-4 pt-1 text-left">
                         <p class="text-[1.375rem] leading-7 font-bold tracking-tight">Goedemorgen, Sam</p>
                         <p class="text-[0.6875rem] text-muted">Studio Fade · vrijdag</p>
                         <div class="mt-3 grid grid-cols-2 gap-2">
                             <div class="rounded-2xl bg-card p-3 shadow-soft">
                                 <p class="text-[0.625rem] font-medium text-muted">Omzet vandaag</p>
-                                <p class="mt-0.5 text-xl font-bold tracking-tight tabular-nums">€ 385,00</p>
+                                <p class="mt-0.5 text-lg font-bold tracking-tight whitespace-nowrap tabular-nums md:text-xl">€ 385,00</p>
                                 <p class="mt-1 inline-flex rounded-pill bg-completed/10 px-1.5 py-0.5 text-[0.5625rem] font-semibold text-completed">+18%</p>
                             </div>
                             <div class="rounded-2xl bg-card p-3 shadow-soft">
                                 <p class="text-[0.625rem] font-medium text-muted">Afspraken</p>
-                                <p class="mt-0.5 text-xl font-bold tracking-tight">14</p>
+                                <p class="mt-0.5 text-lg font-bold tracking-tight md:text-xl">14</p>
                                 <p class="mt-1 text-[0.5625rem] text-muted">9 nog te gaan</p>
                             </div>
                         </div>
@@ -94,7 +94,7 @@
                             @endforeach
                         </div>
                     </div>
-                    <div class="absolute inset-x-0 bottom-0 flex h-16 items-start justify-around border-t border-border/70 bg-card/85 px-3 pt-2 text-[0.5625rem] font-medium text-muted backdrop-blur">
+                    <div class="absolute inset-x-0 bottom-0 flex h-[4.25rem] items-start justify-around border-t border-border/70 bg-card/95 px-3 pt-2 text-[0.5625rem] font-medium text-muted">
                         <span class="flex flex-col items-center gap-0.5 text-link"><x-ui.icon name="layout-dashboard" size="18" />Overzicht</span>
                         <span class="flex flex-col items-center gap-0.5"><x-ui.icon name="calendar" size="18" />Agenda</span>
                         <span class="flex size-9 items-center justify-center rounded-full bg-accent text-on-accent"><x-ui.icon name="plus" size="18" /></span>
@@ -103,17 +103,18 @@
                     </div>
                 </x-platform.phone>
 
-                {{-- Zwevende meldingen (decoratief) --}}
-                <div style="--notif-delay: 1300ms" class="notif absolute top-24 -left-4 flex w-52 items-center gap-2.5 rounded-2xl bg-card/90 p-3 text-left shadow-pop ring-1 ring-border backdrop-blur-xl sm:-left-40" aria-hidden="true">
-                    <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent text-on-accent"><x-ui.icon name="calendar" size="18" /></span>
-                    <span class="min-w-0"><span class="block text-xs font-semibold">Nieuwe boeking</span><span class="block truncate text-[0.6875rem] text-muted">Lars · vandaag 14:30</span></span>
+                {{-- Zwevende meldingen (decoratief): naast de telefoon, ze raken alleen de rand en bedekken nooit de inhoud.
+                     Op een smal scherm is er geen plek; daar laat het eiland bovenin de melding zien. --}}
+                <div style="--notif-delay: 1300ms" class="notif absolute top-28 right-full -mr-3 hidden w-60 items-center gap-3 rounded-2xl bg-card/95 p-3 text-left shadow-pop ring-1 ring-border md:flex" aria-hidden="true">
+                    <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-on-accent"><x-ui.icon name="calendar" size="18" /></span>
+                    <span class="min-w-0"><span class="flex items-center justify-between gap-2 text-xs font-semibold">Nieuwe boeking <span class="font-normal text-muted">nu</span></span><span class="block truncate text-[0.6875rem] text-muted">Lars · vandaag 14:30</span></span>
                 </div>
-                <div style="--notif-delay: 2200ms" class="notif absolute top-64 -right-4 flex w-48 items-center gap-2.5 rounded-2xl bg-card/90 p-3 text-left shadow-pop ring-1 ring-border backdrop-blur-xl sm:-right-36" aria-hidden="true">
-                    <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-star/15 text-star"><x-ui.icon name="star" size="18" /></span>
-                    <span class="min-w-0"><span class="block text-xs font-semibold">Nieuwe review</span><span class="block text-[0.6875rem] text-muted">5 sterren · “Strakke fade”</span></span>
+                <div style="--notif-delay: 2200ms" class="notif absolute top-[18rem] left-full -ml-3 hidden w-56 items-center gap-3 rounded-2xl bg-card/95 p-3 text-left shadow-pop ring-1 ring-border md:flex" aria-hidden="true">
+                    <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-star/15 text-star"><x-ui.icon name="star" size="18" /></span>
+                    <span class="min-w-0"><span class="block text-xs font-semibold">Nieuwe review</span><span class="flex items-center gap-1 text-[0.6875rem] text-muted"><span class="text-star">★★★★★</span> “Strakke fade”</span></span>
                 </div>
-                <div style="--notif-delay: 3100ms" class="notif absolute bottom-28 -left-2 hidden w-44 items-center gap-2.5 rounded-2xl bg-card/90 p-3 text-left shadow-pop ring-1 ring-border backdrop-blur-xl sm:-left-32 sm:flex" aria-hidden="true">
-                    <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-completed/15 text-completed"><x-ui.icon name="check" size="18" /></span>
+                <div style="--notif-delay: 3100ms" class="notif absolute bottom-24 right-full -mr-3 hidden w-48 items-center gap-3 rounded-2xl bg-card/95 p-3 text-left shadow-pop ring-1 ring-border md:flex" aria-hidden="true">
+                    <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-completed/15 text-completed"><x-ui.icon name="check" size="18" /></span>
                     <span class="min-w-0"><span class="block text-xs font-semibold">Voltooid</span><span class="block text-[0.6875rem] text-muted">€ 35,00 · pin</span></span>
                 </div>
             </div>
@@ -127,7 +128,7 @@
             <h2 class="mx-auto mt-1 max-w-2xl text-center text-[2rem] leading-10 font-bold tracking-tight md:text-5xl md:leading-[1.1]" data-reveal>Bekijk het in 30 seconden.</h2>
             <div @class(['mt-8 grid items-start gap-6', 'md:grid-cols-2' => $videos->count() === 2, 'md:grid-cols-3' => $videos->count() >= 3])>
                 @foreach ($videos as $video)
-                    <x-promo-video :video="$video" wire:key="video-{{ $video->id }}" data-reveal />
+                    <x-promo-video :video="$video" sound wire:key="video-{{ $video->id }}" data-reveal />
                 @endforeach
             </div>
         </section>
@@ -448,7 +449,7 @@
 
             <div class="md:sticky md:top-24">
                 <x-platform.phone label="De boekingspagina van een zaak, met de banner, het logo en de kleur die je kiest" data-reveal style="--reveal-delay: 120ms">
-                    <div :data-theme="dark ? 'dark' : 'light'" :style="`--accent: ${accent}; --on-accent: ${onAccent}`" class="-mt-11 h-full bg-bg pt-11 text-left text-text transition-colors duration-300">
+                    <div :data-theme="dark ? 'dark' : 'light'" :style="`--accent: ${accent}; --on-accent: ${onAccent}`" class="-mt-[2.85rem] h-full bg-bg pt-[2.85rem] text-left text-text transition-colors duration-300">
                         <div class="h-28 transition-[background] duration-300" :style="coverStyle"></div>
                         <div class="px-4">
                             <span class="-mt-7 flex size-14 items-center justify-center overflow-hidden rounded-2xl border-4 border-bg bg-accent text-lg font-bold text-on-accent transition-colors duration-300">
