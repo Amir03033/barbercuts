@@ -73,6 +73,48 @@
         @endif
     </section>
 
+    {{-- Video's om te delen (geüpload in /admin) --}}
+    @if ($videos->isNotEmpty())
+        <section class="mt-4 rounded-[1.75rem] bg-card p-5 shadow-soft ring-1 ring-border/70 md:p-6" data-reveal>
+            <h2 class="text-lg font-bold tracking-tight">Video's om te delen</h2>
+            <p class="mt-1 text-sm text-muted">Stuur een video mee in WhatsApp of zet hem in je Instagram-story. Een video speelt daar meteen af en valt meer op dan een link. Je demolink gaat mee in de tekst.</p>
+            <div class="mt-4 grid gap-6 sm:grid-cols-2">
+                @foreach ($videos as $video)
+                    @php($shareText = "Zo werkt BarberCuts in 30 seconden. Probeer het zelf, zonder account: {$demoLink}")
+                    <div wire:key="video-{{ $video->id }}"
+                        x-data="{
+                            busy: false,
+                            async share() {
+                                this.busy = true;
+                                try {
+                                    const blob = await (await fetch(@js($video->url()))).blob();
+                                    const file = new File([blob], @js($video->downloadName()), { type: blob.type || 'video/mp4' });
+                                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                        await navigator.share({ files: [file], text: @js($shareText) });
+                                    } else {
+                                        this.$refs.download.click();
+                                    }
+                                } catch (error) {
+                                } finally {
+                                    this.busy = false;
+                                }
+                            },
+                        }">
+                        <x-promo-video :video="$video" />
+                        <p class="mt-3 text-sm font-semibold">{{ $video->title }}</p>
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <x-ui.button variant="secondary" size="sm" icon="share" x-on:click="share()" x-bind:disabled="busy">
+                                <span x-text="busy ? 'Even geduld…' : 'Delen'">Delen</span>
+                            </x-ui.button>
+                            <x-ui.button variant="secondary" size="sm" icon="download" :href="$video->url()" x-ref="download" download="{{ $video->downloadName() }}">Downloaden</x-ui.button>
+                        </div>
+                        <x-ui.copy-link :url="$shareText" label="Tekst met je demolink" class="mt-2" />
+                    </div>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     {{-- Wie heeft er een demo bekeken --}}
     @if ($visits->isNotEmpty())
         <section class="mt-4 rounded-[1.75rem] bg-card p-5 shadow-soft ring-1 ring-border/70 md:p-6" data-reveal>

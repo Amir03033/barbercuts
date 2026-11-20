@@ -8,6 +8,9 @@ use Filament\Widgets\ChartWidget;
 
 class SignupsChartWidget extends ChartWidget
 {
+    /** Niet elke 5 seconden opnieuw laden (standaard in Filament): dat maakte het dashboard traag bij scrollen. */
+    protected ?string $pollingInterval = null;
+
     protected static ?int $sort = 2;
 
     protected ?string $heading = 'Nieuwe aanmeldingen per week';

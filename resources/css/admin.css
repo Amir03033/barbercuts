@@ -51,11 +51,12 @@ body.fi-body,
     -webkit-font-smoothing: antialiased;
 }
 
-/* ---------- Zijbalk en bovenbalk ---------- */
+/* ---------- Zijbalk en bovenbalk ----------
+   Effen achtergronden, geen backdrop-filter: een blur over de grafieken heen moest bij elke scrollbeweging opnieuw
+   berekend worden en maakte het dashboard schokkerig. */
 .fi-sidebar,
 .fi-main-sidebar {
-    background: rgb(255 255 255 / 0.78);
-    backdrop-filter: saturate(180%) blur(24px);
+    background: #ffffff;
     border-right: 1px solid var(--bc-line);
 }
 
@@ -68,8 +69,7 @@ body.fi-body,
 
 .fi-topbar,
 .fi-topbar-ctn {
-    background: rgb(245 245 247 / 0.8);
-    backdrop-filter: saturate(180%) blur(24px);
+    background: rgb(245 245 247 / 0.97);
     box-shadow: none;
     border-bottom: 1px solid var(--bc-line);
 }

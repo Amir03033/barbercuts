@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DemoInvite;
 use App\Models\Plan;
+use App\Models\PromoVideo;
 use App\Models\User;
 use App\Notifications\DemoStarted;
 use App\Services\Demo\DemoShopService;
@@ -49,6 +50,7 @@ class PublicDemoController extends Controller
                 default => route('demo.try.share'),
             },
             'invite' => $demoInvite,
+            'video' => PromoVideo::query()->shown('show_on_demo')->first(),
             'code' => $pitcher?->referralCode(),
             'pitcher' => $pitcher ?? Referral::current($request),
             'viewer' => $request->user(),

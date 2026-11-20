@@ -38,6 +38,7 @@ class Dashboard extends BaseDashboard
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('statistics')->label('Statistieken')->icon(Heroicon::OutlinedChartBar)->color('gray')->url(Statistics::getUrl()),
             Action::make('shops')->label('Zaken')->icon(Heroicon::OutlinedBuildingStorefront)->color('gray')->url(BarbershopResource::getUrl('index')),
             Action::make('plans')->label('Prijs en proef')->icon(Heroicon::OutlinedCurrencyEuro)->color('gray')->url(PlanResource::getUrl('index')),
             Action::make('settings')->label('Instellingen')->icon(Heroicon::OutlinedCog6Tooth)->url(PlatformSettingsPage::getUrl()),

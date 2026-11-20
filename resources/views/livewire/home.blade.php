@@ -120,6 +120,19 @@
         </div>
     </section>
 
+    {{-- Zo werkt het: de promovideo's die de beheerder in /admin heeft aangezet voor de landingspagina --}}
+    @if ($videos->isNotEmpty())
+        <section class="mx-auto max-w-5xl px-4 pt-16 md:pt-24">
+            <p class="text-center text-sm font-semibold text-link" data-reveal>Zo werkt het</p>
+            <h2 class="mx-auto mt-1 max-w-2xl text-center text-[2rem] leading-10 font-bold tracking-tight md:text-5xl md:leading-[1.1]" data-reveal>Bekijk het in 30 seconden.</h2>
+            <div @class(['mt-8 grid items-start gap-6', 'md:grid-cols-2' => $videos->count() === 2, 'md:grid-cols-3' => $videos->count() >= 3])>
+                @foreach ($videos as $video)
+                    <x-promo-video :video="$video" wire:key="video-{{ $video->id }}" data-reveal />
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     {{-- Alles in één app --}}
     <section class="mx-auto max-w-5xl px-4 py-16 md:py-24">
         <p class="text-sm font-semibold text-link" data-reveal>Zo ziet het eruit</p>

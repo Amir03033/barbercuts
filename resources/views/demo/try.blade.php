@@ -84,6 +84,13 @@
         </div>
     </section>
 
+    @if ($video)
+        <section class="mx-auto max-w-3xl px-4 pb-10">
+            <h2 class="mb-4 text-center text-sm font-semibold text-muted">Liever eerst kijken? Zo werkt het</h2>
+            <x-promo-video :video="$video" />
+        </section>
+    @endif
+
     <section class="mx-auto max-w-3xl px-4 pb-10">
         <h2 class="text-center text-sm font-semibold text-muted">Dit kun je meteen uitproberen</h2>
         <div class="stagger mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">

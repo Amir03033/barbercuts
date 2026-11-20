@@ -10,6 +10,7 @@ use App\Models\Barbershop;
 use App\Models\DemoInvite;
 use App\Models\DemoVisit;
 use App\Models\PitcherRequest;
+use App\Models\PromoVideo;
 use App\Models\User;
 use App\Notifications\PitcherRequestReceived;
 use App\Support\Color;
@@ -219,6 +220,7 @@ class PitcherOverview extends Component
 
         return view('livewire.pitcher-overview', [
             'invites' => $invites,
+            'videos' => PromoVideo::query()->shown('for_pitchers')->get(),
             'visits' => $visits,
             'colors' => Color::PRESETS,
             'requests' => $requests,

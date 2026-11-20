@@ -9,6 +9,9 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class MoneyOverviewWidget extends StatsOverviewWidget
 {
+    /** Niet elke 5 seconden opnieuw laden (standaard in Filament): dat maakte het dashboard traag bij scrollen. */
+    protected ?string $pollingInterval = null;
+
     protected static ?int $sort = 3;
 
     protected ?string $heading = 'Geld';
