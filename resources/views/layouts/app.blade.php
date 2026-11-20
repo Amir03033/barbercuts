@@ -18,6 +18,9 @@
         <x-app.impersonation-banner />
         @isset($currentShop)
             <x-app.demo-banner :shop="$currentShop" />
+            @if ($currentShop->is_demo)
+                <livewire:app.demo-live-bookings />
+            @endif
             <x-app.access-banner :shop="$currentShop" :is-owner="auth()->user()?->isOwnerOf($currentShop) ?? false" />
         @endisset
 

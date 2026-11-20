@@ -15,6 +15,9 @@
                 <h1 class="text-[1.75rem] leading-9 font-bold tracking-tight md:text-3xl">Meld je zaak aan</h1>
                 <p class="mt-1 text-base text-muted">Eerst je account. Binnen drie minuten staat je boekingspagina online, gratis en zonder creditcard.</p>
             </div>
+            @if ($fromDemo)
+                <x-demo-carryover-note :name="$shopName" />
+            @endif
             <x-ui.input label="Je naam" wire:model="name" autocomplete="name" required autofocus />
             <x-ui.input label="E-mailadres" type="email" wire:model="email" autocomplete="email" inputmode="email" required />
             <x-ui.password-input label="Wachtwoord" wire:model="password" autocomplete="new-password" hint="Minimaal 8 tekens." meter required />
@@ -33,6 +36,9 @@
                 <h1 class="text-lg font-bold">Je zaak</h1>
                 <p class="mt-1 text-sm text-muted">Dit zien klanten op je boekingspagina.</p>
             </div>
+            @if ($fromDemo)
+                <x-demo-carryover-note :name="$shopName" />
+            @endif
             <x-ui.input label="Naam van je zaak" wire:model.live.debounce.400ms="shopName" autocomplete="organization" required autofocus />
             <x-ui.input label="Plaats" wire:model.blur="city" autocomplete="address-level2" required />
             <x-ui.phone-input wire:model="phone" label="Telefoonnummer van de zaak" />

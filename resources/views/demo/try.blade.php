@@ -4,6 +4,12 @@
 --}}
 @php
     $pitcherName = $pitcher ? explode(' ', trim($pitcher->name))[0] : null;
+    $shopName = $invite?->shop_name ?? \App\Services\Demo\DemoShopService::DEFAULT_NAME;
+    $ogTitle = match (true) {
+        $invite !== null => "Een demo van BarberCuts voor {$invite->shop_name}",
+        $pitcherName !== null => "{$pitcherName} nodigt je uit om BarberCuts te proberen",
+        default => 'Probeer BarberCuts — je eigen demozaak',
+    };
     $features = [
         ['calendar', 'Agenda per kapper', 'Drie kappers met elk een eigen agenda, pauzes en vrije dagen.'],
         ['plus', 'Afspraak in seconden', 'Zet een telefonische boeking erin met een paar tikken.'],
@@ -12,8 +18,8 @@
     ];
 @endphp
 
-<x-layouts::platform title="Probeer de demo"
-    :og="['title' => 'Probeer BarberCuts — je eigen demozaak', 'description' => 'Geen account nodig. Bekijk in een minuut hoe je agenda, klanten en omzet eruitzien in BarberCuts.', 'url' => route('demo.try')]">
+<x-layouts::platform :title="$invite ? 'Demo voor '.$invite->shop_name : 'Probeer de demo'"
+    :og="['title' => $ogTitle, 'description' => 'Geen account nodig. Bekijk in een minuut hoe je agenda, klanten en omzet eruitzien in BarberCuts.', 'url' => url()->current(), 'image' => $shareImage]">
     <section class="relative">
         <div class="hero-glow pointer-events-none absolute inset-0" aria-hidden="true"></div>
 
@@ -23,17 +29,31 @@
                 Live demo · geen account nodig
             </p>
 
-            <h1 class="rise-in mt-5 text-[2rem] leading-[1.1] font-bold tracking-tight text-text md:text-5xl" style="--rise-delay: 60ms">
-                Probeer BarberCuts in je eigen voorbeeldzaak
+            <h1 class="rise-in mt-5 text-[2rem] leading-[1.1] font-bold tracking-tight text-balance text-text md:text-5xl" style="--rise-delay: 60ms">
+                @if ($invite)
+                    Zo ziet <span class="text-link">{{ $invite->shop_name }}</span> eruit in BarberCuts
+                @else
+                    Probeer BarberCuts in je eigen voorbeeldzaak
+                @endif
             </h1>
             <p class="rise-in mx-auto mt-4 max-w-md text-base text-muted md:text-lg" style="--rise-delay: 120ms">
-                Je krijgt <strong class="font-semibold text-text">Studio Fade</strong>: drie kappers, 140 klanten en een volle agenda. Tik overal op en verander wat je wilt — alles is verzonnen en er wordt niets verstuurd.
+                @if ($invite)
+                    Je krijgt een volle agenda met drie kappers en 140 klanten, alvast onder jouw naam. Tik overal op en verander wat je wilt — de klanten zijn verzonnen en er wordt niets verstuurd.
+                @else
+                    Je krijgt <strong class="font-semibold text-text">{{ $shopName }}</strong>: drie kappers, 140 klanten en een volle agenda. Tik overal op en verander wat je wilt — alles is verzonnen en er wordt niets verstuurd.
+                @endif
             </p>
 
             @if ($pitcherName)
                 <div class="rise-in mx-auto mt-6 flex max-w-sm items-center gap-3 rounded-card bg-card p-3 pr-4 text-left shadow-soft ring-1 ring-border/70" style="--rise-delay: 160ms">
                     <x-ui.avatar :name="$pitcher->name" />
-                    <p class="min-w-0 text-sm text-muted">Je kreeg deze link van <strong class="font-semibold text-text">{{ $pitcherName }}</strong>. Vragen? Stuur gerust een berichtje terug.</p>
+                    <p class="min-w-0 text-sm text-muted">
+                        @if ($invite)
+                            <strong class="font-semibold text-text">{{ $pitcherName }}</strong> heeft deze demo voor je klaargezet. Vragen? Stuur gerust een berichtje terug.
+                        @else
+                            Je kreeg deze link van <strong class="font-semibold text-text">{{ $pitcherName }}</strong>. Vragen? Stuur gerust een berichtje terug.
+                        @endif
+                    </p>
                 </div>
             @endif
 
@@ -44,9 +64,15 @@
             <form method="POST" action="{{ route('demo.try.start') }}" class="rise-in mx-auto mt-7 max-w-sm" style="--rise-delay: 200ms"
                 x-data="{ busy: false }" x-on:submit="busy = true">
                 @csrf
+                @if ($code)
+                    <input type="hidden" name="code" value="{{ $code }}">
+                @endif
+                @if ($invite)
+                    <input type="hidden" name="invite" value="{{ $invite->token }}">
+                @endif
                 <button type="submit" x-bind:disabled="busy"
                     class="relative inline-flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-input bg-accent px-6 text-lg font-semibold text-on-accent shadow-pop transition-[transform,filter] duration-150 hover:brightness-110 active:scale-[0.98] disabled:opacity-80">
-                    <span x-show="! busy" class="inline-flex items-center gap-2">Start de demo <x-ui.icon name="arrow-right" size="20" /></span>
+                    <span x-show="! busy" class="inline-flex items-center gap-2">{{ $invite ? 'Bekijk je zaak' : 'Start de demo' }} <x-ui.icon name="arrow-right" size="20" /></span>
                     <span x-show="busy" x-cloak class="inline-flex items-center gap-2"><x-ui.icon name="loader" size="20" class="animate-spin" /> Je zaak wordt klaargezet…</span>
                 </button>
                 @if ($viewer && ! $viewer->is_demo_visitor)

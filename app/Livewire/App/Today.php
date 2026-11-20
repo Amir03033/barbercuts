@@ -12,6 +12,7 @@ use App\Support\Period;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -76,6 +77,12 @@ class Today extends Component
             default => Period::make('custom', $today->subDays(6)->toDateString(), $shop->timezone, $today->toDateString()),
         };
     }
+
+    /**
+     * Een "live" boeking in een demozaak (App\Livewire\App\DemoLiveBookings): opnieuw tekenen, zodat hij er meteen staat.
+     */
+    #[On('demo-booking-created')]
+    public function refreshAfterDemoBooking(): void {}
 
     public function render(ShopStatsService $stats): View
     {

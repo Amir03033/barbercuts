@@ -5,12 +5,15 @@ namespace App\Livewire;
 use App\Enums\ShopRole;
 use App\Livewire\Concerns\EditsWeekSchedule;
 use App\Models\Barbershop;
+use App\Models\DemoVisit;
 use App\Models\Service;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Rules\AvailableSlug;
 use App\Services\ShopSetupService;
+use App\Support\Color;
 use App\Support\CurrentShop;
+use App\Support\DemoCarryover;
 use App\Support\Referral;
 use App\Support\WeekSchedule;
 use Illuminate\Auth\Events\Registered;
@@ -42,6 +45,9 @@ class Onboarding extends Component
 
     #[Locked]
     public ?int $shopId = null;
+
+    /** Komt van de demo: instellingen staan al ingevuld. */
+    public bool $fromDemo = false;
 
     // Stap 1 — account
     public string $name = '';
@@ -107,6 +113,10 @@ class Onboarding extends Component
             'price' => money_input($service['price_cents']),
         ], ShopSetupService::SUGGESTED_SERVICES);
 
+        if ($this->shop === null) {
+            $this->applyDemoCarryover();
+        }
+
         $user = Auth::user();
 
         if (! $user instanceof User) {
@@ -132,6 +142,36 @@ class Onboarding extends Component
         $this->phone = (string) $this->shop->phone;
         $this->slug = $this->shop->slug;
         $this->slugEdited = true;
+    }
+
+    /**
+     * Komt de bezoeker uit de demo, dan staan naam, plaats, diensten en openingstijden uit de demo alvast ingevuld.
+     */
+    private function applyDemoCarryover(): void
+    {
+        $carryover = DemoCarryover::current();
+
+        if ($carryover === null) {
+            return;
+        }
+
+        $this->fromDemo = true;
+        $this->shopName = (string) ($carryover['shop_name'] ?? '');
+        $this->city = (string) ($carryover['city'] ?? '');
+        $this->week = $carryover['week'];
+
+        if ($carryover['services'] !== []) {
+            $this->services = array_map(fn (array $service): array => [
+                'selected' => true,
+                'name' => $service['name'],
+                'duration' => $service['duration'],
+                'price' => money_input($service['price_cents']),
+            ], $carryover['services']);
+        }
+
+        if ($this->shopName !== '') {
+            $this->slug = app(ShopSetupService::class)->suggestSlug($this->shopName, $this->city ?: null);
+        }
     }
 
     public function saveAccount(): void
@@ -204,12 +244,34 @@ class Onboarding extends Component
         if ($this->shop === null) {
             $this->shop = $setup->createShop($user, trim($this->shopName), trim($this->city), $phone, $this->slug, Referral::current(request()));
             $this->shopId = $this->shop->id;
+            $this->takeOverFromDemo($this->shop);
             $currentShop->set($this->shop);
         } else {
             $this->shop->update(['name' => trim($this->shopName), 'city' => trim($this->city), 'phone' => $phone, 'slug' => $this->slug]);
         }
 
         $this->goTo(3);
+    }
+
+    /**
+     * De kleur uit de demo op de nieuwe zaak, en de demo telt als aanmelding in het overzicht van de pitcher.
+     */
+    private function takeOverFromDemo(Barbershop $shop): void
+    {
+        $carryover = DemoCarryover::current();
+
+        if ($carryover === null) {
+            return;
+        }
+
+        if (Color::isHex($carryover['accent'])) {
+            $shop->accent_color = (string) $carryover['accent'];
+            $shop->save();
+        }
+
+        if ($carryover['visit_id'] !== null) {
+            DemoVisit::query()->whereKey($carryover['visit_id'])->whereNull('signed_up_barbershop_id')->update(['signed_up_barbershop_id' => $shop->id]);
+        }
     }
 
     public function addBarber(): void
@@ -324,6 +386,8 @@ class Onboarding extends Component
             $shop->onboarding_step = null;
             $shop->save();
         });
+
+        DemoCarryover::forget();
 
         $this->step = 6;
     }

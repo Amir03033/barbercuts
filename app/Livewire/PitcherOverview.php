@@ -7,9 +7,12 @@ use App\Enums\PitcherRequestStatus;
 use App\Enums\PitcherRequestType;
 use App\Enums\ShopRole;
 use App\Models\Barbershop;
+use App\Models\DemoInvite;
+use App\Models\DemoVisit;
 use App\Models\PitcherRequest;
 use App\Models\User;
 use App\Notifications\PitcherRequestReceived;
+use App\Support\Color;
 use App\Support\Features;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -20,6 +23,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -42,6 +46,65 @@ class PitcherOverview extends Component
     public string $extensionReason = '';
 
     public string $wish = '';
+
+    // Persoonlijke demo voor één zaak
+    public string $inviteShopName = '';
+
+    public string $inviteCity = '';
+
+    public string $inviteColor = '';
+
+    #[Locked]
+    public ?int $newInviteId = null;
+
+    /**
+     * Zet een demo klaar met de naam (en eventueel plaats en kleur) van de zaak van een kapper.
+     */
+    public function createInvite(): void
+    {
+        $this->inviteShopName = trim($this->inviteShopName);
+        $this->inviteCity = trim($this->inviteCity);
+
+        $this->validate([
+            'inviteShopName' => ['required', 'string', 'min:2', 'max:60'],
+            'inviteCity' => ['nullable', 'string', 'max:60'],
+            'inviteColor' => ['nullable', Rule::in(Color::PRESETS)],
+        ], attributes: ['inviteShopName' => 'naam van de zaak', 'inviteCity' => 'plaats', 'inviteColor' => 'kleur']);
+
+        $key = 'demo-invite:'.Auth::id();
+
+        if (RateLimiter::tooManyAttempts($key, 30)) {
+            $this->addError('inviteShopName', 'Je hebt er vandaag al veel gemaakt. Probeer het morgen weer.');
+
+            return;
+        }
+
+        RateLimiter::hit($key, 86400);
+
+        /** @var User $pitcher */
+        $pitcher = Auth::user();
+
+        $invite = new DemoInvite([
+            'shop_name' => $this->inviteShopName,
+            'city' => $this->inviteCity !== '' ? $this->inviteCity : null,
+            'accent_color' => $this->inviteColor !== '' ? $this->inviteColor : null,
+        ]);
+        $invite->user_id = $pitcher->id;
+        $invite->save();
+
+        $this->newInviteId = $invite->id;
+        $this->reset('inviteShopName', 'inviteCity', 'inviteColor');
+        $this->dispatch('toast', message: 'Demo voor '.$invite->shop_name.' staat klaar');
+    }
+
+    public function deleteInvite(int $inviteId): void
+    {
+        DemoInvite::query()->where('user_id', Auth::id())->whereKey($inviteId)->delete();
+
+        if ($this->newInviteId === $inviteId) {
+            $this->newInviteId = null;
+        }
+    }
 
     /**
      * Open het venster om een langere proef voor één van jouw zaken aan te vragen.
@@ -149,7 +212,15 @@ class PitcherOverview extends Component
 
         $requests = PitcherRequest::query()->where('user_id', $pitcher->id)->with('barbershop')->latest('id')->limit(8)->get();
 
+        $invites = DemoInvite::query()->where('user_id', $pitcher->id)->latest('id')->limit(12)
+            ->withCount(['visits as signed_up_count' => fn ($query) => $query->whereNotNull('signed_up_barbershop_id')])->get();
+
+        $visits = DemoVisit::query()->where('pitcher_id', $pitcher->id)->with(['invite', 'signedUpShop'])->latest('id')->limit(8)->get();
+
         return view('livewire.pitcher-overview', [
+            'invites' => $invites,
+            'visits' => $visits,
+            'colors' => Color::PRESETS,
             'requests' => $requests,
             'openExtensions' => $requests->where('type', PitcherRequestType::TrialExtension)->where('status', PitcherRequestStatus::Open)->pluck('barbershop_id')->all(),
             'pitcher' => $pitcher,

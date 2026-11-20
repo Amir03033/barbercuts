@@ -37,9 +37,9 @@
         </div>
 
         <div class="relative mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/15 pt-4">
-            <p class="text-sm text-white/80">Bevalt het? Je eigen zaak staat in een paar minuten online.</p>
+            <p class="text-sm text-white/80">Bevalt het? Maak dit je echte zaak: je diensten, prijzen en openingstijden gaan mee.</p>
             <a href="{{ route('onboarding') }}" class="inline-flex min-h-11 items-center gap-1.5 rounded-pill bg-white px-4 text-sm font-semibold text-[#1d1d1f]">
-                Meld je zaak aan <x-ui.icon name="arrow-right" size="16" />
+                Maak dit mijn zaak <x-ui.icon name="arrow-right" size="16" />
             </a>
         </div>
     </section>

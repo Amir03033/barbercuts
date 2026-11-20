@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\User;
 use App\Services\Demo\DemoShopService;
+use App\Support\DemoCarryover;
 use App\Support\Referral;
 use Closure;
 use Illuminate\Http\Request;
@@ -25,6 +26,10 @@ class EndDemoVisit
         if ($user instanceof User && $user->is_demo_visitor) {
             $referrer = Referral::current($request);
 
+            // Wat de bezoeker in de demo instelde, gaat mee naar het aanmelden (naam, kleur, diensten, openingstijden).
+            $shop = $user->shops()->where('barbershops.is_demo', true)->where('barbershops.demo_expires_at', '>', now())->latest('barbershops.id')->first();
+            $carryover = $shop !== null ? DemoCarryover::fromShop($shop, $this->demos->visitFor($user)) : null;
+
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -33,6 +38,10 @@ class EndDemoVisit
 
             if ($referrer !== null) {
                 $request->session()->put(Referral::SESSION, $referrer->referralCode());
+            }
+
+            if ($carryover !== null) {
+                $request->session()->put(DemoCarryover::SESSION, $carryover);
             }
         }
 

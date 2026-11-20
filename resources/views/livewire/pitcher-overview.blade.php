@@ -21,6 +21,81 @@
     {{-- De eigen demolink --}}
     <x-pitcher.demo-link :url="$demoLink" :starts="$pitcher->demo_link_starts" class="mt-4" />
 
+    {{-- Persoonlijke demo: een demo met de naam van de zaak van één kapper --}}
+    <section class="mt-4 rounded-[1.75rem] bg-card p-5 shadow-soft ring-1 ring-border/70 md:p-6" data-reveal>
+        <h2 class="text-lg font-bold tracking-tight">Demo klaarzetten voor een zaak</h2>
+        <p class="mt-1 text-sm text-muted">Vul de naam van de zaak in. De kapper opent dan een demo met zijn eigen naam erin: "Zo ziet Fadez eruit in BarberCuts".</p>
+
+        <form wire:submit="createInvite" class="mt-4 space-y-3" novalidate>
+            <x-ui.input label="Naam van de zaak" wire:model="inviteShopName" placeholder="Bijv. Fadez Barbershop" autocomplete="off" maxlength="60" />
+            <x-ui.input label="Plaats" wire:model="inviteCity" placeholder="Bijv. Zwolle" autocomplete="off" optional maxlength="60" />
+            <div>
+                <p class="text-sm font-medium text-text">Kleur <span class="font-normal text-muted">· optioneel, bijvoorbeeld de kleur van hun logo</span></p>
+                <x-ui.color-swatches :colors="$colors" wire:model="inviteColor" :value="$inviteColor" name="inviteColor" label="Kleur van de demo" class="mt-2" />
+            </div>
+            <x-ui.button type="submit" loading="createInvite" full>Demo klaarzetten</x-ui.button>
+        </form>
+
+        @if ($invites->isNotEmpty())
+            <ul class="mt-5 space-y-3">
+                @foreach ($invites as $invite)
+                    @php
+                        $inviteUrl = $invite->url();
+                        $inviteMessage = "Hoi! Ik heb alvast een demo van BarberCuts klaargezet voor {$invite->shop_name}. Zo zie je in een minuut hoe jouw agenda en omzet eruitzien, zonder account: {$inviteUrl}";
+                    @endphp
+                    <li wire:key="invite-{{ $invite->id }}" @class(['rounded-[1.25rem] p-4 ring-1', 'bg-gold-soft/60 ring-link/30' => $newInviteId === $invite->id, 'bg-surface ring-border/50' => $newInviteId !== $invite->id])>
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <span class="size-3 shrink-0 rounded-full ring-2 ring-white" style="background-color: {{ $invite->accent_color ?? '#1f3a5f' }}"></span>
+                                <div class="min-w-0">
+                                    <p class="truncate text-base font-semibold">{{ $invite->shop_name }}</p>
+                                    <p class="text-xs text-muted">
+                                        {{ $invite->city ? $invite->city.' · ' : '' }}
+                                        @if ($invite->starts > 0)
+                                            {{ $invite->starts }}× geopend, laatst {{ $invite->last_started_at?->diffForHumans() }}
+                                        @else
+                                            Nog niet geopend
+                                        @endif
+                                        @if ($invite->signed_up_count > 0)
+                                            · <span class="font-semibold text-completed">aangemeld</span>
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                            <x-ui.icon-button icon="trash" label="Verwijderen" wire:click="deleteInvite({{ $invite->id }})" wire:confirm="Deze demolink verwijderen? De link werkt daarna als gewone demo." class="-mt-2 -mr-2" />
+                        </div>
+                        <x-ui.copy-link :url="$inviteUrl" :label="preg_replace('#^https?://#', '', $inviteUrl)" class="mt-3 bg-card" />
+                        <x-ui.button variant="secondary" size="sm" icon="message-circle" full class="mt-2" target="_blank" rel="noopener"
+                            :href="'https://wa.me/?text='.rawurlencode($inviteMessage)">Stuur via WhatsApp</x-ui.button>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </section>
+
+    {{-- Wie heeft er een demo bekeken --}}
+    @if ($visits->isNotEmpty())
+        <section class="mt-4 rounded-[1.75rem] bg-card p-5 shadow-soft ring-1 ring-border/70 md:p-6" data-reveal>
+            <h2 class="text-lg font-bold tracking-tight">Recente demo's</h2>
+            <p class="mt-1 text-sm text-muted">Gestart via jouw links. Je krijgt meteen een melding als iemand begint.</p>
+            <ul class="mt-3 divide-y divide-border">
+                @foreach ($visits as $visit)
+                    <li class="flex items-center justify-between gap-3 py-3" wire:key="visit-{{ $visit->id }}">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold">{{ $visit->invite?->shop_name ?? 'Via je demolink' }}</p>
+                            <p class="text-xs text-muted">{{ ucfirst($visit->created_at->diffForHumans()) }}</p>
+                        </div>
+                        @if ($visit->signedUpShop)
+                            <x-ui.badge status="completed">Aangemeld</x-ui.badge>
+                        @else
+                            <span class="shrink-0 text-xs text-muted">Nog niet aangemeld</span>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
     {{-- Aantallen --}}
     <div class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4" data-reveal>
         <x-ui.stat label="Aangemeld" :value="$totals['signedUp']" icon="user-plus" />

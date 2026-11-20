@@ -13,6 +13,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -127,6 +128,12 @@ class Calendar extends Component
             'tijd' => sprintf('%02d:%02d', intdiv($minutes, 60), $minutes % 60),
         ], navigate: true);
     }
+
+    /**
+     * Een "live" boeking in een demozaak (App\Livewire\App\DemoLiveBookings): opnieuw tekenen, zodat hij er meteen staat.
+     */
+    #[On('demo-booking-created')]
+    public function refreshAfterDemoBooking(): void {}
 
     public function render(AvailabilityService $availability): View
     {

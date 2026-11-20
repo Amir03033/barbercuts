@@ -8,9 +8,14 @@ use App\Enums\CancelledBy;
 use App\Enums\PaymentMethod;
 use App\Enums\ShopRole;
 use App\Models\ActivityLog;
+use App\Models\Appointment;
 use App\Models\Barbershop;
+use App\Models\DemoInvite;
+use App\Models\DemoVisit;
+use App\Models\Service;
 use App\Models\ShopSetting;
 use App\Models\User;
+use App\Services\Booking\AvailabilityService;
 use App\Services\ReviewService;
 use App\Support\Color;
 use App\Support\ImageStore;
@@ -27,6 +32,15 @@ class DemoShopService
 {
     /** Tijdelijke demo-accounts krijgen een adres op een domein dat nooit mail ontvangt (RFC 2606). */
     public const string VISITOR_EMAIL_DOMAIN = 'demo.invalid';
+
+    public const string DEFAULT_NAME = 'Studio Fade';
+
+    public const string DEFAULT_CITY = 'Utrecht';
+
+    public const string DEFAULT_ACCENT = '#1f3a5f';
+
+    /** De plaats van de demozaak die nu gebouwd wordt (voor de teksten van reviews). */
+    private string $city = self::DEFAULT_CITY;
 
     private const array STAFF = [
         ['name' => 'Sam', 'days' => [2, 3, 4, 5, 6], 'from' => 9, 'to' => 18],
@@ -86,12 +100,17 @@ class DemoShopService
     /**
      * Openbare demolink: maak een tijdelijk demo-account met een eigen demozaak, voor iemand zonder account.
      * De pitcher van de link (als die er is) krijgt de demo op zijn naam, zodat hij ziet hoe vaak zijn link werkt.
+     * Met een persoonlijke uitnodiging krijgt de demozaak de naam (en plaats en kleur) van de zaak van de kapper.
      *
-     * @return array{0: User, 1: Barbershop}
+     * @return array{0: User, 1: Barbershop, 2: DemoVisit}
      */
-    public function startForVisitor(?User $referrer): array
+    public function startForVisitor(?User $referrer, ?DemoInvite $invite = null): array
     {
-        [$visitor, $shop] = DB::transaction(function () use ($referrer): array {
+        if ($invite !== null) {
+            $referrer = $invite->pitcher;
+        }
+
+        [$visitor, $shop, $visit] = DB::transaction(function () use ($referrer, $invite): array {
             $visitor = new User;
             $visitor->forceFill([
                 'name' => 'Demo',
@@ -101,16 +120,46 @@ class DemoShopService
                 'is_demo_visitor' => true,
             ])->save();
 
-            return [$visitor, $this->build($visitor, referrer: $referrer)];
+            $shop = $this->build($visitor, referrer: $referrer, profile: self::profileFor($invite));
+            $visit = DemoVisit::query()->create(['pitcher_id' => $referrer?->id, 'demo_invite_id' => $invite?->id, 'visitor_id' => $visitor->id]);
+
+            return [$visitor, $shop, $visit];
         });
 
         if ($referrer !== null) {
             $referrer->increment('demo_link_starts');
         }
 
-        ActivityLog::record('demo.visitor_started', null, $referrer, ['visitor_id' => $visitor->id]);
+        if ($invite !== null) {
+            $invite->forceFill(['starts' => $invite->starts + 1, 'last_started_at' => now()])->save();
+        }
 
-        return [$visitor, $shop];
+        ActivityLog::record('demo.visitor_started', null, $referrer, ['visitor_id' => $visitor->id, 'invite_id' => $invite?->id]);
+
+        return [$visitor, $shop, $visit];
+    }
+
+    /**
+     * Naam, plaats en kleur van de demozaak: die van de persoonlijke uitnodiging, anders Studio Fade in Utrecht.
+     *
+     * @return array{name: string, city: string, accent: string, personal: bool}
+     */
+    public static function profileFor(?DemoInvite $invite): array
+    {
+        return [
+            'name' => $invite !== null ? $invite->shop_name : self::DEFAULT_NAME,
+            'city' => $invite !== null && filled($invite->city) ? (string) $invite->city : self::DEFAULT_CITY,
+            'accent' => $invite !== null && filled($invite->accent_color) ? (string) $invite->accent_color : self::DEFAULT_ACCENT,
+            'personal' => $invite !== null,
+        ];
+    }
+
+    /**
+     * De laatste gestarte demo van een bezoeker (met de uitnodiging, als die er was).
+     */
+    public function visitFor(User $visitor): ?DemoVisit
+    {
+        return DemoVisit::query()->where('visitor_id', $visitor->id)->latest('id')->first();
     }
 
     /**
@@ -122,12 +171,13 @@ class DemoShopService
 
         $previous = Barbershop::query()->where('is_demo', true)->whereHas('users', fn ($query) => $query->whereKey($visitor->id))->get();
         $referrer = $previous->first()?->demo_referrer_id !== null ? User::query()->find($previous->first()->demo_referrer_id) : null;
+        $invite = $this->visitFor($visitor)?->invite;
 
         foreach ($previous as $shop) {
             $this->delete($shop, keepVisitors: true);
         }
 
-        $shop = DB::transaction(fn (): Barbershop => $this->build($visitor, referrer: $referrer));
+        $shop = DB::transaction(fn (): Barbershop => $this->build($visitor, referrer: $referrer, profile: self::profileFor($invite)));
         $visitor->forgetShopRoles();
 
         return $shop;
@@ -144,6 +194,74 @@ class DemoShopService
             ->get()->each(fn (Barbershop $shop) => $this->delete($shop));
 
         $visitor->delete();
+    }
+
+    /**
+     * Een "live" online boeking in een demozaak, zodat de agenda voelt als een echte drukke dag: een bestaande
+     * voorbeeldklant boekt een vrije tijd vandaag (of de eerstvolgende open dag). Rechtstreeks in de database, dus er
+     * gaat nooit een bericht uit. Geeft de afspraak terug, of null als er niets vrij is.
+     */
+    public function simulateOnlineBooking(Barbershop $shop): ?Appointment
+    {
+        abort_unless($shop->is_demo, 403);
+
+        $services = Service::withoutGlobalScopes()->where('barbershop_id', $shop->id)->where('is_active', true)->orderBy('sort_order')->get();
+        $customerId = DB::table('customers')->where('barbershop_id', $shop->id)->inRandomOrder()->value('id');
+
+        if ($services->isEmpty() || $customerId === null) {
+            return null;
+        }
+
+        // Meestal een gewone knipbeurt, soms iets anders.
+        $service = mt_rand(1, 100) <= 60 ? $services->first() : $services->random();
+        $now = CarbonImmutable::now($shop->timezone);
+        $availability = app(AvailabilityService::class);
+
+        for ($offset = 0; $offset <= 6; $offset++) {
+            $date = $now->addDays($offset)->toDateString();
+            $slots = array_values(array_filter(
+                $availability->slots($shop, $service, null, $date, online: false),
+                fn (CarbonImmutable $slot): bool => $slot->greaterThan($now->addMinutes(45)),
+            ));
+
+            if ($slots === []) {
+                continue;
+            }
+
+            $start = $slots[mt_rand(0, min(5, count($slots) - 1))];
+            $staff = $availability->freeStaffAt($shop, $service, null, $start, online: false)[0] ?? null;
+
+            if ($staff === null) {
+                continue;
+            }
+
+            $end = $start->addMinutes($service->duration);
+            $stamp = now()->utc()->format('Y-m-d H:i:s');
+
+            $id = DB::table('appointments')->insertGetId([
+                'barbershop_id' => $shop->id,
+                'customer_id' => $customerId,
+                'staff_member_id' => $staff->id,
+                'service_id' => $service->id,
+                'service_name' => $service->name,
+                'duration' => $service->duration,
+                'price_cents' => $service->price_cents,
+                'starts_at' => $start->utc()->format('Y-m-d H:i:s'),
+                'ends_at' => $end->utc()->format('Y-m-d H:i:s'),
+                'blocked_until' => $end->addMinutes((int) $service->buffer_after)->utc()->format('Y-m-d H:i:s'),
+                'status' => AppointmentStatus::Scheduled->value,
+                'source' => AppointmentSource::Online->value,
+                'manage_token' => Str::random(40),
+                'created_at' => $stamp,
+                'updated_at' => $stamp,
+            ]);
+
+            $shop->forceFill(['demo_live_bookings' => $shop->demo_live_bookings + 1, 'demo_live_booking_at' => now()])->save();
+
+            return Appointment::withoutGlobalScopes()->with(['customer', 'staffMember'])->find($id);
+        }
+
+        return null;
     }
 
     /**
@@ -207,21 +325,25 @@ class DemoShopService
      * @param  User  $owner  wie de zaak beheert: de pitcher zelf, of het tijdelijke account van een bezoeker
      * @param  User|null  $pitcher  de pitcher van wie dit zijn eigen demo is
      * @param  User|null  $referrer  de pitcher van de openbare demolink
+     * @param  array{name: string, city: string, accent: string, personal: bool}|null  $profile  naam, plaats en kleur
      */
-    private function build(User $owner, ?User $pitcher = null, ?User $referrer = null): Barbershop
+    private function build(User $owner, ?User $pitcher = null, ?User $referrer = null, ?array $profile = null): Barbershop
     {
         $now = now();
+        $profile ??= self::profileFor(null);
+        $this->city = $profile['city'];
 
         $shop = new Barbershop([
             'slug' => 'demo-'.Str::lower(Str::random(10)),
-            'name' => 'Studio Fade',
-            'description' => 'Barbershop in hartje Utrecht. Strakke fades, verzorgde baarden en altijd goede koffie.',
+            'name' => $profile['name'],
+            'description' => 'Barbershop in hartje '.$profile['city'].'. Strakke fades, verzorgde baarden en altijd goede koffie.',
             'phone' => '+31301234567',
-            'email' => $pitcher !== null ? $pitcher->email : 'info@studio-fade.'.self::VISITOR_EMAIL_DOMAIN,
+            'email' => $pitcher !== null ? $pitcher->email : 'info@zaak.'.self::VISITOR_EMAIL_DOMAIN,
             'address' => 'Voorbeeldstraat 12',
-            'postal_code' => '3511 AB',
-            'city' => 'Utrecht',
-            'accent_color' => '#1f3a5f',
+            // De postcode hoort bij Utrecht; bij een andere plaats laten we hem weg.
+            'postal_code' => $profile['city'] === self::DEFAULT_CITY ? '3511 AB' : null,
+            'city' => $profile['city'],
+            'accent_color' => $profile['accent'],
         ]);
         $shop->is_public = true;
         $shop->is_demo = true;
@@ -373,7 +495,7 @@ class DemoShopService
             $comment = match (true) {
                 $index === 0 => 'Moest twintig minuten wachten terwijl ik een afspraak had. Knipbeurt zelf was prima.',
                 $index % 3 === 0 => null,
-                default => self::REVIEW_TEXTS[$rating][$index % count(self::REVIEW_TEXTS[$rating])],
+                default => str_replace('Utrecht', $this->city, self::REVIEW_TEXTS[$rating][$index % count(self::REVIEW_TEXTS[$rating])]),
             };
             $at = CarbonImmutable::parse($visit->ends_at, 'UTC')->addHours(mt_rand(3, 30))->min(now());
 

@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DemoInvite;
 use App\Models\Plan;
 use App\Models\User;
+use App\Notifications\DemoStarted;
 use App\Services\Demo\DemoShopService;
+use App\Services\ShareImage;
 use App\Support\Features;
 use App\Support\Referral;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * De openbare demolink: barbercuts.nl/probeer of /probeer/{code van een pitcher}. Een kapper die de link krijgt (WhatsApp,
@@ -27,9 +31,10 @@ class PublicDemoController extends Controller
 
     private const int RESTARTS_PER_HOUR = 6;
 
-    public function show(Request $request, ?string $code = null): Response
+    public function show(Request $request, ?string $code = null, ?string $invite = null): Response
     {
         $pitcher = Referral::pitcherFor($code);
+        $demoInvite = DemoInvite::findForLink($code, $invite);
 
         if ($pitcher !== null) {
             Referral::remember($request, $pitcher);
@@ -38,6 +43,13 @@ class PublicDemoController extends Controller
         $plan = Plan::current();
 
         $response = response()->view('demo.try', [
+            'shareImage' => match (true) {
+                $demoInvite !== null => route('demo.try.share.invite', ['code' => $pitcher?->referralCode(), 'invite' => $demoInvite->token]),
+                $pitcher !== null => route('demo.try.share.pitcher', ['code' => $pitcher->referralCode()]),
+                default => route('demo.try.share'),
+            },
+            'invite' => $demoInvite,
+            'code' => $pitcher?->referralCode(),
             'pitcher' => $pitcher ?? Referral::current($request),
             'viewer' => $request->user(),
             'hours' => (int) config('barbercuts.demo.hours'),
@@ -51,6 +63,17 @@ class PublicDemoController extends Controller
         }
 
         return $response;
+    }
+
+    /**
+     * De deelafbeelding bij de link: met de naam van de pitcher of van de zaak (persoonlijke demo).
+     */
+    public function shareImage(ShareImage $images, ?string $code = null, ?string $invite = null): BinaryFileResponse
+    {
+        return response()->file($images->forDemo(Referral::pitcherFor($code), DemoInvite::findForLink($code, $invite)), [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
     }
 
     public function start(Request $request, DemoShopService $demos): RedirectResponse
@@ -70,6 +93,7 @@ class PublicDemoController extends Controller
         }
 
         $referrer = Referral::current($request);
+        $invite = DemoInvite::findForLink($request->string('code')->toString(), $request->string('invite')->toString());
 
         // Wie met een ander account is ingelogd, start de demo in een apart demo-account (de pagina zegt dat vooraf).
         if ($user instanceof User) {
@@ -78,7 +102,14 @@ class PublicDemoController extends Controller
             $request->session()->regenerateToken();
         }
 
-        [$visitor, $shop] = $demos->startForVisitor($referrer);
+        [$visitor, $shop, $visit] = $demos->startForVisitor($referrer, $invite);
+        $referrer = $invite !== null ? $invite->pitcher : $referrer;
+
+        // De pitcher krijgt een seintje, zodat hij kan bellen terwijl de kapper nog rondkijkt (hooguit 30 per dag).
+        if ($referrer !== null && ! RateLimiter::tooManyAttempts('demo-notify:'.$referrer->id, 30)) {
+            RateLimiter::hit('demo-notify:'.$referrer->id, 86400);
+            $referrer->notify(new DemoStarted($visit->id));
+        }
 
         Auth::guard('web')->login($visitor);
         $request->session()->regenerate();

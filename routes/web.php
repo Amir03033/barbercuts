@@ -276,7 +276,11 @@ Route::get('/demo/welkom/{user}', function (User $user): RedirectResponse {
 | Openbare demolink: /probeer en /probeer/{code van een pitcher}. Voor iedereen, zonder account.
 |--------------------------------------------------------------------------
 */
-Route::get('/probeer/{code?}', [PublicDemoController::class, 'show'])->where('code', '[A-Za-z0-9-]{1,40}')->name('demo.try');
+// De afbeelding die WhatsApp, Instagram en iMessage tonen bij de link (eerst registreren: "deel.png" is geen code).
+Route::get('/probeer/deel.png', [PublicDemoController::class, 'shareImage'])->name('demo.try.share');
+Route::get('/probeer/{code}/deel.png', [PublicDemoController::class, 'shareImage'])->where('code', '[A-Za-z0-9-]{1,40}')->name('demo.try.share.pitcher');
+Route::get('/probeer/{code}/{invite}/deel.png', [PublicDemoController::class, 'shareImage'])->where(['code' => '[A-Za-z0-9-]{1,40}', 'invite' => '[a-z0-9]{8}'])->name('demo.try.share.invite');
+Route::get('/probeer/{code?}/{invite?}', [PublicDemoController::class, 'show'])->where(['code' => '[A-Za-z0-9-]{1,40}', 'invite' => '[a-z0-9]{8}'])->name('demo.try');
 Route::post('/probeer', [PublicDemoController::class, 'start'])->middleware('throttle:10,1')->name('demo.try.start');
 Route::post('/probeer/opnieuw', [PublicDemoController::class, 'restart'])->middleware(['auth', 'throttle:10,1'])->name('demo.try.restart');
 

@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Barbershop;
+use App\Models\DemoInvite;
+use App\Models\User;
 use App\Support\BrandMark;
 use App\Support\Color;
 use App\Support\ImageStore;
@@ -48,6 +50,88 @@ class ShareImage
         imagepng($this->drawShop($shop), $path, 7);
 
         return $path;
+    }
+
+    /**
+     * De deelafbeelding van de openbare demolink: met de naam van de pitcher, of bij een persoonlijke demo met de naam
+     * (en kleur) van de zaak. Zo ziet een kapper in WhatsApp meteen dat de link voor hem is.
+     */
+    public function forDemo(?User $pitcher, ?DemoInvite $invite): string
+    {
+        $pitcherName = $pitcher !== null ? explode(' ', trim($pitcher->name))[0] : null;
+        $key = sha1(implode('|', [$pitcherName, $invite?->shop_name, $invite?->city, $invite?->accent_color, 'v3']));
+        $directory = storage_path('app/share');
+        $path = "{$directory}/demo-{$key}.png";
+
+        if (is_file($path)) {
+            return $path;
+        }
+
+        if (! is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+
+        imagepng($this->drawDemo($pitcherName, $invite), $path, 7);
+
+        return $path;
+    }
+
+    private function drawDemo(?string $pitcherName, ?DemoInvite $invite): GdImage
+    {
+        $image = $this->canvas();
+        $accent = $invite !== null && Color::isHex($invite->accent_color) ? (string) $invite->accent_color : '#0071e3';
+        [$r, $g, $b] = Color::rgb($accent);
+        $this->gradient($image, sprintf('#%02x%02x%02x', (int) ($r * 0.45), (int) ($g * 0.45), (int) ($b * 0.45)), '#000000');
+
+        $white = imagecolorallocate($image, 255, 255, 255);
+        $soft = imagecolorallocatealpha($image, 255, 255, 255, 30);
+        $green = imagecolorallocate($image, 48, 209, 88);
+        $x = 72;
+
+        imagecopy($image, BrandMark::image(88, dark: false), $x, 64, 0, 0, 88, 88);
+        imagettftext($image, 32, 0, $x + 108, 122, $white, $this->font('Bold'), 'barbercuts');
+
+        // "Live demo"-label rechtsboven
+        $label = 'Live demo · geen account nodig';
+        $box = imagettfbbox(20, 0, $this->font('Medium'), $label);
+        $labelWidth = $box[2] - $box[0] + 78;
+        $this->pill($image, self::WIDTH - 72 - $labelWidth, 78, $labelWidth, 58, 0.18);
+        imagefilledellipse($image, self::WIDTH - 72 - $labelWidth + 30, 107, 14, 14, $green);
+        imagettftext($image, 20, 0, self::WIDTH - 72 - $labelWidth + 48, 115, $white, $this->font('Medium'), $label);
+
+        [$lead, $title] = match (true) {
+            $invite !== null => ['Zo ziet jouw zaak eruit', $invite->shop_name],
+            $pitcherName !== null => ["{$pitcherName} nodigt je uit", 'Probeer BarberCuts'],
+            default => ['Je eigen demozaak', 'Probeer BarberCuts'],
+        };
+
+        imagettftext($image, 34, 0, $x, 290, $soft, $this->font('Medium'), $lead);
+
+        $y = 390;
+
+        foreach ($this->wrap($title, 76, self::WIDTH - 2 * $x, 2) as $line) {
+            imagettftext($image, 76, 0, $x, $y, $white, $this->font('Bold'), $line);
+            $y += 92;
+        }
+
+        imagettftext($image, 28, 0, $x, 570, $soft, $this->font('Medium'), 'Agenda, klanten en omzet · probeer het in een minuut');
+
+        return $image;
+    }
+
+    /**
+     * Een pil in een effen kleur: de achtergrond onder het midden, voor $whiteness wit gemaakt. Effen, zodat de delen
+     * waar rechthoek en halve cirkels overlappen niet lichter worden.
+     */
+    private function pill(GdImage $image, int $x, int $y, int $width, int $height, float $whiteness): void
+    {
+        $radius = intdiv($height, 2);
+        $under = imagecolorat($image, $x + intdiv($width, 2), $y + $radius);
+        $mix = fn (int $channel): int => (int) round($channel + (255 - $channel) * $whiteness);
+        $color = imagecolorallocate($image, $mix(($under >> 16) & 0xFF), $mix(($under >> 8) & 0xFF), $mix($under & 0xFF));
+        imagefilledrectangle($image, $x + $radius, $y, $x + $width - $radius - 1, $y + $height - 1, $color);
+        imagefilledarc($image, $x + $radius, $y + $radius, $height, $height, 90, 270, $color, IMG_ARC_PIE);
+        imagefilledarc($image, $x + $width - $radius - 1, $y + $radius, $height, $height, 270, 90, $color, IMG_ARC_PIE);
     }
 
     /**

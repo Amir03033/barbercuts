@@ -29,6 +29,8 @@ use Illuminate\Support\Str;
  * @property ThemeMode $theme_mode
  * @property int|null $referred_by_user_id
  * @property int|null $demo_referrer_id
+ * @property int $demo_live_bookings
+ * @property Carbon|null $demo_live_booking_at
  * @property Carbon|null $trial_ends_at
  * @property Carbon|null $free_until
  * @property Carbon|null $suspended_at
@@ -71,6 +73,8 @@ class Barbershop extends Model
             'theme_mode' => ThemeMode::class,
             'is_public' => 'boolean',
             'is_demo' => 'boolean',
+            'demo_live_bookings' => 'integer',
+            'demo_live_booking_at' => 'datetime',
             'billing_notices' => 'array',
             'banner_active' => 'boolean',
             'rating_avg' => 'float',
